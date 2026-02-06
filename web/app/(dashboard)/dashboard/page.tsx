@@ -1,4 +1,6 @@
 import { requireApprovedUser } from '@/lib/auth/require-approval';
+import { db } from '@/lib/db';
+import { DashboardOverview } from '@/components/dashboard-overview';
 
 /**
  * Dashboard Page
@@ -6,27 +8,104 @@ import { requireApprovedUser } from '@/lib/auth/require-approval';
  */
 export default async function DashboardPage() {
   const session = await requireApprovedUser();
+  const userId = session.user.id;
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const todayEnd = new Date(todayStart);
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const weekStart = new Date(todayStart);
+  weekStart.setDate(weekStart.getDate() - 6);
+
+  const [todayTasks, assignedChores, completedThisWeek, completedTotal] = await Promise.all([
+    db.schedule.findMany({
+      where: {
+        scheduledFor: {
+          gte: todayStart,
+          lte: todayEnd,
+        },
+      },
+      orderBy: { scheduledFor: 'asc' },
+      include: {
+        chore: {
+          include: {
+            assignments: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    image: true,
+                  },
+                },
+              },
+            },
+            _count: {
+              select: {
+                completions: true,
+                schedules: true,
+              },
+            },
+          },
+        },
+      },
+    }),
+    db.chore.findMany({
+      where: {
+        assignments: {
+          some: {
+            userId,
+          },
+        },
+      },
+      orderBy: [{ frequency: 'asc' }, { title: 'asc' }],
+      include: {
+        assignments: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            completions: true,
+            schedules: true,
+          },
+        },
+      },
+    }),
+    db.choreCompletion.count({
+      where: {
+        userId,
+        completedAt: {
+          gte: weekStart,
+        },
+      },
+    }),
+    db.choreCompletion.count({
+      where: { userId },
+    }),
+  ]);
 
   return (
-    <div className="min-h-screen bg-[var(--color-cream)] p-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-[var(--font-display)] text-[var(--color-charcoal)] mb-4">
-          Welcome to Chorus
-        </h1>
-        <p className="text-[var(--color-charcoal)]/70 mb-8">
-          Hi {session?.user?.name || 'there'}! Your dashboard is ready.
-        </p>
-
-        <div className="bg-white rounded-[var(--radius-lg)] p-6 shadow-[var(--shadow-soft)]">
-          <h2 className="text-2xl font-[var(--font-display)] text-[var(--color-charcoal)] mb-4">
-            Coming Soon
-          </h2>
-          <p className="text-[var(--color-charcoal)]/70">
-            Dashboard features will be implemented in Phase 5.
-          </p>
-        </div>
-      </div>
-    </div>
+    <DashboardOverview
+      userName={session?.user?.name || 'there'}
+      initialTodayTasks={todayTasks}
+      initialAssignedChores={assignedChores}
+      stats={{
+        assignedChores: assignedChores.length,
+        openToday: todayTasks.length,
+        completedThisWeek,
+        completedTotal,
+      }}
+    />
   );
 }
 

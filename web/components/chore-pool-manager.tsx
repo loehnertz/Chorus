@@ -1,0 +1,175 @@
+'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+import { Frequency } from '@prisma/client'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { ChoreCard } from '@/components/chore-card'
+import { ChoreForm } from '@/components/chore-form'
+import type { ChoreWithMeta, UserSummary } from '@/types'
+
+interface ChorePoolManagerProps {
+  users: UserSummary[]
+}
+
+const FREQUENCIES: Frequency[] = [Frequency.DAILY, Frequency.WEEKLY, Frequency.MONTHLY, Frequency.YEARLY]
+
+interface ChoreResponse {
+  data: ChoreWithMeta[]
+}
+
+export function ChorePoolManager({ users }: ChorePoolManagerProps) {
+  const [chores, setChores] = useState<ChoreWithMeta[]>([])
+  const [selectedFrequency, setSelectedFrequency] = useState<Frequency>(Frequency.DAILY)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingChore, setEditingChore] = useState<ChoreWithMeta | null>(null)
+
+  const filteredChores = useMemo(
+    () => chores.filter((chore) => chore.frequency === selectedFrequency),
+    [chores, selectedFrequency]
+  )
+
+  useEffect(() => {
+    const loadChores = async () => {
+      setIsLoading(true)
+      setError('')
+
+      try {
+        const response = await fetch('/api/chores')
+        const payload = (await response.json()) as ChoreResponse
+
+        if (!response.ok) {
+          setError('Failed to load chores')
+          return
+        }
+
+        setChores(payload.data)
+      } catch {
+        setError('Failed to load chores')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    void loadChores()
+  }, [])
+
+  const handleSuccess = (savedChore: ChoreWithMeta) => {
+    setChores((current) => {
+      const existing = current.find((chore) => chore.id === savedChore.id)
+      if (existing) {
+        return current.map((chore) => (chore.id === savedChore.id ? savedChore : chore))
+      }
+
+      return [savedChore, ...current]
+    })
+    setFormOpen(false)
+    setEditingChore(null)
+  }
+
+  const handleDelete = async (choreId: string) => {
+    const confirmed = window.confirm('Delete this chore? This cannot be undone.')
+    if (!confirmed) {
+      return
+    }
+
+    const response = await fetch(`/api/chores/${choreId}`, { method: 'DELETE' })
+    if (!response.ok) {
+      setError('Failed to delete chore')
+      return
+    }
+
+    setChores((current) => current.filter((chore) => chore.id !== choreId))
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-3xl font-semibold text-[var(--color-charcoal)]">Chore Pool</h1>
+        <Dialog open={formOpen} onOpenChange={(open) => {
+          setFormOpen(open)
+          if (!open) {
+            setEditingChore(null)
+          }
+        }}>
+          <DialogTrigger asChild>
+            <Button onClick={() => setEditingChore(null)}>Add Chore</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editingChore ? 'Edit Chore' : 'Create Chore'}</DialogTitle>
+              <DialogDescription>All chores are shared with the household.</DialogDescription>
+            </DialogHeader>
+            <ChoreForm
+              users={users}
+              initialValues={
+                editingChore
+                  ? {
+                    id: editingChore.id,
+                    title: editingChore.title,
+                    description: editingChore.description || '',
+                    frequency: editingChore.frequency,
+                    assignedUserIds: editingChore.assignments.map((assignment) => assignment.userId),
+                  }
+                  : undefined
+              }
+              onSuccess={handleSuccess}
+              onCancel={() => {
+                setFormOpen(false)
+                setEditingChore(null)
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {FREQUENCIES.map((frequency) => (
+          <Button
+            key={frequency}
+            size="sm"
+            variant={selectedFrequency === frequency ? 'default' : 'outline'}
+            onClick={() => setSelectedFrequency(frequency)}
+          >
+            {frequency}
+          </Button>
+        ))}
+      </div>
+
+      {error ? (
+        <div className="rounded-[var(--radius-md)] border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
+      ) : null}
+
+      {isLoading ? (
+        <p className="text-sm text-[var(--color-charcoal)]/70">Loading chores...</p>
+      ) : filteredChores.length === 0 ? (
+        <p className="text-sm text-[var(--color-charcoal)]/70">No chores in this frequency yet.</p>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {filteredChores.map((chore) => (
+            <ChoreCard
+              key={chore.id}
+              chore={chore}
+              onEdit={() => {
+                setEditingChore(chore)
+                setFormOpen(true)
+              }}
+              onDelete={() => {
+                void handleDelete(chore.id)
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
