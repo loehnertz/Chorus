@@ -1,6 +1,13 @@
 import { requireApprovedUser } from '@/lib/auth/require-approval'
 import { db } from '@/lib/db'
-import { ScheduleWorkspace } from '@/components/schedule-workspace'
+import dynamicImport from 'next/dynamic'
+
+const ScheduleWorkspace = dynamicImport(
+  () => import('@/components/schedule-workspace').then((module) => module.ScheduleWorkspace),
+  {
+    loading: () => <p className="text-sm text-[var(--color-charcoal)]/70">Loading schedule workspace...</p>,
+  }
+)
 
 export default async function SchedulePage() {
   await requireApprovedUser()

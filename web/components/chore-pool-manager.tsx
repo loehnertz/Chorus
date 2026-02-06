@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
 import { Frequency } from '@prisma/client'
 import {
   Dialog,
@@ -13,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { ChoreCard } from '@/components/chore-card'
 import { ChoreForm } from '@/components/chore-form'
+import { useToast } from '@/components/toast-provider'
 import type { ChoreWithMeta, UserSummary } from '@/types'
 
 interface ChorePoolManagerProps {
@@ -32,6 +34,7 @@ export function ChorePoolManager({ users }: ChorePoolManagerProps) {
   const [error, setError] = useState('')
   const [formOpen, setFormOpen] = useState(false)
   const [editingChore, setEditingChore] = useState<ChoreWithMeta | null>(null)
+  const { showToast } = useToast()
 
   const filteredChores = useMemo(
     () => chores.filter((chore) => chore.frequency === selectedFrequency),
@@ -49,19 +52,21 @@ export function ChorePoolManager({ users }: ChorePoolManagerProps) {
 
         if (!response.ok) {
           setError('Failed to load chores')
+          showToast('Failed to load chores', 'error')
           return
         }
 
         setChores(payload.data)
       } catch {
         setError('Failed to load chores')
+        showToast('Failed to load chores', 'error')
       } finally {
         setIsLoading(false)
       }
     }
 
     void loadChores()
-  }, [])
+  }, [showToast])
 
   const handleSuccess = (savedChore: ChoreWithMeta) => {
     setChores((current) => {
@@ -74,6 +79,7 @@ export function ChorePoolManager({ users }: ChorePoolManagerProps) {
     })
     setFormOpen(false)
     setEditingChore(null)
+    showToast('Chore saved')
   }
 
   const handleDelete = async (choreId: string) => {
@@ -85,14 +91,21 @@ export function ChorePoolManager({ users }: ChorePoolManagerProps) {
     const response = await fetch(`/api/chores/${choreId}`, { method: 'DELETE' })
     if (!response.ok) {
       setError('Failed to delete chore')
+      showToast('Failed to delete chore', 'error')
       return
     }
 
     setChores((current) => current.filter((chore) => chore.id !== choreId))
+    showToast('Chore deleted')
   }
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      className="space-y-6"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+    >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-3xl font-semibold text-[var(--color-charcoal)]">Chore Pool</h1>
         <Dialog open={formOpen} onOpenChange={(open) => {
@@ -170,6 +183,6 @@ export function ChorePoolManager({ users }: ChorePoolManagerProps) {
           ))}
         </div>
       )}
-    </div>
+    </motion.div>
   )
 }

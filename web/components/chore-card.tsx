@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { Frequency } from '@prisma/client'
+import { motion } from 'framer-motion'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -39,47 +40,53 @@ export function ChoreCard({ chore, scheduleId, onComplete, onEdit, onDelete, cla
   }
 
   return (
-    <Card className={className}>
-      <CardHeader className="mb-3 flex flex-row items-start justify-between gap-3 pb-0">
-        <div className="space-y-1">
-          <CardTitle className="text-xl">{chore.title}</CardTitle>
-          <FrequencyBadge frequency={chore.frequency as Frequency} />
-        </div>
-        {onComplete ? (
-          <Checkbox
-            aria-label={`Mark ${chore.title} complete`}
-            disabled={isCompleting}
-            onCheckedChange={handleCompletion}
-          />
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card className={className}>
+        <CardHeader className="mb-3 flex flex-row items-start justify-between gap-3 pb-0">
+          <div className="space-y-1">
+            <CardTitle className="text-xl">{chore.title}</CardTitle>
+            <FrequencyBadge frequency={chore.frequency as Frequency} />
+          </div>
+          {onComplete ? (
+            <Checkbox
+              aria-label={`Mark ${chore.title} complete`}
+              disabled={isCompleting}
+              onCheckedChange={handleCompletion}
+            />
+          ) : null}
+        </CardHeader>
+
+        <CardContent className="space-y-2">
+          {chore.description ? (
+            <p className="text-sm text-[var(--color-charcoal)]/80">{chore.description}</p>
+          ) : (
+            <p className="text-sm text-[var(--color-charcoal)]/50">No description</p>
+          )}
+          <p className="text-xs text-[var(--color-charcoal)]/70">
+            Assigned to: {assignedNames || 'No one yet'}
+          </p>
+          <p className="text-xs text-[var(--color-charcoal)]/60">Completed {chore._count.completions} times</p>
+        </CardContent>
+
+        {(onEdit || onDelete) ? (
+          <CardFooter className="gap-2">
+            {onEdit ? (
+              <Button size="sm" variant="outline" onClick={onEdit}>
+                Edit
+              </Button>
+            ) : null}
+            {onDelete ? (
+              <Button size="sm" variant="ghost" onClick={onDelete} className="text-red-700 hover:bg-red-50">
+                Delete
+              </Button>
+            ) : null}
+          </CardFooter>
         ) : null}
-      </CardHeader>
-
-      <CardContent className="space-y-2">
-        {chore.description ? (
-          <p className="text-sm text-[var(--color-charcoal)]/80">{chore.description}</p>
-        ) : (
-          <p className="text-sm text-[var(--color-charcoal)]/50">No description</p>
-        )}
-        <p className="text-xs text-[var(--color-charcoal)]/70">
-          Assigned to: {assignedNames || 'No one yet'}
-        </p>
-        <p className="text-xs text-[var(--color-charcoal)]/60">Completed {chore._count.completions} times</p>
-      </CardContent>
-
-      {(onEdit || onDelete) ? (
-        <CardFooter className="gap-2">
-          {onEdit ? (
-            <Button size="sm" variant="outline" onClick={onEdit}>
-              Edit
-            </Button>
-          ) : null}
-          {onDelete ? (
-            <Button size="sm" variant="ghost" onClick={onDelete} className="text-red-700 hover:bg-red-50">
-              Delete
-            </Button>
-          ) : null}
-        </CardFooter>
-      ) : null}
-    </Card>
+      </Card>
+    </motion.div>
   )
 }

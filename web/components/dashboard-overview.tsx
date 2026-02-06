@@ -1,9 +1,11 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChoreCard } from '@/components/chore-card'
 import { DashboardStats } from '@/components/dashboard-stats'
+import { useToast } from '@/components/toast-provider'
 import type { ChoreWithMeta, ScheduleWithChore } from '@/types'
 
 interface DashboardOverviewProps {
@@ -27,7 +29,8 @@ export function DashboardOverview({
   const [todayTasks, setTodayTasks] = useState(initialTodayTasks)
   const [assignedChores] = useState(initialAssignedChores)
   const [statValues, setStatValues] = useState(stats)
-  const [error, setError] = useState('')
+  const [celebration, setCelebration] = useState<string | null>(null)
+  const { showToast } = useToast()
 
   const todayLabel = useMemo(
     () =>
@@ -40,8 +43,6 @@ export function DashboardOverview({
   )
 
   const completeChore = async (choreId: string, scheduleId?: string) => {
-    setError('')
-
     const response = await fetch('/api/completions', {
       method: 'POST',
       headers: {
@@ -52,7 +53,7 @@ export function DashboardOverview({
 
     const payload = await response.json()
     if (!response.ok) {
-      setError(payload.error || 'Could not mark chore complete')
+      showToast(payload.error || 'Could not mark chore complete', 'error')
       return
     }
 
@@ -66,14 +67,31 @@ export function DashboardOverview({
       completedThisWeek: current.completedThisWeek + 1,
       completedTotal: current.completedTotal + 1,
     }))
+
+    setCelebration('Nice work. Chore completed.')
+    setTimeout(() => setCelebration(null), 1800)
   }
 
   return (
     <div className="space-y-8">
-      <section className="space-y-2">
+      <AnimatePresence>
+        {celebration ? (
+          <motion.p
+            key={celebration}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="rounded-[var(--radius-md)] border border-[var(--color-sage)]/40 bg-[var(--color-sage)]/15 p-3 text-sm text-[var(--color-charcoal)]"
+          >
+            {celebration}
+          </motion.p>
+        ) : null}
+      </AnimatePresence>
+
+      <motion.section className="space-y-2" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-4xl font-semibold text-[var(--color-charcoal)]">Welcome back, {userName}</h1>
         <p className="text-[var(--color-charcoal)]/70">{todayLabel}</p>
-      </section>
+      </motion.section>
 
       <DashboardStats
         assignedChores={statValues.assignedChores}
@@ -82,11 +100,7 @@ export function DashboardOverview({
         completedTotal={statValues.completedTotal}
       />
 
-      {error ? (
-        <div className="rounded-[var(--radius-md)] border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
-      ) : null}
-
-      <section className="space-y-4">
+      <motion.section className="space-y-4" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
         <h2 className="text-2xl font-semibold text-[var(--color-charcoal)]">Today&apos;s Tasks</h2>
         {todayTasks.length === 0 ? (
           <Card className="p-4">
@@ -109,9 +123,9 @@ export function DashboardOverview({
             ))}
           </div>
         )}
-      </section>
+      </motion.section>
 
-      <section className="space-y-4">
+      <motion.section className="space-y-4" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <h2 className="text-2xl font-semibold text-[var(--color-charcoal)]">Your Assigned Chores</h2>
         {assignedChores.length === 0 ? (
           <Card className="p-4">
@@ -129,7 +143,7 @@ export function DashboardOverview({
             ))}
           </div>
         )}
-      </section>
+      </motion.section>
     </div>
   )
 }

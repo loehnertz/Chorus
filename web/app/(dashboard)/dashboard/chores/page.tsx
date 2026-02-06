@@ -1,6 +1,13 @@
-import { ChorePoolManager } from '@/components/chore-pool-manager'
 import { requireApprovedUser } from '@/lib/auth/require-approval'
 import { db } from '@/lib/db'
+import dynamicImport from 'next/dynamic'
+
+const ChorePoolManager = dynamicImport(
+  () => import('@/components/chore-pool-manager').then((module) => module.ChorePoolManager),
+  {
+    loading: () => <p className="text-sm text-[var(--color-charcoal)]/70">Loading chore manager...</p>,
+  }
+)
 
 export default async function ChoresPage() {
   await requireApprovedUser()

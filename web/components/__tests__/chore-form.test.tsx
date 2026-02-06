@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ChoreForm } from '../chore-form'
+import { ToastProvider } from '../toast-provider'
 
 describe('ChoreForm', () => {
   beforeEach(() => {
@@ -15,10 +16,12 @@ describe('ChoreForm', () => {
     const user = userEvent.setup()
 
     render(
-      <ChoreForm
-        users={[]}
-        onSuccess={jest.fn()}
-      />
+      <ToastProvider>
+        <ChoreForm
+          users={[]}
+          onSuccess={jest.fn()}
+        />
+      </ToastProvider>
     )
 
     await user.click(screen.getByRole('button', { name: 'Create Chore' }))
@@ -46,16 +49,18 @@ describe('ChoreForm', () => {
     })
 
     render(
-      <ChoreForm
-        users={[
-          {
-            id: 'user-1',
-            name: 'Alex',
-            image: null,
-          },
-        ]}
-        onSuccess={onSuccess}
-      />
+      <ToastProvider>
+        <ChoreForm
+          users={[
+            {
+              id: 'user-1',
+              name: 'Alex',
+              image: null,
+            },
+          ]}
+          onSuccess={onSuccess}
+        />
+      </ToastProvider>
     )
 
     await user.type(screen.getByLabelText('Title'), 'Vacuum')

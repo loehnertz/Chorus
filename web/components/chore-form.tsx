@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Frequency } from '@prisma/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useToast } from '@/components/toast-provider'
 import type { ChoreWithMeta, UserSummary } from '@/types'
 
 interface ChoreFormValues {
@@ -32,6 +33,7 @@ export function ChoreForm({ users, initialValues, onSuccess, onCancel }: ChoreFo
   const [values, setValues] = useState<ChoreFormValues>(initialValues ?? DEFAULT_VALUES)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const { showToast } = useToast()
 
   const mode = useMemo(() => (initialValues?.id ? 'edit' : 'create'), [initialValues?.id])
 
@@ -85,12 +87,15 @@ export function ChoreForm({ users, initialValues, onSuccess, onCancel }: ChoreFo
       const payload = await response.json()
       if (!response.ok) {
         setError(payload.error || 'Failed to save chore')
+        showToast(payload.error || 'Failed to save chore', 'error')
         return
       }
 
       onSuccess(payload.data as ChoreWithMeta)
+      showToast(mode === 'create' ? 'Chore created' : 'Chore updated')
     } catch {
       setError('Failed to save chore')
+      showToast('Failed to save chore', 'error')
     } finally {
       setIsSubmitting(false)
     }

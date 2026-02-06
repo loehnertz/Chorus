@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Frequency } from '@prisma/client'
 import { SlotPicker } from '../slot-picker'
+import { ToastProvider } from '../toast-provider'
 
 describe('SlotPicker', () => {
   beforeEach(() => {
@@ -50,13 +51,15 @@ describe('SlotPicker', () => {
       })
 
     render(
-      <SlotPicker
-        availableChores={[
-          { id: 'chore-1', title: 'Dishes', frequency: Frequency.DAILY },
-          { id: 'chore-2', title: 'Deep Clean', frequency: Frequency.YEARLY },
-        ]}
-        onScheduleCreated={onScheduleCreated}
-      />
+      <ToastProvider>
+        <SlotPicker
+          availableChores={[
+            { id: 'chore-1', title: 'Dishes', frequency: Frequency.DAILY },
+            { id: 'chore-2', title: 'Deep Clean', frequency: Frequency.YEARLY },
+          ]}
+          onScheduleCreated={onScheduleCreated}
+        />
+      </ToastProvider>
     )
 
     await waitFor(() => {

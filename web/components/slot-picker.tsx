@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Frequency } from '@prisma/client'
 import { Button } from '@/components/ui/button'
+import { useToast } from '@/components/toast-provider'
 import type { ScheduleWithChore } from '@/types'
 
 interface SlotPickerProps {
@@ -49,6 +50,7 @@ export function SlotPicker({ availableChores, onScheduleCreated }: SlotPickerPro
   const [loadingSuggestion, setLoadingSuggestion] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const { showToast } = useToast()
 
   const compatibleChores = useMemo(
     () => availableChores.filter((chore) => COMPATIBILITY[slotType].includes(chore.frequency)),
@@ -72,6 +74,7 @@ export function SlotPicker({ availableChores, onScheduleCreated }: SlotPickerPro
       if (!response.ok || !payload.data) {
         setSuggestedChore(null)
         setError(payload.error || 'No suggestion available for this slot')
+        showToast(payload.error || 'No suggestion available for this slot', 'error')
         return
       }
 
@@ -84,6 +87,7 @@ export function SlotPicker({ availableChores, onScheduleCreated }: SlotPickerPro
     } catch {
       setError('Could not load suggestion')
       setSuggestedChore(null)
+      showToast('Could not load suggestion', 'error')
     } finally {
       setLoadingSuggestion(false)
     }
@@ -124,12 +128,15 @@ export function SlotPicker({ availableChores, onScheduleCreated }: SlotPickerPro
       const payload = await response.json()
       if (!response.ok) {
         setError(payload.error || 'Failed to create slot')
+        showToast(payload.error || 'Failed to create slot', 'error')
         return
       }
 
       onScheduleCreated(payload.data as ScheduleWithChore)
+      showToast('Slot created')
     } catch {
       setError('Failed to create slot')
+      showToast('Failed to create slot', 'error')
     } finally {
       setIsSubmitting(false)
     }
