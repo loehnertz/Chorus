@@ -47,7 +47,7 @@ cd web  # Always navigate to web directory first
 
 ```bash
 # Development
-npm run dev              # Start development server (port 3000)
+npm run dev              # Start development server (port 3001)
 npm run build            # Build for production
 npm run start            # Start production server
 
