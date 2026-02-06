@@ -43,6 +43,47 @@ npm run type-check       # Run TypeScript type checking
 npm run lint && npm run test && npm run build
 ```
 
+## Git Workflow
+
+### Branching Strategy
+
+**Create a new branch for each phase:**
+```bash
+# Starting Phase 1
+git checkout -b phase-1-v0.1.0
+
+# Starting Phase 2 (if Phase 1 is merged)
+git checkout master
+git pull
+git checkout -b phase-2-v0.2.0
+```
+
+**Stacked branches (if previous phase not yet merged):**
+
+If you're starting a new phase while the previous phase's branch is still open (not merged to master), create the new branch from the previous phase branch:
+
+```bash
+# Phase 1 branch exists but not merged yet
+git checkout phase-1-v0.1.0
+git checkout -b phase-2-v0.2.0
+
+# Phase 2 branch exists but not merged yet
+git checkout phase-2-v0.2.0
+git checkout -b phase-3-v0.3.0
+```
+
+This creates **stacked branches** where each phase builds on top of the previous one. When the base branch gets merged, rebase the dependent branches onto master.
+
+**Branch naming convention:**
+- Format: `phase-{number}-v{version}`
+- Examples: `phase-1-v0.1.0`, `phase-2-v0.2.0`, `phase-7-v1.0.0`
+
+**When to merge:**
+- Complete all tasks in the phase
+- All tests passing
+- Code review completed (if applicable)
+- Pre-commit checks pass (`lint && test && build`)
+
 ## Architecture
 
 ### Slot-Based Scheduling System
