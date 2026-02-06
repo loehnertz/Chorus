@@ -2,7 +2,7 @@
 
 ## Context
 
-Building a shared chore tracking web application for couples/households to manage recurring tasks across different time frequencies (daily, weekly, monthly, yearly). The key innovation is a **slot-based scheduling system** where users can pull tasks from frequency pools into their schedule - for example, picking a yearly deep-cleaning task to tackle during a monthly slot.
+Building a shared chore tracking web application for couples/households to manage recurring tasks across different time frequencies (daily, weekly, monthly, yearly). The key innovation is a **cascading schedule system** where each frequency level includes one chore pulled down from the next higher level — for example, each month includes one yearly chore, so all yearly chores get distributed across the year.
 
 **Deployment Model**: Each deployment represents a single household. There is no multi-household support - all users in a deployment share the same chore pool and can see each other's tasks.
 
@@ -84,7 +84,7 @@ model Schedule {
   chore        Chore     @relation(fields: [choreId], references: [id], onDelete: Cascade)
 
   scheduledFor DateTime  // When this task should be done
-  slotType     Frequency // What kind of slot (WEEKLY, MONTHLY, etc)
+  slotType     Frequency // The frequency level this schedule belongs to
   suggested    Boolean   @default(true) // Was this auto-suggested or manually selected
 
   completions ChoreCompletion[]
@@ -201,7 +201,7 @@ chorus/
    - Prioritize never-completed tasks
    - Sort by least recently completed
    - Respect user assignments
-   - Filter by slot type compatibility
+   - Cascade one level only (daily←weekly, weekly←monthly, monthly←yearly)
 2. Write comprehensive tests for suggestion algorithm
 3. Create Schedules API routes:
    - `GET /api/schedules` - List schedules
@@ -234,8 +234,9 @@ chorus/
    - Display schedules in calendar format
    - Show upcoming tasks
 3. Implement slot creation UI:
-   - Weekly slots → pull from daily/monthly pools
-   - Monthly slots → pull from yearly pool
+   - Daily view: daily chores + 1 cascaded weekly chore
+   - Weekly view: weekly chores + 1 cascaded monthly chore
+   - Monthly view: monthly chores + 1 cascaded yearly chore
 4. Build SlotPicker component:
    - Show suggested task from algorithm
    - Allow manual override/selection
@@ -269,23 +270,35 @@ chorus/
 
 ### Task Suggestion Algorithm (`lib/suggestions.ts`)
 ```typescript
-// Suggest tasks based on:
-// 1. Least recently completed
-// 2. Never completed tasks (priority)
-// 3. User assignment
-// 4. Slot type (weekly slot can only pull certain frequencies)
+// Suggest a cascaded chore from the next higher frequency level:
+// 1. Never completed tasks (highest priority)
+// 2. Least recently completed
+// 3. Respect user assignments
+// Cascade direction (one level only):
+//   daily ← weekly, weekly ← monthly, monthly ← yearly
 
-function suggestTask(
-  slotType: Frequency,
+function suggestCascadedChore(
+  currentFrequency: Frequency,
   userId?: string
 ): Promise<Chore>
 ```
 
-### Slot System Rules
-- **Weekly Slot**: Can pull from DAILY or MONTHLY chore pools
-- **Monthly Slot**: Can pull from YEARLY chore pool
-- Users can manually override suggestions
-- System tracks when each pool task was last completed
+### Cascade System Rules
+The cascade determines **suggestions**, not hard constraints. The default is one chore cascaded down per cycle from the next higher level:
+- **Daily**: daily chores + 1 weekly chore cascaded down
+- **Weekly**: weekly chores + 1 monthly chore cascaded down
+- **Monthly**: monthly chores + 1 yearly chore cascaded down
+- **Yearly**: yearly chores only (no higher level)
+
+This ensures all chores get completed within their frequency cycle (e.g., 12 yearly chores → 1/month → all done by year's end). However, users are **free to pull more than the default** — e.g., scheduling 2 yearly chores in one month if they want to get ahead. The system warns if there are more chores at a level than available slots (e.g., >12 yearly chores), but does not block the user.
+
+### Day-Level Scheduling
+All chores — regardless of their frequency or how they were cascaded — ultimately get scheduled onto **specific dates**. The user's daily view is the single source of truth: "here's what I need to do today."
+
+There is a periodic **scheduling workflow** where the user plans upcoming days:
+1. The system suggests chores to schedule based on cascade logic
+2. The user accepts, overrides, or adds additional chores
+3. If the user falls behind the cascade pace (e.g., 3 yearly chores unscheduled with only 2 months left), the system shows a warning
 
 ### Completion Flow
 1. User clicks checkbox on task
@@ -362,14 +375,13 @@ NEON_AUTH_COOKIE_SECRET="generated-secret-key"    # Generate with: openssl rand 
    - Verify completion appears in history
    - Verify completion count updates
 
-5. **Schedule System**:
-   - Navigate to schedule view
-   - Create a weekly slot
-   - System suggests task from daily/monthly pool
-   - Manually override and pick different task
-   - Create monthly slot
-   - System suggests yearly task
-   - Complete scheduled task
+5. **Cascade & Scheduling**:
+   - Open scheduling workflow, verify cascade suggestions appear
+   - Schedule a cascaded yearly chore onto a specific date
+   - Schedule 2 yearly chores in one month (verify no blocking, just warning)
+   - View daily schedule — verify all scheduled chores appear for today
+   - Complete a cascaded chore and verify it counts toward the yearly total
+   - Fall behind on scheduling — verify warning appears
 
 6. **Multi-User**:
    - Create second user account
