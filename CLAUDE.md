@@ -109,6 +109,31 @@ This creates **stacked branches** where each phase builds on top of the previous
 - Code review completed (if applicable)
 - Pre-commit checks pass (`lint && test && build`)
 
+### Phase Completion Documentation
+
+**REQUIRED**: After completing each phase, create a phase summary document in `web/docs/`:
+
+```markdown
+web/docs/PHASE_{N}_SUMMARY.md
+```
+
+The summary should include:
+- **Completed Features**: List all implemented features with brief descriptions
+- **File Structure**: Show new files and directories created
+- **Key Implementation Details**: Highlight important patterns or decisions
+- **Database Changes**: Document schema changes (if any)
+- **Testing Status**: Checklist of what was tested
+- **Known Limitations**: Document any incomplete features or known issues
+- **Next Steps**: Reference the next phase
+
+See `web/docs/PHASE_2_SUMMARY.md` for a complete example.
+
+This documentation helps:
+- Track progress across phases
+- Onboard new developers
+- Remember implementation decisions
+- Plan future work
+
 ## Architecture
 
 ### Slot-Based Scheduling System
@@ -222,6 +247,44 @@ Neon Auth is configured via two files:
 - Client Components: `const session = authClient.useSession()`
 - API Routes: `const { data: session } = await auth.getSession()`
 
+### User Approval Requirement
+
+**CRITICAL**: All data access (reads or writes) requires user approval. Use the `requireApprovedUser()` utility to enforce this:
+
+```typescript
+import { requireApprovedUser } from '@/lib/auth/require-approval';
+
+// Server Component
+export default async function ChoresPage() {
+  const session = await requireApprovedUser(); // Ensures user is authenticated AND approved
+  const chores = await db.chore.findMany();
+  return <ChoreList chores={chores} />;
+}
+
+// API Route
+export async function GET() {
+  const session = await requireApprovedUser();
+  const chores = await db.chore.findMany();
+  return Response.json(chores);
+}
+
+// Server Action
+'use server'
+export async function createChore(formData: FormData) {
+  const session = await requireApprovedUser();
+  const chore = await db.chore.create({ ... });
+  return chore;
+}
+```
+
+**Why this matters**: New users sign up with `approved: false` and cannot access any data until an administrator approves them. The `requireApprovedUser()` utility:
+1. Checks authentication (redirects to `/sign-in` if not logged in)
+2. Syncs user data from Neon Auth
+3. Checks approval status (redirects to `/pending-approval` if not approved)
+4. Returns the session if both checks pass
+
+**Alternative**: Use `checkApprovedUser()` for conditional rendering without redirects.
+
 ## API Conventions
 
 All API routes follow RESTful patterns and require authentication:
@@ -235,13 +298,23 @@ Special endpoints:
 - `POST /api/schedules/suggest` - Get suggested task for a slot type (body: `{ slotType, userId? }`)
 - `POST /api/completions` - Record task completion
 
-**Authentication pattern for API routes**:
+**Authentication and approval pattern for API routes**:
+```typescript
+import { requireApprovedUser } from '@/lib/auth/require-approval';
+
+export async function GET() {
+  const session = await requireApprovedUser(); // Checks auth AND approval
+  // ... handle authenticated and approved request
+}
+```
+
+Or manually (not recommended - use requireApprovedUser instead):
 ```typescript
 const { data: session } = await auth.getSession();
 if (!session?.user) {
   return Response.json({ error: 'Unauthorized' }, { status: 401 });
 }
-// ... handle authenticated request
+// Still need to check approval!
 ```
 
 ## Idiomatic Usage Patterns

@@ -1,11 +1,11 @@
-import { auth } from '@/lib/auth/server';
+import { requireApprovedUser } from '@/lib/auth/require-approval';
 
 /**
  * Dashboard Page
  * Main dashboard for authenticated and approved users
  */
 export default async function DashboardPage() {
-  const { data: session } = await auth.getSession();
+  const session = await requireApprovedUser();
 
   return (
     <div className="min-h-screen bg-[var(--color-cream)] p-8">

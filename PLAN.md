@@ -216,7 +216,7 @@ chore-tracker/
 7. Create base layout and theme system (CSS variables in `globals.css`)
 8. Set up custom fonts (Outfit, Merriweather)
 
-### Phase 2: Authentication & User Management (v0.2.0)
+### Phase 2: Authentication & User Management (v0.2.0) ✅ COMPLETED
 1. Create Neon Auth server instance (`lib/auth/server.ts`)
 2. Create Neon Auth client instance (`lib/auth/client.ts`)
 3. Set up auth API handlers (`app/api/auth/[...path]/route.ts`)
@@ -224,8 +224,11 @@ chore-tracker/
 5. Define TypeScript types for sessions (`types/auth.ts`)
 6. Create sign-in/sign-up pages with Neon Auth UI components
 7. Implement user sync: On first login, create User record from Neon Auth
-8. Write tests for auth utilities and user sync logic
-9. Verify auth flow end-to-end (signup → login → session)
+8. Implement approval system: Users created with `approved: false`, require admin approval
+9. Create `requireApprovedUser()` utility for data access control
+10. Write tests for auth utilities and user sync logic
+11. Verify auth flow end-to-end (signup → approval → login → session)
+12. Write phase summary document: `web/docs/PHASE_2_SUMMARY.md`
 
 ### Phase 3: Basic CRUD APIs (v0.3.0)
 1. Implement Prisma client setup (`lib/db.ts`)
@@ -235,12 +238,15 @@ chore-tracker/
    - `GET /api/chores/[id]` - Get single chore
    - `PUT /api/chores/[id]` - Update chore
    - `DELETE /api/chores/[id]` - Delete chore
+   - **IMPORTANT**: All routes must use `requireApprovedUser()` for approval checking
 3. Create Completions API routes:
    - `POST /api/completions` - Record completion
    - `GET /api/completions` - List completions (with filters)
+   - **IMPORTANT**: All routes must use `requireApprovedUser()` for approval checking
 4. Write API route tests for all endpoints
 5. Create seed script (`prisma/seed.ts`) with sample data
 6. Test CRUD operations with Prisma Studio
+7. Write phase summary document: `web/docs/PHASE_3_SUMMARY.md`
 
 ### Phase 4: Suggestion Algorithm & Schedules (v0.4.0)
 1. Build task suggestion algorithm (`lib/suggestions.ts`):
