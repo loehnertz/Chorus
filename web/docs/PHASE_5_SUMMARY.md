@@ -5,6 +5,8 @@
 - Added dashboard navigation shell (desktop sidebar + mobile bottom bar) with active route styling and sign out
 - Implemented toast notifications (Sonner) and wired Toaster into the app root layout
 - Built new UI primitives: FrequencyBadge, Select, Textarea, Skeleton, EmptyState, Avatar, DropdownMenu
+- Added system-synced dark mode using `prefers-color-scheme` via semantic CSS tokens (`--background`, `--surface`, `--foreground`, `--border`)
+- Increased spacing and layout rhythm (responsive gutters, card/dialog padding, empty-state spacing) while keeping mobile compact
 - Implemented chores management UI:
   - `/chores` page with frequency filter chips, chore grid, empty states
   - Dialog-based create/edit form with inline validation and assignee multi-select
