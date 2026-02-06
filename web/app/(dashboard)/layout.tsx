@@ -18,7 +18,7 @@ export default async function DashboardLayout({
 
   // User is authenticated and approved - render dashboard
   return (
-    <div className="min-h-screen bg-[var(--color-warm-white)]">
+    <div className="min-h-screen bg-[var(--background)]">
       <Sidebar user={{ id: session.user.id, name: userName }} />
       <main className="md:ml-64 pb-20 md:pb-0">
         <div className="max-w-5xl mx-auto px-4 md:px-8 py-6 md:py-10">{children}</div>

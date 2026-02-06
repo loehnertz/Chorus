@@ -48,16 +48,16 @@ export function DashboardView({ stats, todaysTasks, recentActivity }: DashboardV
         </CardHeader>
         <CardContent>
           {recentActivity.length === 0 ? (
-            <p className="text-sm text-[var(--color-charcoal)]/50">No completions yet.</p>
+            <p className="text-sm text-[var(--foreground)]/50">No completions yet.</p>
           ) : (
             <div className="space-y-3">
               {recentActivity.map((item) => (
                 <div key={item.id} className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-[var(--font-display)] text-[var(--color-charcoal)]">
+                    <p className="truncate text-sm font-[var(--font-display)] text-[var(--foreground)]">
                       {item.title}
                     </p>
-                    <p className="mt-0.5 text-xs text-[var(--color-charcoal)]/50">
+                    <p className="mt-0.5 text-xs text-[var(--foreground)]/50">
                       {item.userName} · {item.completedAtLabel}
                     </p>
                   </div>

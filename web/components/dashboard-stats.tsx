@@ -24,11 +24,11 @@ function StatCard({
   subTone?: 'neutral' | 'positive'
 }) {
   return (
-    <div className="bg-white rounded-[var(--radius-md)] p-4 shadow-[var(--shadow-soft)] border border-[var(--color-cream)]">
-      <p className="text-xs uppercase tracking-wide font-[var(--font-display)] text-[var(--color-charcoal)]/50">
+    <div className="bg-[var(--surface)] rounded-[var(--radius-md)] p-4 shadow-[var(--shadow-soft)] border border-[var(--border)]">
+      <p className="text-xs uppercase tracking-wide font-[var(--font-display)] text-[var(--foreground)]/50">
         {label}
       </p>
-      <p className="mt-1 text-3xl font-[var(--font-display)] font-bold text-[var(--color-charcoal)]">
+      <p className="mt-1 text-3xl font-[var(--font-display)] font-bold text-[var(--foreground)]">
         {value}
       </p>
       {sub ? (
@@ -37,7 +37,7 @@ function StatCard({
             'mt-1 text-xs',
             subTone === 'positive'
               ? 'text-[var(--color-sage)]'
-              : 'text-[var(--color-charcoal)]/50'
+              : 'text-[var(--foreground)]/50'
           )}
         >
           {sub}

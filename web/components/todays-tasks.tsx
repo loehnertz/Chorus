@@ -71,7 +71,7 @@ export function TodaysTasks({ tasks, className }: TodaysTasksProps) {
   }
 
   return (
-    <div className={cn('divide-y divide-[var(--color-cream)]', className)}>
+    <div className={cn('divide-y divide-[var(--border)]', className)}>
       {tasks.map((task) => {
         const checked = completedIds.has(task.scheduleId)
         const disabled = checked || savingId === task.scheduleId
@@ -83,8 +83,8 @@ export function TodaysTasks({ tasks, className }: TodaysTasksProps) {
                 className={cn(
                   'truncate text-sm font-[var(--font-display)] font-medium',
                   checked
-                    ? 'text-[var(--color-charcoal)]/50 line-through'
-                    : 'text-[var(--color-charcoal)]'
+                    ? 'text-[var(--foreground)]/50 line-through'
+                    : 'text-[var(--foreground)]'
                 )}
               >
                 {task.title}

@@ -48,9 +48,9 @@ export function ChoreCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
       className={cn(
-        'bg-white rounded-[var(--radius-lg)] p-5 shadow-[var(--shadow-soft)]',
+        'bg-[var(--surface)] rounded-[var(--radius-lg)] p-5 shadow-[var(--shadow-soft)]',
         'hover:shadow-[var(--shadow-lifted)] transition-shadow duration-200',
-        'border border-transparent hover:border-[var(--color-cream)]',
+        'border border-transparent hover:border-[var(--border)]',
         onClick && 'cursor-pointer',
         className
       )}
@@ -75,7 +75,7 @@ export function ChoreCard({
                 type="button"
                 className={cn(
                   'inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)]',
-                  'text-[var(--color-charcoal)]/60 hover:bg-[var(--color-cream)] hover:text-[var(--color-charcoal)]',
+                  'text-[var(--foreground)]/60 hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-terracotta)] focus-visible:ring-offset-2'
                 )}
                 aria-label="More"
@@ -103,17 +103,17 @@ export function ChoreCard({
         ) : null}
       </div>
 
-      <h3 className="text-lg font-[var(--font-display)] font-semibold text-[var(--color-charcoal)]">
+      <h3 className="text-lg font-[var(--font-display)] font-semibold text-[var(--foreground)]">
         {title}
       </h3>
       <p className={cn(
-        'mt-1 text-sm font-[var(--font-body)] text-[var(--color-charcoal)]/70',
+        'mt-1 text-sm font-[var(--font-body)] text-[var(--foreground)]/70',
         'line-clamp-2'
       )}>
         {description?.trim() ? description : 'No description'}
       </p>
 
-      <div className="mt-4 flex items-center justify-between border-t border-[var(--color-cream)] pt-3 text-xs text-[var(--color-charcoal)]/60">
+      <div className="mt-4 flex items-center justify-between border-t border-[var(--border)] pt-3 text-xs text-[var(--foreground)]/60">
         <div className="flex items-center gap-2">
           <span className="shrink-0">Assigned:</span>
           {assignees.length ? (
@@ -123,7 +123,7 @@ export function ChoreCard({
               ))}
             </div>
           ) : (
-            <span className="text-[var(--color-charcoal)]/50">Unassigned</span>
+            <span className="text-[var(--foreground)]/50">Unassigned</span>
           )}
         </div>
 

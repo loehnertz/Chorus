@@ -27,7 +27,7 @@ export function Toaster() {
       duration={4000}
       toastOptions={{
         className:
-          'bg-white rounded-[var(--radius-md)] shadow-[var(--shadow-lifted)] border border-[var(--color-cream)] p-4 font-[var(--font-display)] text-sm',
+          'bg-[var(--surface)] text-[var(--foreground)] rounded-[var(--radius-md)] shadow-[var(--shadow-lifted)] border border-[var(--border)] p-4 font-[var(--font-display)] text-sm',
         classNames: {
           success: 'border-l-4 border-l-[var(--color-sage)]',
           error: 'border-l-4 border-l-red-500',

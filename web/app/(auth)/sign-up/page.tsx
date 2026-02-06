@@ -70,7 +70,7 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--color-cream)] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--background)] p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-center font-[var(--font-display)]">
@@ -89,7 +89,7 @@ export default function SignUpPage() {
             )}
 
             <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium text-[var(--color-charcoal)]">
+              <label htmlFor="name" className="text-sm font-medium text-[var(--foreground)]">
                 Name
               </label>
               <Input
@@ -105,7 +105,7 @@ export default function SignUpPage() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-[var(--color-charcoal)]">
+              <label htmlFor="email" className="text-sm font-medium text-[var(--foreground)]">
                 Email
               </label>
               <Input
@@ -121,7 +121,7 @@ export default function SignUpPage() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-[var(--color-charcoal)]">
+              <label htmlFor="password" className="text-sm font-medium text-[var(--foreground)]">
                 Password
               </label>
               <Input
@@ -135,7 +135,7 @@ export default function SignUpPage() {
                 autoComplete="new-password"
                 minLength={8}
               />
-              <p className="text-xs text-[var(--color-charcoal)]/60">
+              <p className="text-xs text-[var(--foreground)]/60">
                 Must be at least 8 characters
               </p>
             </div>
@@ -143,7 +143,7 @@ export default function SignUpPage() {
             <div className="space-y-2">
               <label
                 htmlFor="confirmPassword"
-                className="text-sm font-medium text-[var(--color-charcoal)]"
+                className="text-sm font-medium text-[var(--foreground)]"
               >
                 Confirm Password
               </label>
@@ -167,7 +167,7 @@ export default function SignUpPage() {
               {loading ? 'Creating account...' : 'Create Account'}
             </Button>
 
-            <p className="text-center text-sm text-[var(--color-charcoal)]/70">
+            <p className="text-center text-sm text-[var(--foreground)]/70">
               Already have an account?{' '}
               <Link
                 href="/sign-in"
@@ -177,7 +177,7 @@ export default function SignUpPage() {
               </Link>
             </p>
 
-            <p className="text-center text-xs text-[var(--color-charcoal)]/60 mt-2 p-3 bg-[var(--color-sage)]/10 rounded-[var(--radius-md)]">
+            <p className="text-center text-xs text-[var(--foreground)]/60 mt-2 p-3 bg-[var(--color-sage)]/10 rounded-[var(--radius-md)]">
               ⚠️ Note: New accounts require administrator approval before you can access the app
             </p>
           </form>

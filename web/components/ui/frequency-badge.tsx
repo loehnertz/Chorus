@@ -13,7 +13,7 @@ const frequencyStyles: Record<Frequency, string> = {
   WEEKLY:
     'bg-[var(--color-sage)]/15 text-[var(--color-sage)] border-[var(--color-sage)]/30',
   MONTHLY:
-    'bg-[var(--color-charcoal)]/10 text-[var(--color-charcoal)] border-[var(--color-charcoal)]/20',
+    'bg-[var(--color-charcoal)]/10 text-[var(--foreground)] border-[var(--foreground)]/20',
   YEARLY:
     'bg-[var(--color-cream)] text-[var(--color-charcoal)] border-[var(--color-charcoal)]/20',
 }

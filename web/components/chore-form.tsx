@@ -182,7 +182,7 @@ export function ChoreForm({ open, onOpenChange, users, initialValues, onSaved }:
           ) : null}
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium font-[var(--font-display)] text-[var(--color-charcoal)]">
+            <label className="text-sm font-medium font-[var(--font-display)] text-[var(--foreground)]">
               Title
             </label>
             <Input
@@ -196,7 +196,7 @@ export function ChoreForm({ open, onOpenChange, users, initialValues, onSaved }:
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium font-[var(--font-display)] text-[var(--color-charcoal)]">
+            <label className="text-sm font-medium font-[var(--font-display)] text-[var(--foreground)]">
               Description
             </label>
             <Textarea
@@ -211,7 +211,7 @@ export function ChoreForm({ open, onOpenChange, users, initialValues, onSaved }:
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium font-[var(--font-display)] text-[var(--color-charcoal)]">
+            <label className="text-sm font-medium font-[var(--font-display)] text-[var(--foreground)]">
               Frequency
             </label>
             <Select value={frequency} onValueChange={(v) => setFrequency(v as Frequency)}>
@@ -251,10 +251,10 @@ export function ChoreForm({ open, onOpenChange, users, initialValues, onSaved }:
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium font-[var(--font-display)] text-[var(--color-charcoal)]">
+            <label className="text-sm font-medium font-[var(--font-display)] text-[var(--foreground)]">
               Assignees
             </label>
-            <div className="rounded-[var(--radius-md)] border border-[var(--color-charcoal)]/10 p-3">
+            <div className="rounded-[var(--radius-md)] border border-[var(--border)] p-3">
               <div className="grid grid-cols-1 gap-2">
                 {users.length ? (
                   users.map((u) => {
@@ -264,7 +264,7 @@ export function ChoreForm({ open, onOpenChange, users, initialValues, onSaved }:
                         key={u.id}
                         className={cn(
                           'flex items-center gap-3 rounded-[var(--radius-md)] px-2 py-2',
-                          'hover:bg-[var(--color-cream)]/50 cursor-pointer'
+                          'hover:bg-[var(--surface-2)]/50 cursor-pointer'
                         )}
                       >
                         <Checkbox
@@ -274,14 +274,14 @@ export function ChoreForm({ open, onOpenChange, users, initialValues, onSaved }:
                           disabled={saving}
                         />
                         <Avatar name={u.name} userId={u.id} size="sm" />
-                        <span className="text-sm font-[var(--font-display)] text-[var(--color-charcoal)]">
+                        <span className="text-sm font-[var(--font-display)] text-[var(--foreground)]">
                           {u.name}
                         </span>
                       </label>
                     )
                   })
                 ) : (
-                  <div className="flex items-center gap-2 text-sm text-[var(--color-charcoal)]/50">
+                  <div className="flex items-center gap-2 text-sm text-[var(--foreground)]/50">
                     <Plus className="h-4 w-4" aria-hidden="true" />
                     Add another user to assign chores.
                   </div>

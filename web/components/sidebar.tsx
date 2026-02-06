@@ -27,7 +27,7 @@ export function Sidebar({ user, className }: SidebarProps) {
     <aside
       className={cn(
         'hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-64 md:flex-col',
-        'bg-white border-r border-[var(--color-cream)]',
+        'bg-[var(--surface)] border-r border-[var(--border)]',
         className
       )}
     >
@@ -54,8 +54,8 @@ export function Sidebar({ user, className }: SidebarProps) {
                   'flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5',
                   'text-sm font-[var(--font-display)] font-medium transition-colors duration-150',
                   active
-                    ? 'bg-[var(--color-cream)] text-[var(--color-charcoal)]'
-                    : 'text-[var(--color-charcoal)]/60 hover:bg-[var(--color-cream)]/50'
+                    ? 'bg-[var(--surface-2)] text-[var(--foreground)]'
+                    : 'text-[var(--foreground)]/60 hover:bg-[var(--surface-2)]/50'
                 )}
               >
                 <span
@@ -72,11 +72,11 @@ export function Sidebar({ user, className }: SidebarProps) {
           })}
         </nav>
 
-        <div className="mt-auto pt-4 border-t border-[var(--color-cream)]">
+        <div className="mt-auto pt-4 border-t border-[var(--border)]">
           <div className="flex items-center gap-3 px-3 py-2">
             <Avatar name={user.name} userId={user.id} size="sm" />
             <div className="min-w-0">
-              <p className="truncate text-sm font-[var(--font-display)] font-medium text-[var(--color-charcoal)]">
+              <p className="truncate text-sm font-[var(--font-display)] font-medium text-[var(--foreground)]">
                 {user.name}
               </p>
               <button
@@ -84,7 +84,7 @@ export function Sidebar({ user, className }: SidebarProps) {
                 onClick={handleSignOut}
                 className={cn(
                   'mt-0.5 inline-flex items-center gap-1 text-xs',
-                  'text-[var(--color-charcoal)]/50 hover:text-[var(--color-terracotta)]',
+                  'text-[var(--foreground)]/50 hover:text-[var(--color-terracotta)]',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-terracotta)] focus-visible:ring-offset-2 rounded'
                 )}
               >

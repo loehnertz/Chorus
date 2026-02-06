@@ -45,7 +45,7 @@ export function CompletionCheckbox({
         disabled && 'opacity-50 cursor-not-allowed',
         checked
           ? 'bg-[var(--color-sage)] border-[var(--color-sage)] text-white'
-          : 'bg-white border-[var(--color-charcoal)]/30 hover:border-[var(--color-sage)] hover:bg-[var(--color-sage)]/5',
+          : 'bg-[var(--surface)] border-[var(--border-strong)] hover:border-[var(--color-sage)] hover:bg-[var(--color-sage)]/5',
         className
       )}
       animate={checked ? { scale: [1, 1.2, 1] } : { scale: 1 }}

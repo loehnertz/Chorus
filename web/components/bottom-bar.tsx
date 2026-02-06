@@ -16,7 +16,7 @@ export function BottomBar({ className }: BottomBarProps) {
     <nav
       className={cn(
         'fixed bottom-0 left-0 right-0 z-40 h-16 md:hidden',
-        'bg-white border-t border-[var(--color-cream)]',
+        'bg-[var(--surface)] border-t border-[var(--border)]',
         'shadow-[0_-2px_8px_rgba(61,64,91,0.06)]',
         className
       )}
@@ -39,7 +39,7 @@ export function BottomBar({ className }: BottomBarProps) {
                   'h-5 w-5',
                   active
                     ? 'text-[var(--color-terracotta)]'
-                    : 'text-[var(--color-charcoal)]/40'
+                    : 'text-[var(--foreground)]/40'
                 )}
                 aria-hidden="true"
               />
@@ -48,7 +48,7 @@ export function BottomBar({ className }: BottomBarProps) {
                   'text-[10px] font-[var(--font-display)]',
                   active
                     ? 'text-[var(--color-terracotta)]'
-                    : 'text-[var(--color-charcoal)]/40'
+                    : 'text-[var(--foreground)]/40'
                 )}
               >
                 {item.label}

@@ -14,7 +14,7 @@ const DropdownMenuSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DropdownMenuPrimitive.Separator
     ref={ref}
-    className={cn('-mx-1 my-1 h-px bg-[var(--color-cream)]', className)}
+    className={cn('-mx-1 my-1 h-px bg-[var(--border)]', className)}
     {...props}
   />
 ))
@@ -29,7 +29,7 @@ const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        'z-50 min-w-40 overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-cream)] bg-white shadow-[var(--shadow-lifted)] p-1',
+        'z-50 min-w-40 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-lifted)] p-1',
         'data-[state=open]:animate-in data-[state=closed]:animate-out',
         'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
         className
@@ -52,12 +52,12 @@ const DropdownMenuItem = React.forwardRef<
     className={cn(
       'relative flex cursor-default select-none items-center gap-2 rounded-[var(--radius-sm)] px-2 py-2 text-sm',
       'outline-none transition-colors',
-      'focus:bg-[var(--color-cream)]',
+      'focus:bg-[var(--surface-2)]',
       'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       inset && 'pl-8',
       destructive
         ? 'text-red-600 focus:bg-red-50'
-        : 'text-[var(--color-charcoal)]',
+        : 'text-[var(--foreground)]',
       className
     )}
     {...props}

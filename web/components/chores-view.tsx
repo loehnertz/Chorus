@@ -77,10 +77,10 @@ export function ChoresView({ chores, users }: ChoresViewProps) {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-[var(--font-display)] font-bold text-[var(--color-charcoal)]">
+          <h1 className="text-2xl md:text-3xl font-[var(--font-display)] font-bold text-[var(--foreground)]">
             Chores
           </h1>
-          <p className="mt-1 text-sm text-[var(--color-charcoal)]/70">
+          <p className="mt-1 text-sm text-[var(--foreground)]/70">
             Manage the household chore pool.
           </p>
         </div>
@@ -98,7 +98,7 @@ export function ChoresView({ chores, users }: ChoresViewProps) {
             chipBase,
             filter === 'ALL'
               ? 'bg-[var(--color-terracotta)] text-white'
-              : 'bg-white text-[var(--color-charcoal)]/60 border border-[var(--color-charcoal)]/15 hover:border-[var(--color-charcoal)]/30'
+              : 'bg-[var(--surface)] text-[var(--foreground)]/60 border border-[var(--border-strong)] hover:border-[var(--foreground)]/30'
           )}
           onClick={() => setFilter('ALL')}
         >
@@ -112,7 +112,7 @@ export function ChoresView({ chores, users }: ChoresViewProps) {
               chipBase,
               filter === f
                 ? 'bg-[var(--color-terracotta)] text-white'
-                : 'bg-white text-[var(--color-charcoal)]/60 border border-[var(--color-charcoal)]/15 hover:border-[var(--color-charcoal)]/30'
+                : 'bg-[var(--surface)] text-[var(--foreground)]/60 border border-[var(--border-strong)] hover:border-[var(--foreground)]/30'
             )}
             onClick={() => setFilter(f)}
           >

@@ -16,7 +16,7 @@ describe('FrequencyBadge', () => {
     expect(screen.getByText('WEEKLY')).toHaveClass('text-[var(--color-sage)]')
 
     rerender(<FrequencyBadge frequency={'MONTHLY' as Frequency} />)
-    expect(screen.getByText('MONTHLY')).toHaveClass('text-[var(--color-charcoal)]')
+    expect(screen.getByText('MONTHLY')).toHaveClass('text-[var(--foreground)]')
 
     rerender(<FrequencyBadge frequency={'YEARLY' as Frequency} />)
     expect(screen.getByText('YEARLY')).toHaveClass('bg-[var(--color-cream)]')

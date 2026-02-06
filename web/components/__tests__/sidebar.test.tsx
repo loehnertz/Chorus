@@ -28,8 +28,8 @@ describe('Sidebar', () => {
     const choresLink = screen.getByRole('link', { name: 'Chores' })
     const dashboardLink = screen.getByRole('link', { name: 'Dashboard' })
 
-    expect(choresLink).toHaveClass('bg-[var(--color-cream)]')
-    expect(dashboardLink).not.toHaveClass('bg-[var(--color-cream)]')
+    expect(choresLink).toHaveClass('bg-[var(--surface-2)]')
+    expect(dashboardLink).not.toHaveClass('bg-[var(--surface-2)]')
   })
 
   it('signs out when clicking Sign Out', async () => {

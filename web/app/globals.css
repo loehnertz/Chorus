@@ -8,6 +8,11 @@
   --color-charcoal: #3D405B;
   --color-warm-white: #F8F7F4;
 
+  /* Dark-mode neutrals (system-synced) */
+  --color-night: #1E2030;
+  --color-night-surface: #2A2D43;
+  --color-night-surface-2: #343853;
+
   /* Typography */
   --font-display: 'Outfit', sans-serif;
   --font-body: 'Merriweather', serif;
@@ -24,9 +29,29 @@
   /* Semantic Colors */
   --background: var(--color-warm-white);
   --foreground: var(--color-charcoal);
+  --surface: #FFFFFF;
+  --surface-2: var(--color-cream);
+  --border: var(--color-cream);
+  --border-strong: rgba(61, 64, 91, 0.20);
   --primary: var(--color-terracotta);
   --secondary: var(--color-sage);
   --accent: var(--color-cream);
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: var(--color-night);
+    --foreground: var(--color-cream);
+    --surface: var(--color-night-surface);
+    --surface-2: var(--color-night-surface-2);
+    --border: rgba(244, 241, 222, 0.12);
+    --border-strong: rgba(244, 241, 222, 0.18);
+
+    --shadow-soft: 0 6px 18px rgba(0, 0, 0, 0.35);
+    --shadow-lifted: 0 10px 28px rgba(0, 0, 0, 0.45);
+  }
 }
 
 @theme inline {
