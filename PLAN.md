@@ -542,24 +542,28 @@ Touch targets: minimum 44x44px everywhere. Tighter spacing on mobile (`gap-3`, `
    - Toast enter: slide up from bottom + fade in
    - Dialog: backdrop fade + content zoom from 95%
 3. **Loading states**: Replace blank space with Skeleton components from Phase 5 on every data-fetching page
-4. **Error handling**: Error boundaries for component failures + Toast notifications for API errors
-5. **Responsive QA**:
+4. **Dark mode (system-synced)**:
+    - Support `prefers-color-scheme` and keep the aesthetic consistent in dark environments
+    - Implement via semantic CSS variables (e.g. `--background`, `--surface`, `--foreground`, `--border`) so components do not rely on `bg-white`
+    - Ensure focus rings, borders, and empty states remain accessible and readable
+5. **Error handling**: Error boundaries for component failures + Toast notifications for API errors
+6. **Responsive QA**:
    - Verify at 375px (mobile), 768px (tablet), 1280px (desktop)
    - All touch targets ≥ 44x44px
    - Tighter spacing mobile (`gap-3`, `p-4`), more generous desktop (`gap-4`, `p-6`)
    - Scale down headings on mobile (`text-2xl` → `text-xl`)
-6. Add completion history view
-7. Performance: code splitting, Server Components optimization
-8. Final testing pass (all tests passing, >80% coverage)
-9. Verification checklist:
+7. Add completion history view
+8. Performance: code splitting, Server Components optimization
+9. Final testing pass (all tests passing, >80% coverage)
+10. Verification checklist:
    - All components use `cn()` + accept `className` prop
    - No hardcoded hex values — CSS variables only
    - All interactive elements have visible focus states (terracotta ring)
    - Empty states show EmptyState component with relevant icon/message
    - Toasts confirm destructive actions and celebrate completions
    - `npm run lint && npm run test && npm run build` passes
-10. Deploy to Vercel production
-11. Write phase summary: `web/docs/PHASE_7_SUMMARY.md`
+11. Deploy to Vercel production
+12. Write phase summary: `web/docs/PHASE_7_SUMMARY.md`
 
 ## Key Features Implementation Details
 
