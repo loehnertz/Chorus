@@ -28,7 +28,7 @@ export function ScheduleCalendar({ schedules, onComplete, onDelete }: ScheduleCa
 
   if (dayKeys.length === 0) {
     return (
-      <Card>
+      <Card className="text-center">
         <CardHeader>
           <CardTitle className="text-lg">No scheduled slots yet</CardTitle>
         </CardHeader>
@@ -40,17 +40,17 @@ export function ScheduleCalendar({ schedules, onComplete, onDelete }: ScheduleCa
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {dayKeys.map((dayKey) => (
-        <section key={dayKey} className="space-y-3">
-          <h3 className="text-lg font-semibold text-[var(--color-charcoal)]">
+        <section key={dayKey} className="space-y-4">
+          <h3 className="text-lg font-semibold tracking-tight text-[var(--color-charcoal)] sm:text-xl">
             {new Date(dayKey).toLocaleDateString('en-US', {
               weekday: 'long',
               month: 'short',
               day: 'numeric',
             })}
           </h3>
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-5 lg:grid-cols-2">
             {groupedSchedules[dayKey].map((schedule) => (
               <ChoreCard
                 key={schedule.id}

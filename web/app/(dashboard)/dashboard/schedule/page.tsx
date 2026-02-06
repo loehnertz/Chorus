@@ -5,7 +5,7 @@ import dynamicImport from 'next/dynamic'
 const ScheduleWorkspace = dynamicImport(
   () => import('@/components/schedule-workspace').then((module) => module.ScheduleWorkspace),
   {
-    loading: () => <p className="text-sm text-[var(--color-charcoal)]/70">Loading schedule workspace...</p>,
+    loading: () => <p className="py-8 text-center text-sm text-[var(--color-charcoal)]/70">Loading schedule workspace...</p>,
   }
 )
 

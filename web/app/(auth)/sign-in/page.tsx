@@ -48,25 +48,25 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--color-cream)] p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center font-[var(--font-display)]">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--color-cream)] px-4 py-8 sm:px-6 sm:py-12">
+      <Card className="w-full max-w-lg">
+        <CardHeader className="space-y-2">
+          <CardTitle className="text-center font-[var(--font-display)] text-3xl">
             Welcome back to Chorus
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-center text-base">
             Sign in to manage your household chores
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="space-y-1">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="p-3 rounded-[var(--radius-md)] bg-red-50 border border-red-200 text-red-800 text-sm">
+              <div className="rounded-[var(--radius-md)] border border-red-200 bg-red-50 p-3.5 text-sm text-red-800">
                 {error}
               </div>
             )}
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <label htmlFor="email" className="text-sm font-medium text-[var(--color-charcoal)]">
                 Email
               </label>
@@ -82,7 +82,7 @@ export default function SignInPage() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <label htmlFor="password" className="text-sm font-medium text-[var(--color-charcoal)]">
                 Password
               </label>
@@ -100,7 +100,7 @@ export default function SignInPage() {
 
             <Button
               type="submit"
-              className="w-full"
+              className="w-full justify-center"
               disabled={loading}
             >
               {loading ? 'Signing in...' : 'Sign In'}

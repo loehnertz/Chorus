@@ -70,25 +70,25 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--color-cream)] p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center font-[var(--font-display)]">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--color-cream)] px-4 py-8 sm:px-6 sm:py-12">
+      <Card className="w-full max-w-lg">
+        <CardHeader className="space-y-2">
+          <CardTitle className="text-center font-[var(--font-display)] text-3xl">
             Join Chorus
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-center text-base">
             Create an account - administrator approval required
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="p-3 rounded-[var(--radius-md)] bg-red-50 border border-red-200 text-red-800 text-sm">
+              <div className="rounded-[var(--radius-md)] border border-red-200 bg-red-50 p-3.5 text-sm text-red-800">
                 {error}
               </div>
             )}
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <label htmlFor="name" className="text-sm font-medium text-[var(--color-charcoal)]">
                 Name
               </label>
@@ -104,7 +104,7 @@ export default function SignUpPage() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <label htmlFor="email" className="text-sm font-medium text-[var(--color-charcoal)]">
                 Email
               </label>
@@ -120,7 +120,7 @@ export default function SignUpPage() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <label htmlFor="password" className="text-sm font-medium text-[var(--color-charcoal)]">
                 Password
               </label>
@@ -140,7 +140,7 @@ export default function SignUpPage() {
               </p>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <label
                 htmlFor="confirmPassword"
                 className="text-sm font-medium text-[var(--color-charcoal)]"
@@ -161,7 +161,7 @@ export default function SignUpPage() {
 
             <Button
               type="submit"
-              className="w-full"
+              className="w-full justify-center"
               disabled={loading}
             >
               {loading ? 'Creating account...' : 'Create Account'}
@@ -177,7 +177,7 @@ export default function SignUpPage() {
               </Link>
             </p>
 
-            <p className="text-center text-xs text-[var(--color-charcoal)]/60 mt-2 p-3 bg-[var(--color-sage)]/10 rounded-[var(--radius-md)]">
+            <p className="mt-2 rounded-[var(--radius-md)] bg-[var(--color-sage)]/10 p-3.5 text-center text-xs text-[var(--color-charcoal)]/65">
               ⚠️ Note: New accounts require administrator approval before you can access the app
             </p>
           </form>

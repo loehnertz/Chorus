@@ -17,18 +17,18 @@ export default function PendingApprovalPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--color-cream)] p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center font-[var(--font-display)]">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--color-cream)] px-4 py-8 sm:px-6 sm:py-12">
+      <Card className="w-full max-w-lg">
+        <CardHeader className="space-y-2">
+          <CardTitle className="text-center font-[var(--font-display)] text-3xl">
             Account Pending Approval
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-center text-base">
             Your account is waiting for administrator approval
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="p-4 rounded-[var(--radius-md)] bg-[var(--color-sage)]/10 border border-[var(--color-sage)]/20">
+        <CardContent className="space-y-5">
+          <div className="rounded-[var(--radius-md)] border border-[var(--color-sage)]/20 bg-[var(--color-sage)]/10 p-4.5">
             <p className="text-sm text-[var(--color-charcoal)]">
               Hi {session.data?.user?.name || 'there'}! Your account has been created, but you need
               approval from the household administrator before you can access Chorus.
@@ -44,11 +44,11 @@ export default function PendingApprovalPage() {
             </ol>
           </div>
 
-          <div className="pt-4 border-t border-[var(--color-cream)]">
-            <p className="text-xs text-[var(--color-charcoal)]/60 mb-3 text-center">
+          <div className="border-t border-[var(--color-charcoal)]/10 pt-5">
+            <p className="mb-3 text-center text-xs text-[var(--color-charcoal)]/60">
               If you have any questions, contact your household administrator
             </p>
-            <Button variant="outline" onClick={handleSignOut} className="w-full">
+            <Button variant="tertiary" onClick={handleSignOut} className="w-full justify-center">
               Sign Out
             </Button>
           </div>

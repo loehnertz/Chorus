@@ -101,13 +101,13 @@ export function ChorePoolManager({ users }: ChorePoolManagerProps) {
 
   return (
     <motion.div
-      className="space-y-6"
+      className="space-y-7 sm:space-y-10"
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-3xl font-semibold text-[var(--color-charcoal)]">Chore Pool</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-[var(--color-charcoal)] sm:text-4xl">Chore Pool</h1>
         <Dialog open={formOpen} onOpenChange={(open) => {
           setFormOpen(open)
           if (!open) {
@@ -145,12 +145,12 @@ export function ChorePoolManager({ users }: ChorePoolManagerProps) {
         </Dialog>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
         {FREQUENCIES.map((frequency) => (
           <Button
             key={frequency}
             size="sm"
-            variant={selectedFrequency === frequency ? 'default' : 'outline'}
+            variant={selectedFrequency === frequency ? 'secondary' : 'tertiary'}
             onClick={() => setSelectedFrequency(frequency)}
           >
             {frequency}
@@ -163,11 +163,15 @@ export function ChorePoolManager({ users }: ChorePoolManagerProps) {
       ) : null}
 
       {isLoading ? (
-        <p className="text-sm text-[var(--color-charcoal)]/70">Loading chores...</p>
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="h-44 animate-pulse rounded-[var(--radius-lg)] bg-white" />
+          ))}
+        </div>
       ) : filteredChores.length === 0 ? (
         <p className="text-sm text-[var(--color-charcoal)]/70">No chores in this frequency yet.</p>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
           {filteredChores.map((chore) => (
             <ChoreCard
               key={chore.id}

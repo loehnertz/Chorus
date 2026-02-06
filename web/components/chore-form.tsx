@@ -102,12 +102,12 @@ export function ChoreForm({ users, initialValues, onSuccess, onCancel }: ChoreFo
   }
 
   return (
-    <form className="space-y-4" onSubmit={handleSubmit}>
+    <form className="space-y-5" onSubmit={handleSubmit}>
       {error ? (
-        <div className="rounded-[var(--radius-md)] border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</div>
+        <div className="rounded-[var(--radius-md)] border border-red-200 bg-red-50 p-3.5 text-sm text-red-800">{error}</div>
       ) : null}
 
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         <label className="text-sm font-medium text-[var(--color-charcoal)]" htmlFor="chore-title">
           Title
         </label>
@@ -119,20 +119,20 @@ export function ChoreForm({ users, initialValues, onSuccess, onCancel }: ChoreFo
         />
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         <label className="text-sm font-medium text-[var(--color-charcoal)]" htmlFor="chore-description">
           Description
         </label>
         <textarea
           id="chore-description"
-          className="min-h-24 w-full rounded-[var(--radius-md)] border-2 border-[var(--color-charcoal)]/20 bg-white px-4 py-2 text-sm"
+          className="min-h-28 w-full rounded-[var(--radius-md)] border border-[var(--border-soft)] bg-white px-4 py-3 text-sm leading-relaxed transition-all duration-200 focus-visible:outline-none focus-visible:border-[var(--color-terracotta)] focus-visible:shadow-[var(--shadow-focus)]"
           value={values.description}
           onChange={(event) => setValues((current) => ({ ...current, description: event.target.value }))}
           placeholder="Wipe counters, sink, and cabinet handles"
         />
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         <label className="text-sm font-medium text-[var(--color-charcoal)]" htmlFor="chore-frequency">
           Frequency
         </label>
@@ -145,7 +145,7 @@ export function ChoreForm({ users, initialValues, onSuccess, onCancel }: ChoreFo
               frequency: event.target.value as Frequency,
             }))
           }
-          className="h-11 w-full rounded-[var(--radius-md)] border-2 border-[var(--color-charcoal)]/20 bg-white px-3 text-sm"
+          className="min-h-11 w-full rounded-[var(--radius-md)] border border-[var(--border-soft)] bg-white px-3.5 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:border-[var(--color-terracotta)] focus-visible:shadow-[var(--shadow-focus)] sm:min-h-12"
         >
           <option value={Frequency.DAILY}>DAILY</option>
           <option value={Frequency.WEEKLY}>WEEKLY</option>
@@ -154,13 +154,13 @@ export function ChoreForm({ users, initialValues, onSuccess, onCancel }: ChoreFo
         </select>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         <p className="text-sm font-medium text-[var(--color-charcoal)]">Assign to household members</p>
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-2.5 sm:grid-cols-2">
           {users.map((user) => (
             <label
               key={user.id}
-              className="flex min-h-11 cursor-pointer items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-charcoal)]/15 bg-white px-3 py-2 text-sm"
+              className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-[var(--radius-sm)] border border-[var(--border-soft)] bg-white px-3.5 py-2 text-sm transition-colors hover:bg-[var(--color-cream)]/45"
             >
               <input
                 type="checkbox"
@@ -173,13 +173,13 @@ export function ChoreForm({ users, initialValues, onSuccess, onCancel }: ChoreFo
         </div>
       </div>
 
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2.5 pt-1">
         {onCancel ? (
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="tertiary" onClick={onCancel} className="justify-center">
             Cancel
           </Button>
         ) : null}
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting} className="justify-center">
           {isSubmitting ? 'Saving...' : mode === 'create' ? 'Create Chore' : 'Save Changes'}
         </Button>
       </div>

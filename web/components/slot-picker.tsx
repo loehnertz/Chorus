@@ -143,15 +143,15 @@ export function SlotPicker({ availableChores, onScheduleCreated }: SlotPickerPro
   }
 
   return (
-    <div className="space-y-4 rounded-[var(--radius-lg)] bg-white p-5 shadow-[var(--shadow-soft)]">
-      <div className="flex flex-col gap-3 md:flex-row md:items-end">
-        <div className="flex-1 space-y-1">
+    <div className="space-y-5 rounded-[var(--radius-xl)] border border-[var(--border-soft)] bg-white p-5 shadow-[var(--shadow-soft)] sm:p-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end">
+        <div className="flex-1 space-y-2">
           <label htmlFor="slot-type" className="text-sm font-medium text-[var(--color-charcoal)]">
             Slot Type
           </label>
           <select
             id="slot-type"
-            className="h-11 w-full rounded-[var(--radius-md)] border-2 border-[var(--color-charcoal)]/20 bg-white px-3 text-sm"
+            className="min-h-11 w-full rounded-[var(--radius-md)] border border-[var(--border-soft)] bg-white px-3.5 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:border-[var(--color-terracotta)] focus-visible:shadow-[var(--shadow-focus)] sm:min-h-12"
             value={slotType}
             onChange={(event) => setSlotType(event.target.value as Frequency)}
           >
@@ -163,24 +163,25 @@ export function SlotPicker({ availableChores, onScheduleCreated }: SlotPickerPro
           </select>
         </div>
 
-        <div className="flex-1 space-y-1">
+        <div className="flex-1 space-y-2">
           <label htmlFor="scheduled-for" className="text-sm font-medium text-[var(--color-charcoal)]">
             Scheduled For
           </label>
           <input
             id="scheduled-for"
             type="datetime-local"
-            className="h-11 w-full rounded-[var(--radius-md)] border-2 border-[var(--color-charcoal)]/20 px-3 text-sm"
+            className="min-h-11 w-full rounded-[var(--radius-md)] border border-[var(--border-soft)] px-3.5 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:border-[var(--color-terracotta)] focus-visible:shadow-[var(--shadow-focus)] sm:min-h-12"
             value={scheduledFor}
             onChange={(event) => setScheduledFor(event.target.value)}
           />
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex min-h-11 items-center gap-2.5 rounded-[var(--radius-sm)] bg-[var(--color-cream)]/45 px-3">
         <input
           id="manual-mode"
           type="checkbox"
+          className="h-5 w-5 rounded border-[var(--border-soft)]"
           checked={manualMode}
           onChange={(event) => setManualMode(event.target.checked)}
         />
@@ -190,13 +191,13 @@ export function SlotPicker({ availableChores, onScheduleCreated }: SlotPickerPro
       </div>
 
       {manualMode ? (
-        <div className="space-y-1">
+        <div className="space-y-2">
           <label htmlFor="manual-chore" className="text-sm font-medium text-[var(--color-charcoal)]">
             Choose chore
           </label>
           <select
             id="manual-chore"
-            className="h-11 w-full rounded-[var(--radius-md)] border-2 border-[var(--color-charcoal)]/20 bg-white px-3 text-sm"
+            className="min-h-11 w-full rounded-[var(--radius-md)] border border-[var(--border-soft)] bg-white px-3.5 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:border-[var(--color-terracotta)] focus-visible:shadow-[var(--shadow-focus)] sm:min-h-12"
             value={manualChoreId}
             onChange={(event) => setManualChoreId(event.target.value)}
           >
@@ -209,9 +210,9 @@ export function SlotPicker({ availableChores, onScheduleCreated }: SlotPickerPro
           </select>
         </div>
       ) : (
-        <div className="rounded-[var(--radius-md)] border border-[var(--color-charcoal)]/10 bg-[var(--color-cream)]/50 p-3 text-sm">
+        <div className="rounded-[var(--radius-md)] border border-[var(--color-charcoal)]/10 bg-[var(--color-cream)]/55 p-4 text-sm">
           <p className="font-medium text-[var(--color-charcoal)]">Suggested chore</p>
-          <p className="text-[var(--color-charcoal)]/80">
+          <p className="mt-1 leading-relaxed text-[var(--color-charcoal)]/82">
             {loadingSuggestion
               ? 'Loading suggestion...'
               : suggestedChore
@@ -222,7 +223,7 @@ export function SlotPicker({ availableChores, onScheduleCreated }: SlotPickerPro
                 }`
                 : 'No suggestion available'}
           </p>
-          <Button type="button" variant="ghost" size="sm" className="mt-2" onClick={() => void loadSuggestion()}>
+          <Button type="button" variant="tertiary" size="sm" className="mt-3 justify-center" onClick={() => void loadSuggestion()}>
             Refresh Suggestion
           </Button>
         </div>
@@ -232,7 +233,7 @@ export function SlotPicker({ availableChores, onScheduleCreated }: SlotPickerPro
         <p className="text-sm text-red-700">{error}</p>
       ) : null}
 
-      <Button type="button" onClick={() => void createSlot()} disabled={isSubmitting}>
+      <Button type="button" onClick={() => void createSlot()} disabled={isSubmitting} className="w-full justify-center sm:w-auto">
         {isSubmitting ? 'Creating Slot...' : 'Create Slot'}
       </Button>
     </div>

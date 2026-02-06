@@ -73,7 +73,7 @@ export function ScheduleWorkspace({ initialSchedules, availableChores }: Schedul
   }
 
   return (
-    <motion.div className="space-y-6" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+    <motion.div className="space-y-8 sm:space-y-9" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <AnimatePresence>
         {celebration ? (
           <motion.p
@@ -90,16 +90,18 @@ export function ScheduleWorkspace({ initialSchedules, availableChores }: Schedul
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Create Slot</CardTitle>
+          <CardTitle className="text-2xl tracking-tight">Create Slot</CardTitle>
         </CardHeader>
         <CardContent>
           <SlotPicker availableChores={availableChores} onScheduleCreated={handleScheduleCreated} />
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold text-[var(--color-charcoal)]">Upcoming Schedule</h2>
-        <span className="text-sm text-[var(--color-charcoal)]/70">{upcomingCount} slots</span>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <h2 className="text-2xl font-semibold tracking-tight text-[var(--color-charcoal)] sm:text-3xl">Upcoming Schedule</h2>
+        <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-[var(--color-charcoal)]/75 shadow-[var(--shadow-soft)]">
+          {upcomingCount} slots
+        </span>
       </div>
 
       <ScheduleCalendar schedules={schedules} onComplete={handleCompletion} onDelete={handleDelete} />

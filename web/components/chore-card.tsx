@@ -46,8 +46,8 @@ export function ChoreCard({ chore, scheduleId, onComplete, onEdit, onDelete, cla
       transition={{ duration: 0.2 }}
     >
       <Card className={className}>
-        <CardHeader className="mb-3 flex flex-row items-start justify-between gap-3 pb-0">
-          <div className="space-y-1">
+        <CardHeader className="mb-4 flex flex-row items-start justify-between gap-4 pb-0">
+          <div className="space-y-2">
             <CardTitle className="text-xl">{chore.title}</CardTitle>
             <FrequencyBadge frequency={chore.frequency as Frequency} />
           </div>
@@ -60,27 +60,27 @@ export function ChoreCard({ chore, scheduleId, onComplete, onEdit, onDelete, cla
           ) : null}
         </CardHeader>
 
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-3">
           {chore.description ? (
-            <p className="text-sm text-[var(--color-charcoal)]/80">{chore.description}</p>
+            <p className="text-sm leading-relaxed text-[var(--color-charcoal)]/82">{chore.description}</p>
           ) : (
             <p className="text-sm text-[var(--color-charcoal)]/50">No description</p>
           )}
-          <p className="text-xs text-[var(--color-charcoal)]/70">
+          <p className="text-xs font-medium tracking-wide text-[var(--color-charcoal)]/70">
             Assigned to: {assignedNames || 'No one yet'}
           </p>
           <p className="text-xs text-[var(--color-charcoal)]/60">Completed {chore._count.completions} times</p>
         </CardContent>
 
         {(onEdit || onDelete) ? (
-          <CardFooter className="gap-2">
+          <CardFooter className="gap-2.5">
             {onEdit ? (
-              <Button size="sm" variant="outline" onClick={onEdit}>
+              <Button size="sm" variant="tertiary" onClick={onEdit}>
                 Edit
               </Button>
             ) : null}
             {onDelete ? (
-              <Button size="sm" variant="ghost" onClick={onDelete} className="text-red-700 hover:bg-red-50">
+              <Button size="sm" variant="tertiary" onClick={onDelete} className="border-red-200 text-red-700 hover:bg-red-50">
                 Delete
               </Button>
             ) : null}

@@ -5,7 +5,7 @@ import dynamicImport from 'next/dynamic'
 const ChorePoolManager = dynamicImport(
   () => import('@/components/chore-pool-manager').then((module) => module.ChorePoolManager),
   {
-    loading: () => <p className="text-sm text-[var(--color-charcoal)]/70">Loading chore manager...</p>,
+    loading: () => <p className="py-8 text-center text-sm text-[var(--color-charcoal)]/70">Loading chore manager...</p>,
   }
 )
 

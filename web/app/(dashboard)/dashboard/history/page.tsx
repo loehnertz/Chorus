@@ -36,8 +36,8 @@ export default async function CompletionHistoryPage() {
   })
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-3xl font-semibold text-[var(--color-charcoal)]">Completion History</h1>
+    <div className="space-y-6">
+      <h1 className="text-3xl font-semibold tracking-tight text-[var(--color-charcoal)] sm:text-4xl">Completion History</h1>
       {completions.length === 0 ? (
         <Card>
           <CardHeader>
@@ -48,10 +48,10 @@ export default async function CompletionHistoryPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {completions.map((completion) => (
-            <Card key={completion.id} className="p-4">
-              <CardContent className="space-y-2 p-0 text-sm">
+            <Card key={completion.id} className="p-5">
+              <CardContent className="space-y-2.5 p-0 text-sm">
                 <p className="font-medium text-[var(--color-charcoal)]">{completion.chore.title}</p>
                 <p className="text-[var(--color-charcoal)]/70">
                   Completed by {completion.user.name || 'Unknown'} on{' '}
@@ -67,7 +67,7 @@ export default async function CompletionHistoryPage() {
                   {completion.schedule?.suggested ? ' (suggested)' : ''}
                 </p>
                 {completion.notes ? (
-                  <p className="rounded-[var(--radius-sm)] bg-[var(--color-cream)] px-2 py-1 text-xs text-[var(--color-charcoal)]/75">
+                  <p className="rounded-[var(--radius-sm)] bg-[var(--color-cream)] px-2.5 py-1.5 text-xs text-[var(--color-charcoal)]/75">
                     {completion.notes}
                   </p>
                 ) : null}

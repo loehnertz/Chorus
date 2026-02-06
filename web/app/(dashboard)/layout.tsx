@@ -18,34 +18,34 @@ export default async function DashboardLayout({
 
   return (
     <ToastProvider>
-      <div className="min-h-screen bg-[var(--color-cream)]">
-        <header className="border-b border-[var(--color-charcoal)]/10 bg-white/90">
-          <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
-            <Link href="/dashboard" className="text-xl font-semibold text-[var(--color-charcoal)]">
+      <div className="min-h-screen bg-[var(--color-cream)]/75">
+        <header className="sticky top-0 z-40 border-b border-[var(--color-charcoal)]/10 bg-white/85 backdrop-blur">
+          <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-8">
+            <Link href="/dashboard" className="text-xl font-semibold tracking-tight text-[var(--color-charcoal)] sm:text-2xl">
               Chorus
             </Link>
-            <nav className="flex flex-wrap gap-2">
+            <nav className="flex flex-wrap items-center gap-2 rounded-[var(--radius-lg)] bg-[var(--surface-muted)] p-1.5">
               <Link
                 href="/dashboard"
-                className="min-h-11 rounded-[var(--radius-sm)] px-3 py-2 text-sm font-medium text-[var(--color-charcoal)] hover:bg-[var(--color-cream)]"
+                className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-sm)] px-4 py-2 text-sm font-semibold text-[var(--color-charcoal)] transition-colors hover:bg-white"
               >
                 Dashboard
               </Link>
               <Link
                 href="/dashboard/chores"
-                className="min-h-11 rounded-[var(--radius-sm)] px-3 py-2 text-sm font-medium text-[var(--color-charcoal)] hover:bg-[var(--color-cream)]"
+                className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-sm)] px-4 py-2 text-sm font-semibold text-[var(--color-charcoal)] transition-colors hover:bg-white"
               >
                 Chores
               </Link>
               <Link
                 href="/dashboard/schedule"
-                className="min-h-11 rounded-[var(--radius-sm)] px-3 py-2 text-sm font-medium text-[var(--color-charcoal)] hover:bg-[var(--color-cream)]"
+                className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-sm)] px-4 py-2 text-sm font-semibold text-[var(--color-charcoal)] transition-colors hover:bg-white"
               >
                 Schedule
               </Link>
               <Link
                 href="/dashboard/history"
-                className="min-h-11 rounded-[var(--radius-sm)] px-3 py-2 text-sm font-medium text-[var(--color-charcoal)] hover:bg-[var(--color-cream)]"
+                className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-sm)] px-4 py-2 text-sm font-semibold text-[var(--color-charcoal)] transition-colors hover:bg-white"
               >
                 History
               </Link>
@@ -53,7 +53,7 @@ export default async function DashboardLayout({
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
+        <main className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-8 sm:py-10">
           <PageTransition>{children}</PageTransition>
         </main>
       </div>

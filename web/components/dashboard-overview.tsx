@@ -73,7 +73,7 @@ export function DashboardOverview({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 sm:space-y-11">
       <AnimatePresence>
         {celebration ? (
           <motion.p
@@ -88,9 +88,9 @@ export function DashboardOverview({
         ) : null}
       </AnimatePresence>
 
-      <motion.section className="space-y-2" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-4xl font-semibold text-[var(--color-charcoal)]">Welcome back, {userName}</h1>
-        <p className="text-[var(--color-charcoal)]/70">{todayLabel}</p>
+      <motion.section className="space-y-2 sm:space-y-3" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+        <h1 className="text-4xl font-semibold tracking-tight text-[var(--color-charcoal)] sm:text-5xl">Welcome back, {userName}</h1>
+        <p className="text-base text-[var(--color-charcoal)]/72">{todayLabel}</p>
       </motion.section>
 
       <DashboardStats
@@ -100,10 +100,10 @@ export function DashboardOverview({
         completedTotal={statValues.completedTotal}
       />
 
-      <motion.section className="space-y-4" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-        <h2 className="text-2xl font-semibold text-[var(--color-charcoal)]">Today&apos;s Tasks</h2>
+      <motion.section className="space-y-4 sm:space-y-7" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+        <h2 className="pb-1 text-2xl font-semibold tracking-tight text-[var(--color-charcoal)] sm:pb-2 sm:text-3xl">Today&apos;s Tasks</h2>
         {todayTasks.length === 0 ? (
-          <Card className="p-4">
+          <Card className="p-5 sm:p-6">
             <CardHeader className="mb-0 p-0">
               <CardTitle className="text-lg">All clear</CardTitle>
             </CardHeader>
@@ -112,7 +112,7 @@ export function DashboardOverview({
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
             {todayTasks.map((task) => (
               <ChoreCard
                 key={task.id}
@@ -125,10 +125,10 @@ export function DashboardOverview({
         )}
       </motion.section>
 
-      <motion.section className="space-y-4" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <h2 className="text-2xl font-semibold text-[var(--color-charcoal)]">Your Assigned Chores</h2>
+      <motion.section className="space-y-4 sm:space-y-7" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+        <h2 className="pb-1 text-2xl font-semibold tracking-tight text-[var(--color-charcoal)] sm:pb-2 sm:text-3xl">Your Assigned Chores</h2>
         {assignedChores.length === 0 ? (
-          <Card className="p-4">
+          <Card className="p-5 sm:p-6">
             <CardHeader className="mb-0 p-0">
               <CardTitle className="text-lg">No assignments yet</CardTitle>
             </CardHeader>
@@ -137,7 +137,7 @@ export function DashboardOverview({
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
             {assignedChores.map((chore) => (
               <ChoreCard key={chore.id} chore={chore} onComplete={completeChore} />
             ))}

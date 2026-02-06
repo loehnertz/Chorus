@@ -17,7 +17,7 @@ export function FrequencyBadge({ frequency, className }: FrequencyBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex min-h-6 items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wide',
+        'inline-flex min-h-7 items-center justify-center rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.08em]',
         FREQUENCY_STYLES[frequency],
         className
       )}
