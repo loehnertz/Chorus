@@ -546,24 +546,28 @@ Touch targets: minimum 44x44px everywhere. Tighter spacing on mobile (`gap-3`, `
     - Support `prefers-color-scheme` and keep the aesthetic consistent in dark environments
     - Implement via semantic CSS variables (e.g. `--background`, `--surface`, `--foreground`, `--border`) so components do not rely on `bg-white`
     - Ensure focus rings, borders, and empty states remain accessible and readable
-5. **Error handling**: Error boundaries for component failures + Toast notifications for API errors
-6. **Responsive QA**:
+5. **Spacing & layout rhythm**:
+    - Add breathing room (padding/margins) on tablet/desktop while keeping mobile sleek
+    - Standardize card padding and page gutters per breakpoint (mobile tighter, desktop more generous)
+    - Verify empty states and icon/text spacing feel intentional
+6. **Error handling**: Error boundaries for component failures + Toast notifications for API errors
+7. **Responsive QA**:
    - Verify at 375px (mobile), 768px (tablet), 1280px (desktop)
    - All touch targets ≥ 44x44px
    - Tighter spacing mobile (`gap-3`, `p-4`), more generous desktop (`gap-4`, `p-6`)
    - Scale down headings on mobile (`text-2xl` → `text-xl`)
-7. Add completion history view
-8. Performance: code splitting, Server Components optimization
-9. Final testing pass (all tests passing, >80% coverage)
-10. Verification checklist:
+8. Add completion history view
+9. Performance: code splitting, Server Components optimization
+10. Final testing pass (all tests passing, >80% coverage)
+11. Verification checklist:
    - All components use `cn()` + accept `className` prop
    - No hardcoded hex values — CSS variables only
    - All interactive elements have visible focus states (terracotta ring)
    - Empty states show EmptyState component with relevant icon/message
    - Toasts confirm destructive actions and celebrate completions
    - `npm run lint && npm run test && npm run build` passes
-11. Deploy to Vercel production
-12. Write phase summary: `web/docs/PHASE_7_SUMMARY.md`
+12. Deploy to Vercel production
+13. Write phase summary: `web/docs/PHASE_7_SUMMARY.md`
 
 ## Key Features Implementation Details
 
