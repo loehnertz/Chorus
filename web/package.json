@@ -4,13 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "postinstall": "prisma generate",
+    "db:seed": "tsx prisma/seed.ts",
     "lint": "eslint",
     "test": "jest",
     "test:watch": "jest --watch",
     "type-check": "tsc --noEmit"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@neondatabase/auth": "^0.1.0-beta.21",
