@@ -209,5 +209,4 @@ NEXT_PUBLIC_APP_URL="http://localhost:3001"  # Development
 ## Documentation
 
 See:
-- [MANUAL_USER_CREATION.md](./MANUAL_USER_CREATION.md) - How to create and approve users
 - [SECURITY.md](./SECURITY.md) - Security configuration details
