@@ -31,7 +31,7 @@ export function Sidebar({ user, className }: SidebarProps) {
         className
       )}
     >
-      <div className="flex h-full flex-col p-4">
+      <div className="flex h-full flex-col p-5">
         <Link
           href="/dashboard"
           className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-terracotta)] focus-visible:ring-offset-2"
@@ -42,7 +42,7 @@ export function Sidebar({ user, className }: SidebarProps) {
           </span>
         </Link>
 
-        <nav className="mt-6 flex flex-col gap-1">
+        <nav className="mt-7 flex flex-col gap-1">
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
             const Icon = item.icon
@@ -72,7 +72,7 @@ export function Sidebar({ user, className }: SidebarProps) {
           })}
         </nav>
 
-        <div className="mt-auto pt-4 border-t border-[var(--border)]">
+        <div className="mt-auto pt-5 border-t border-[var(--border)]">
           <div className="flex items-center gap-3 px-3 py-2">
             <Avatar name={user.name} userId={user.id} size="sm" />
             <div className="min-w-0">

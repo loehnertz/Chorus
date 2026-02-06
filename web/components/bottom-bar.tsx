@@ -21,7 +21,7 @@ export function BottomBar({ className }: BottomBarProps) {
         className
       )}
     >
-      <div className="mx-auto flex h-full max-w-5xl items-center justify-around px-4">
+      <div className="mx-auto flex h-full max-w-6xl items-center justify-around px-4">
         {NAV_ITEMS.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
           const Icon = item.icon

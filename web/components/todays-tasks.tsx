@@ -76,7 +76,7 @@ export function TodaysTasks({ tasks, className }: TodaysTasksProps) {
         const checked = completedIds.has(task.scheduleId)
         const disabled = checked || savingId === task.scheduleId
         return (
-          <div key={task.scheduleId} className="flex items-center gap-4 py-4">
+          <div key={task.scheduleId} className="flex items-center gap-4 py-4 sm:py-5">
             <CompletionCheckbox checked={checked} disabled={disabled} onCheckedChange={() => markDone(task)} />
             <div className="min-w-0 flex-1">
               <p

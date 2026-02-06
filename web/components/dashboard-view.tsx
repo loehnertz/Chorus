@@ -22,7 +22,7 @@ export interface DashboardViewProps {
 
 export function DashboardView({ stats, todaysTasks, recentActivity }: DashboardViewProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-7 md:space-y-8">
       <DashboardStats stats={stats} />
 
       <Card>

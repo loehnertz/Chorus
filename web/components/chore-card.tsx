@@ -48,7 +48,7 @@ export function ChoreCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
       className={cn(
-        'bg-[var(--surface)] rounded-[var(--radius-lg)] p-5 shadow-[var(--shadow-soft)]',
+        'bg-[var(--surface)] rounded-[var(--radius-lg)] p-5 sm:p-6 shadow-[var(--shadow-soft)]',
         'hover:shadow-[var(--shadow-lifted)] transition-shadow duration-200',
         'border border-transparent hover:border-[var(--border)]',
         onClick && 'cursor-pointer',

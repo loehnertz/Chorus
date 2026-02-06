@@ -174,7 +174,7 @@ export function ChoreForm({ open, onOpenChange, users, initialValues, onSaved }:
           </DialogDescription>
         </DialogHeader>
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-5" onSubmit={handleSubmit}>
           {errors.form ? (
             <div className="rounded-[var(--radius-md)] border border-red-200 bg-red-50 p-3 text-sm text-red-800">
               {errors.form}
@@ -293,7 +293,7 @@ export function ChoreForm({ open, onOpenChange, users, initialValues, onSaved }:
             ) : null}
           </div>
 
-          <DialogFooter className="flex justify-between sm:justify-end gap-3 pt-2">
+          <DialogFooter className="flex justify-between sm:justify-end gap-3 pt-3">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
               Cancel
             </Button>

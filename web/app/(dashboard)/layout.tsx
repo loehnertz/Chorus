@@ -21,7 +21,9 @@ export default async function DashboardLayout({
     <div className="min-h-screen bg-[var(--background)]">
       <Sidebar user={{ id: session.user.id, name: userName }} />
       <main className="md:ml-64 pb-20 md:pb-0">
-        <div className="max-w-5xl mx-auto px-4 md:px-8 py-6 md:py-10">{children}</div>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-10 py-7 sm:py-8 md:py-12">
+          {children}
+        </div>
       </main>
       <BottomBar />
     </div>

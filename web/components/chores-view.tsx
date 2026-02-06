@@ -74,8 +74,8 @@ export function ChoresView({ chores, users }: ChoresViewProps) {
     'px-3 py-1.5 rounded-full text-sm font-[var(--font-display)] font-medium cursor-pointer transition-colors'
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
+    <div className="space-y-7 md:space-y-8">
+      <div className="flex items-start justify-between gap-5">
         <div>
           <h1 className="text-2xl md:text-3xl font-[var(--font-display)] font-bold text-[var(--foreground)]">
             Chores
@@ -136,7 +136,7 @@ export function ChoresView({ chores, users }: ChoresViewProps) {
           subtitle="Try a different frequency filter"
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
           {filtered.map((c, idx) => (
             <ChoreCard
               key={c.id}

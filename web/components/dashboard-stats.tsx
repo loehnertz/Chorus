@@ -24,7 +24,7 @@ function StatCard({
   subTone?: 'neutral' | 'positive'
 }) {
   return (
-    <div className="bg-[var(--surface)] rounded-[var(--radius-md)] p-4 shadow-[var(--shadow-soft)] border border-[var(--border)]">
+    <div className="bg-[var(--surface)] rounded-[var(--radius-md)] p-4 sm:p-5 shadow-[var(--shadow-soft)] border border-[var(--border)]">
       <p className="text-xs uppercase tracking-wide font-[var(--font-display)] text-[var(--foreground)]/50">
         {label}
       </p>
@@ -49,7 +49,7 @@ function StatCard({
 
 export function DashboardStats({ stats, className }: DashboardStatsProps) {
   return (
-    <div className={cn('grid grid-cols-2 md:grid-cols-4 gap-4', className)}>
+    <div className={cn('grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5', className)}>
       <StatCard
         label="Completed"
         value={stats.completedTotal}
