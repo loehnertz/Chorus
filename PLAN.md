@@ -23,9 +23,9 @@ A refined, slightly retro-futuristic aesthetic that elevates the mundane task of
 
 ### Tech Stack
 - **Framework**: Next.js 14+ (App Router)
-- **Database**: PostgreSQL (Neon-compatible)
+- **Database**: PostgreSQL (Neon)
 - **ORM**: Prisma
-- **Authentication**: NextAuth.js v5 (Auth.js)
+- **Authentication**: Neon Auth (built on Better Auth)
 - **Styling**: TailwindCSS + custom CSS variables
 - **Animation**: Framer Motion
 - **Deployment**: Vercel-ready
@@ -33,15 +33,12 @@ A refined, slightly retro-futuristic aesthetic that elevates the mundane task of
 ### Database Schema
 
 ```prisma
-// User model
+// User model (extends Neon Auth user)
+// Note: Auth data (email, password, sessions) lives in neon_auth schema
 model User {
-  id            String    @id @default(cuid())
+  id            String    @id // Maps to Neon Auth user ID
   name          String?
-  email         String    @unique
-  emailVerified DateTime?
   image         String?
-  accounts      Account[]
-  sessions      Session[]
 
   householdId   String?
   household     Household? @relation(fields: [householdId], references: [id])
@@ -135,35 +132,9 @@ enum Frequency {
   MONTHLY
   YEARLY
 }
-
-// NextAuth models
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
 ```
+
+**Note**: Authentication tables (users, sessions, accounts, verification tokens) are managed by Neon Auth in the `neon_auth` schema. Our app schema only includes the User model extension for household/chore relationships.
 
 ## Project Structure
 
@@ -187,9 +158,6 @@ chore-tracker/
 │   │   └── household/
 │   │       └── page.tsx            # Household settings
 │   ├── api/
-│   │   ├── auth/
-│   │   │   └── [...nextauth]/
-│   │   │       └── route.ts
 │   │   ├── chores/
 │   │   │   ├── route.ts            # CRUD operations
 │   │   │   └── [id]/
@@ -219,7 +187,7 @@ chore-tracker/
 │   ├── slot-picker.tsx             # Pick task from pool UI
 │   └── user-avatar.tsx
 ├── lib/
-│   ├── auth.ts                     # NextAuth configuration
+│   ├── auth.ts                     # Neon Auth client & utilities
 │   ├── db.ts                       # Prisma client
 │   ├── suggestions.ts              # Task suggestion algorithm
 │   └── utils.ts                    # Utility functions
@@ -241,20 +209,20 @@ chore-tracker/
 ## Implementation Phases
 
 ### Phase 1: Project Setup & Foundation
-1. Copy this plan to `/Users/loehnertz/Projects/Personal/chore-tracker-plan.md`
-2. Initialize Next.js project with TypeScript
-3. Install dependencies (Prisma, NextAuth, Framer Motion, TailwindCSS)
+1. Initialize Next.js project with TypeScript
+2. Install dependencies (Prisma, Better Auth SDK, Framer Motion, TailwindCSS)
+3. Set up Neon database and enable Neon Auth
 4. Set up Prisma with schema
-5. Configure NextAuth with credentials provider (or Google OAuth)
+5. Initialize Neon Auth client and configure providers
 6. Create base layout and theme system (CSS variables)
 7. Set up custom fonts (Outfit, Merriweather)
 
 ### Phase 2: Authentication & User Management
-1. Implement NextAuth configuration
-2. Create login/signup pages with the aesthetic
-3. Build household creation/joining flow
-4. Add protected route middleware
-5. Create user context/session management
+1. Configure Neon Auth with Better Auth SDK
+2. Create login/signup pages with the aesthetic (using Neon Auth UI components)
+3. Set up session management and protected routes
+4. Build household creation/joining flow
+5. Create user profile extension (link Neon Auth user to app User model)
 
 ### Phase 3: Core Data Layer & API
 1. Implement Prisma client setup
@@ -361,13 +329,13 @@ function suggestTask(
 # Database
 DATABASE_URL="postgresql://..."
 
-# NextAuth
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="generated-secret"
+# Neon Auth
+NEON_AUTH_PROJECT_ID="your-project-id"
+NEON_AUTH_API_KEY="your-api-key"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
-# OAuth (optional)
-GOOGLE_CLIENT_ID=""
-GOOGLE_CLIENT_SECRET=""
+# OAuth (configured in Neon Auth dashboard)
+# GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are set in Neon console
 ```
 
 ## Verification & Testing
@@ -434,12 +402,13 @@ npx prisma studio
 
 ## Deployment Preparation
 
-1. Set up Neon PostgreSQL database
-2. Configure environment variables in Vercel
-3. Run migrations: `npx prisma migrate deploy`
-4. Deploy to Vercel
-5. Test production authentication flow
-6. Verify database connections
+1. Set up Neon PostgreSQL database with Neon Auth enabled
+2. Configure OAuth providers in Neon Auth dashboard
+3. Configure environment variables in Vercel (Neon Auth credentials)
+4. Run migrations: `npx prisma migrate deploy`
+5. Deploy to Vercel
+6. Test production authentication flow (Neon Auth handles auth state branching)
+7. Verify database connections
 
 ## Future Enhancements (Out of Scope)
 - Push notifications for task reminders
