@@ -21,10 +21,12 @@ Phase 2 has been successfully implemented with all required features plus enhanc
    - OAuth flows support (configured in Neon dashboard)
    - All standard Neon Auth endpoints exposed
 
-4. **Middleware Route Protection** (`middleware.ts`)
+4. **Middleware Route Protection** (`proxy.ts`)
    - Uses `neonAuthMiddleware()` for authentication
+   - Custom wrapper to allow public routes: `/sign-in`, `/sign-up`, `/pending-approval`
    - Redirects unauthenticated users to `/sign-in`
    - Runs on edge runtime for optimal performance
+   - **Note**: Renamed from `middleware.ts` to `proxy.ts` per Next.js 16 deprecation
 
 5. **TypeScript Types** (`types/auth.ts`)
    - `NeonAuthUser` - User object from Neon Auth
@@ -61,6 +63,15 @@ npx tsx scripts/approve-user.ts
 # Approve a specific user
 npx tsx scripts/approve-user.ts <user-id>
 ```
+
+**Manual Sync Script** (`scripts/manual-sync-user.ts`):
+```bash
+# Manually sync user from neon_auth schema to app database
+npx tsx scripts/manual-sync-user.ts <email>
+```
+- Queries `neon_auth.user` table (singular) and creates User record
+- Auto-approves the synced user (`approved: true`)
+- Useful for troubleshooting sync issues
 
 **Approval Utilities** (`lib/auth/check-approval.ts`):
 - `isUserApproved()` - Check if user is approved
@@ -119,7 +130,8 @@ app/
 │   └── sign-up/page.tsx          # Registration page (approval required)
 ├── (dashboard)/
 │   ├── layout.tsx                # Approval checking + user sync
-│   └── page.tsx                  # Main dashboard (placeholder)
+│   └── dashboard/
+│       └── page.tsx              # Main dashboard at /dashboard (placeholder)
 ├── pending-approval/page.tsx     # Waiting for approval
 └── api/auth/[...path]/route.ts   # Neon Auth API handlers
 
@@ -131,7 +143,9 @@ lib/auth/
 
 scripts/
 ├── approve-user.ts               # User approval CLI tool
-└── create-user.ts                # User creation helper
+├── create-user.ts                # User creation helper
+├── manual-sync-user.ts           # Manual user sync from neon_auth to app DB
+└── check-schemas.ts              # Database schema inspection tool
 
 docs/
 ├── MANUAL_USER_CREATION.md       # User management guide
@@ -141,7 +155,10 @@ docs/
 types/
 └── auth.ts                       # Auth TypeScript types
 
-middleware.ts                     # Route protection
+lib/
+└── db.ts                         # Prisma client with pg adapter (Prisma 7)
+
+proxy.ts                          # Route protection middleware (Next.js 16+)
 ```
 
 ### Environment Variables Required
@@ -181,10 +198,13 @@ NEXT_PUBLIC_APP_URL="http://localhost:3001"  # Development
 
 ### Notes
 
+- **Database Connection**: Using `@prisma/adapter-pg` with standard `pg` library instead of `@neondatabase/serverless` for better compatibility in Node.js environments (Prisma 7 requirement)
+- **Neon Auth Schema**: Neon Auth stores data in `neon_auth` schema; table names are **singular** (`neon_auth.user`, not `neon_auth.users`)
 - **Middleware Limitation**: Approval checking happens in dashboard layout (not middleware) because middleware runs on edge runtime which doesn't support Prisma database queries
 - **User Sync**: Happens automatically on every dashboard access via layout.tsx
 - **Session Management**: Handled entirely by Neon Auth (no custom session logic needed)
 - **Security**: Two-layer approach ensures even if signup is somehow exploited, users still can't access data without approval
+- **Route Structure**: Dashboard at `/dashboard` using Next.js route group: `app/(dashboard)/dashboard/page.tsx`
 
 ## Documentation
 

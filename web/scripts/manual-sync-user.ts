@@ -13,13 +13,17 @@
  * 3. Set approved=true (since you're manually adding them)
  */
 
+// CRITICAL: Load environment variables BEFORE any imports
+import { config } from 'dotenv';
+config({ path: '.env.development.local' });
+
 import { db } from '../lib/db';
 
 async function manualSyncUser(email: string) {
   try {
     console.log(`\nLooking for Neon Auth user with email: ${email}...`);
 
-    // Query the neon_auth.users table directly
+    // Query the neon_auth.user table directly
     const neonAuthUser = await db.$queryRaw<Array<{
       id: string;
       email: string;
@@ -27,7 +31,7 @@ async function manualSyncUser(email: string) {
       image: string | null;
     }>>`
       SELECT id, email, name, image
-      FROM neon_auth.users
+      FROM neon_auth.user
       WHERE email = ${email}
     `;
 
@@ -51,7 +55,7 @@ async function manualSyncUser(email: string) {
 
       if (!existingUser.approved) {
         console.log(`\n   Updating to approved=true...`);
-        const updated = await db.user.update({
+        await db.user.update({
           where: { id: authUser.id },
           data: { approved: true },
         });
