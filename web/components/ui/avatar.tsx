@@ -52,6 +52,7 @@ export function Avatar({ name, userId, imageUrl, size = 'md', className }: Avata
 
   return (
     <div className={baseClassName} aria-label={name} title={name}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={imageUrl}
         alt={name}
