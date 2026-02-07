@@ -5,7 +5,6 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { DashboardStats, type DashboardStatsData } from '@/components/dashboard-stats'
 import { TodaysTasks, type TodaysTask } from '@/components/todays-tasks'
 import { FrequencyBadge } from '@/components/ui/frequency-badge'
-import { PageFadeIn } from '@/components/page-fade-in'
 
 export type RecentActivityItem = {
   id: string
@@ -23,7 +22,7 @@ export interface DashboardViewProps {
 
 export function DashboardView({ stats, todaysTasks, recentActivity }: DashboardViewProps) {
   return (
-    <PageFadeIn className="space-y-7 md:space-y-8">
+    <div className="space-y-7 md:space-y-8">
       <DashboardStats stats={stats} />
 
       <Card>
@@ -69,6 +68,6 @@ export function DashboardView({ stats, todaysTasks, recentActivity }: DashboardV
           )}
         </CardContent>
       </Card>
-    </PageFadeIn>
+    </div>
   )
 }
