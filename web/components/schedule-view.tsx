@@ -130,6 +130,10 @@ export function ScheduleView({
     setUpcoming(upcomingSchedules)
   }, [upcomingSchedules])
 
+  const upcomingVisible = React.useMemo(() => {
+    return upcoming.filter((u) => !u.completed)
+  }, [upcoming])
+
   React.useEffect(() => {
     const cell = buildMonthGridUtc({ year, monthIndex }).find((c) => c.dayKey === selectedDayKey)
     if (!cell?.inMonth) {
@@ -575,11 +579,11 @@ export function ScheduleView({
               <CardTitle className="text-xl md:text-2xl">Upcoming</CardTitle>
             </CardHeader>
             <CardContent>
-              {upcoming.length === 0 ? (
+              {upcomingVisible.length === 0 ? (
                 <p className="text-sm text-[var(--foreground)]/50">No upcoming tasks.</p>
               ) : (
                 <div className="space-y-3">
-                  {upcoming
+                  {upcomingVisible
                     .slice()
                     .sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime())
                     .slice(0, 8)

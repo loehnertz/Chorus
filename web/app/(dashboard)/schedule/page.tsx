@@ -96,7 +96,10 @@ export default async function SchedulePage({
       orderBy: { scheduledFor: 'asc' },
     }),
     db.schedule.findMany({
-      where: { scheduledFor: { gte: upcomingStart, lt: upcomingEnd } },
+      where: {
+        scheduledFor: { gte: upcomingStart, lt: upcomingEnd },
+        completion: { is: null },
+      },
       include: {
         chore: {
           select: {
