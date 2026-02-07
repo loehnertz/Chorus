@@ -4,11 +4,14 @@ import { startOfTodayUtc } from '@/lib/date'
 /**
  * Auto-schedule all DAILY-frequency chores for a date range.
  *
- * When `through` is omitted only today is scheduled. When provided, every day
- * from today through `through` (exclusive) gets schedules for all daily chores.
+ * When `through` is omitted, only start-of-day UTC for `now` is scheduled.
+ * When provided, every day from start-of-day UTC for `now` through start-of-day
+ * UTC for `through` (exclusive) gets schedules for all daily chores.
  *
  * Uses createMany with skipDuplicates (backed by the @@unique([choreId, scheduledFor])
  * constraint) so concurrent calls are safe and idempotent.
+ *
+ * Guardrail: generation is clamped to a maximum horizon to avoid runaway inserts.
  */
 export async function ensureDailySchedules(
   now?: Date,

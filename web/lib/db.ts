@@ -9,9 +9,16 @@ const globalForPrisma = globalThis as unknown as {
 
 function createPrismaClient() {
   // Create or reuse pool
-  const pool = globalForPrisma.pool ?? new Pool({
-    connectionString: process.env.DATABASE_URL,
-  });
+  const pool = globalForPrisma.pool ??
+    new Pool({
+      connectionString: process.env.DATABASE_URL,
+      // In serverless environments, keep per-instance pools small to reduce the chance
+      // of exhausting database connections during bursts.
+      max: process.env.NODE_ENV === 'production' ? 3 : 10,
+      connectionTimeoutMillis: 5_000,
+      idleTimeoutMillis: 10_000,
+      allowExitOnIdle: process.env.NODE_ENV !== 'production',
+    });
   if (!globalForPrisma.pool) {
     globalForPrisma.pool = pool;
   }

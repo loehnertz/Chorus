@@ -25,6 +25,22 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: '/sw.js',
+        headers: [
+          ...securityHeaders,
+          // Service workers should always be revalidated to pick up updates quickly.
+          { key: 'Cache-Control', value: 'no-cache' },
+        ],
+      },
+      {
+        source: '/manifest.webmanifest',
+        headers: [
+          ...securityHeaders,
+          // Avoid stale manifest metadata on clients/installers.
+          { key: 'Cache-Control', value: 'no-cache' },
+        ],
+      },
+      {
         source: '/:path*',
         headers: securityHeaders,
       },

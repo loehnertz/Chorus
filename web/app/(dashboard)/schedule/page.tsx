@@ -57,9 +57,15 @@ export default async function SchedulePage({
   const gridEnd = new Date(gridStart)
   gridEnd.setUTCDate(gridEnd.getUTCDate() + 42)
 
-  // Auto-schedule daily chores only for the visible grid range.
-  // This avoids generating huge ranges when navigating far into the future.
-  await ensureDailySchedules(gridStart, gridEnd)
+  // Auto-schedule daily chores for the visible grid range, but never backfill the past.
+  // This prevents the DB from accumulating historical daily schedules when users browse old months.
+  const todayStart = startOfTodayUtc(now)
+  const scheduleStart = gridStart < todayStart ? todayStart : gridStart
+  if (gridEnd > scheduleStart) {
+    await ensureDailySchedules(scheduleStart, gridEnd)
+  } else {
+    await ensureDailySchedules(scheduleStart)
+  }
 
   const yearStart = new Date(Date.UTC(year, 0, 1))
   const yearEnd = new Date(Date.UTC(year + 1, 0, 1))
