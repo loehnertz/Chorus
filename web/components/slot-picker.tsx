@@ -238,9 +238,7 @@ export function SlotPicker({
       <div className="mt-4 flex items-center justify-between gap-3">
         <p className="text-xs text-[var(--foreground)]/60">
           {selected ? (
-            <>
-              Selected: <span className="font-[var(--font-display)]">{selected.title}</span>
-            </>
+            <span className="sr-only">Selected {selected.title}</span>
           ) : (
             'Select a chore to schedule'
           )}
