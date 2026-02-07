@@ -1,4 +1,7 @@
 import type { NextConfig } from 'next'
+import { spawnSync } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
+import withSerwistInit from '@serwist/next'
 
 const baseSecurityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -29,4 +32,25 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+function getGitRevision(): string | null {
+  try {
+    const out = spawnSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf-8' }).stdout
+    const trimmed = out?.trim()
+    return trimmed ? trimmed : null
+  } catch {
+    return null
+  }
+}
+
+const revision = process.env.VERCEL_GIT_COMMIT_SHA || getGitRevision() || randomUUID()
+
+const withSerwist = withSerwistInit({
+  swSrc: 'app/sw.ts',
+  swDest: 'public/sw.js',
+  additionalPrecacheEntries: [{ url: '/~offline', revision }],
+  // Avoid service worker cache surprises in dev.
+  // Test PWA behavior with `npm run build && npm run start`.
+  disable: process.env.NODE_ENV === 'development',
+})
+
+export default withSerwist(nextConfig)

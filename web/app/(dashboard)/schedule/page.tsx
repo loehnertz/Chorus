@@ -28,13 +28,13 @@ function parseDayParam(raw: string | undefined): string | null {
 export default async function SchedulePage({
   searchParams,
 }: {
-  searchParams?: SearchParams | Promise<SearchParams>
+  searchParams?: Promise<SearchParams>
 }) {
   noStore()
   const session = await requireApprovedUser()
   const userId = session.user.id
 
-  const sp = (await Promise.resolve(searchParams)) ?? {}
+  const sp = (await searchParams) ?? {}
   const monthRaw = Array.isArray(sp.month) ? sp.month[0] : sp.month
   const dayRaw = Array.isArray(sp.day) ? sp.day[0] : sp.day
 

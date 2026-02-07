@@ -13,12 +13,12 @@ function parseScope(raw: string | undefined): 'mine' | 'household' {
 export default async function HistoryPage({
   searchParams,
 }: {
-  searchParams?: SearchParams | Promise<SearchParams>
+  searchParams?: Promise<SearchParams>
 }) {
   noStore()
   const session = await requireApprovedUser()
 
-  const sp = (await Promise.resolve(searchParams)) ?? {}
+  const sp = (await searchParams) ?? {}
   const scopeRaw = Array.isArray(sp.scope) ? sp.scope[0] : sp.scope
   const scope = parseScope(scopeRaw)
 
