@@ -547,7 +547,7 @@ export function ScheduleView({
                       aria-current={cell.dayKey === todayKey ? 'date' : undefined}
                       tabIndex={cell.inMonth ? (selected ? 0 : -1) : -1}
                       className={cn(
-                        'relative flex h-11 sm:h-12 min-w-0 flex-col items-start justify-between rounded-[var(--radius-md)] border px-1 sm:px-2 py-1 sm:py-1.5 text-left',
+                        'relative flex h-11 sm:h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-[var(--radius-md)] border px-1 sm:px-2 py-1 sm:py-1.5 text-center',
                         cell.inMonth
                           ? 'border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] cursor-pointer'
                           : 'border-transparent bg-transparent opacity-40',
@@ -555,13 +555,13 @@ export function ScheduleView({
                         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-terracotta)] focus-visible:ring-offset-2'
                       )}
                     >
-                      <span className="text-xs sm:text-sm font-[var(--font-display)] text-[var(--foreground)]">
+                      <span className="text-xs sm:text-sm font-[var(--font-display)] text-[var(--foreground)] leading-none">
                         {cell.date.getUTCDate()}
                       </span>
                       {count ? (
-                        <span className="text-[9px] sm:text-[10px] text-[var(--foreground)]/60">{count}</span>
+                        <span className="text-[9px] sm:text-[10px] text-[var(--foreground)]/60 leading-none">{count}</span>
                       ) : (
-                        <span className="text-[9px] sm:text-[10px] text-[var(--foreground)]/40">&nbsp;</span>
+                        <span className="text-[9px] sm:text-[10px] text-[var(--foreground)]/40 leading-none">&nbsp;</span>
                       )}
                     </button>
                   )
