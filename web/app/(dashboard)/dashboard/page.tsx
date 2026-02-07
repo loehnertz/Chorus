@@ -1,33 +1,98 @@
-import { requireApprovedUser } from '@/lib/auth/require-approval';
+import { requireApprovedUser } from '@/lib/auth/require-approval'
+import { db } from '@/lib/db'
+import { DashboardView } from '@/components/dashboard-view'
+import { startOfTomorrowUtc, startOfTodayUtc, startOfWeekUtc } from '@/lib/date'
+import { computeStreakDaysUtc } from '@/lib/streak'
 
 /**
  * Dashboard Page
  * Main dashboard for authenticated and approved users
  */
 export default async function DashboardPage() {
-  const session = await requireApprovedUser();
+  const session = await requireApprovedUser()
+  const userId = session.user.id
+
+  const now = new Date()
+  const startToday = startOfTodayUtc(now)
+  const startTomorrow = startOfTomorrowUtc(now)
+  const startWeek = startOfWeekUtc(now)
+
+  const [
+    choresCount,
+    completedTotal,
+    completedThisWeek,
+    completionDates,
+    schedules,
+    recent,
+  ] = await Promise.all([
+    db.chore.count(),
+    db.choreCompletion.count({ where: { userId } }),
+    db.choreCompletion.count({ where: { userId, completedAt: { gte: startWeek } } }),
+    db.choreCompletion.findMany({
+      where: { userId, completedAt: { gte: new Date(startToday.getTime() - 1000 * 60 * 60 * 24 * 60) } },
+      select: { completedAt: true },
+      orderBy: { completedAt: 'desc' },
+    }),
+    db.schedule.findMany({
+      where: { scheduledFor: { gte: startToday, lt: startTomorrow } },
+      include: {
+        chore: {
+          select: {
+            id: true,
+            title: true,
+            frequency: true,
+            assignments: { select: { userId: true } },
+          },
+        },
+        completions: { where: { userId }, select: { id: true } },
+      },
+      orderBy: { scheduledFor: 'asc' },
+    }),
+    db.choreCompletion.findMany({
+      take: 5,
+      orderBy: { completedAt: 'desc' },
+      include: {
+        chore: { select: { title: true, frequency: true } },
+        user: { select: { name: true } },
+      },
+    }),
+  ])
+
+  const streakDays = computeStreakDaysUtc(completionDates.map((c) => c.completedAt), now)
+
+  const todaysTasks = schedules
+    .filter((s) => {
+      if (s.chore.assignments.length === 0) return true
+      return s.chore.assignments.some((a) => a.userId === userId)
+    })
+    .map((s) => ({
+      scheduleId: s.id,
+      choreId: s.chore.id,
+      title: s.chore.title,
+      frequency: s.chore.frequency,
+      completed: s.completions.length > 0,
+    }))
+
+  const recentActivity = recent.map((c) => ({
+    id: c.id,
+    title: c.chore.title,
+    frequency: c.chore.frequency,
+    userName: c.user.name?.trim() || 'Someone',
+    completedAtLabel: c.completedAt.toISOString().slice(0, 16).replace('T', ' '),
+  }))
 
   return (
-    <div className="min-h-screen bg-[var(--color-cream)] p-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-[var(--font-display)] text-[var(--color-charcoal)] mb-4">
-          Welcome to Chorus
-        </h1>
-        <p className="text-[var(--color-charcoal)]/70 mb-8">
-          Hi {session?.user?.name || 'there'}! Your dashboard is ready.
-        </p>
-
-        <div className="bg-white rounded-[var(--radius-lg)] p-6 shadow-[var(--shadow-soft)]">
-          <h2 className="text-2xl font-[var(--font-display)] text-[var(--color-charcoal)] mb-4">
-            Coming Soon
-          </h2>
-          <p className="text-[var(--color-charcoal)]/70">
-            Dashboard features will be implemented in Phase 5.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+    <DashboardView
+      stats={{
+        choresCount,
+        completedTotal,
+        completedThisWeek,
+        streakDays,
+      }}
+      todaysTasks={todaysTasks}
+      recentActivity={recentActivity}
+    />
+  )
 }
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic'

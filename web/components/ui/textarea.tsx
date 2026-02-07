@@ -1,14 +1,14 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 
-const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
-  ({ className, type, ...props }, ref) => {
+const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(
+  ({ className, ...props }, ref) => {
     return (
-      <input
-        type={type}
+      <textarea
+        ref={ref}
         className={cn(
-          'flex h-11 w-full rounded-[var(--radius-md)] border-2 border-[var(--border-strong)]',
-          'bg-[var(--surface)] px-4 py-2 text-base text-[var(--foreground)]',
+          'flex min-h-[100px] w-full rounded-[var(--radius-md)] border-2 border-[var(--border-strong)]',
+          'bg-[var(--surface)] px-4 py-3 text-base text-[var(--foreground)]',
           'placeholder:text-[var(--foreground)]/50',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-terracotta)] focus-visible:ring-offset-2',
           'focus-visible:border-[var(--color-terracotta)]',
@@ -16,12 +16,12 @@ const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLI
           'transition-all duration-200',
           className
         )}
-        ref={ref}
         {...props}
       />
     )
   }
 )
-Input.displayName = 'Input'
 
-export { Input }
+Textarea.displayName = 'Textarea'
+
+export { Textarea }

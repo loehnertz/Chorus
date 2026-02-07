@@ -48,7 +48,7 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--color-cream)] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--background)] p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-center font-[var(--font-display)]">
@@ -67,7 +67,7 @@ export default function SignInPage() {
             )}
 
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-[var(--color-charcoal)]">
+              <label htmlFor="email" className="text-sm font-medium text-[var(--foreground)]">
                 Email
               </label>
               <Input
@@ -83,7 +83,7 @@ export default function SignInPage() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-[var(--color-charcoal)]">
+              <label htmlFor="password" className="text-sm font-medium text-[var(--foreground)]">
                 Password
               </label>
               <Input
@@ -106,7 +106,7 @@ export default function SignInPage() {
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
 
-            <p className="text-center text-sm text-[var(--color-charcoal)]/70">
+            <p className="text-center text-sm text-[var(--foreground)]/70">
               Don&apos;t have an account?{' '}
               <Link
                 href="/sign-up"
