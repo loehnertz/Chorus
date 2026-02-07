@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Merriweather, Outfit } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
+import { ServiceWorkerRegistration } from '@/components/pwa/service-worker-registration'
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -55,6 +56,7 @@ export default function RootLayout({
       <body className={`${outfit.variable} ${merriweather.variable} antialiased`}>
         {children}
         <Toaster />
+        <ServiceWorkerRegistration />
       </body>
     </html>
   )
