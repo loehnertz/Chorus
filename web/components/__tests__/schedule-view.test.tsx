@@ -1,9 +1,13 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ScheduleView } from '@/components/schedule-view'
 
 const mockPush = jest.fn()
 const mockRefresh = jest.fn()
+
+const toastSuccess = jest.fn()
+const toastError = jest.fn()
+const toastMessage = jest.fn()
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush, refresh: mockRefresh }),
@@ -11,9 +15,9 @@ jest.mock('next/navigation', () => ({
 
 jest.mock('sonner', () => ({
   toast: {
-    success: () => {},
-    error: () => {},
-    message: () => {},
+    success: (...args: unknown[]) => toastSuccess(...args),
+    error: (...args: unknown[]) => toastError(...args),
+    message: (...args: unknown[]) => toastMessage(...args),
   },
 }))
 
@@ -22,6 +26,21 @@ jest.mock('@/components/slot-picker', () => ({
 }))
 
 describe('ScheduleView', () => {
+  beforeEach(() => {
+    mockPush.mockReset()
+    mockRefresh.mockReset()
+    toastSuccess.mockReset()
+    toastError.mockReset()
+    toastMessage.mockReset()
+    // @ts-expect-error - test env
+    global.fetch = jest.fn()
+    jest.spyOn(window, 'confirm').mockReturnValue(true)
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   it('switches selected day when clicking calendar cells', async () => {
     const user = userEvent.setup()
 
@@ -64,5 +83,83 @@ describe('ScheduleView', () => {
 
     const nextCheckbox = screen.getByRole('checkbox')
     expect(within(nextCheckbox.parentElement as HTMLElement).getByText('Daily 2')).toBeInTheDocument()
+  })
+
+  it('adds a chore to the selected day', async () => {
+    const user = userEvent.setup()
+
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: 's-new',
+        scheduledFor: '2026-02-06T00:00:00.000Z',
+        slotType: 'DAILY',
+        suggested: false,
+        chore: { id: 'c1', title: 'Wash windows', description: null, frequency: 'DAILY' },
+      }),
+    })
+
+    render(
+      <ScheduleView
+        userId="u1"
+        year={2026}
+        monthIndex={1}
+        initialSelectedDayKey="2026-02-06"
+        chores={[{ id: 'c1', title: 'Wash windows', frequency: 'DAILY', assigneeIds: [] }]}
+        monthSchedules={[]}
+        upcomingSchedules={[]}
+      />
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1))
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/api/schedules',
+      expect.objectContaining({ method: 'POST' })
+    )
+    expect(toastSuccess).toHaveBeenCalledWith('Added to schedule')
+    expect(mockRefresh).toHaveBeenCalled()
+
+    const checkbox = screen.getByRole('checkbox')
+    expect(within(checkbox.parentElement as HTMLElement).getByText('Wash windows')).toBeInTheDocument()
+  })
+
+  it('removes a scheduled item', async () => {
+    const user = userEvent.setup()
+
+    ;(global.fetch as jest.Mock).mockResolvedValue({ ok: true })
+
+    render(
+      <ScheduleView
+        userId="u1"
+        year={2026}
+        monthIndex={1}
+        initialSelectedDayKey="2026-02-06"
+        chores={[{ id: 'c1', title: 'Wash windows', frequency: 'DAILY', assigneeIds: [] }]}
+        monthSchedules={[
+          {
+            id: 's1',
+            scheduledFor: '2026-02-06T00:00:00.000Z',
+            slotType: 'DAILY',
+            suggested: false,
+            completed: false,
+            chore: { id: 'c1', title: 'Wash windows', frequency: 'DAILY', assigneeIds: [] },
+          },
+        ]}
+        upcomingSchedules={[]}
+      />
+    )
+
+    expect(screen.getAllByRole('checkbox')).toHaveLength(1)
+
+    await user.click(screen.getByLabelText('Remove'))
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1))
+    expect(global.fetch).toHaveBeenCalledWith('/api/schedules/s1', { method: 'DELETE' })
+    expect(toastSuccess).toHaveBeenCalledWith('Removed')
+    expect(mockRefresh).toHaveBeenCalled()
+
+    await waitFor(() => expect(screen.queryAllByRole('checkbox')).toHaveLength(0))
   })
 })

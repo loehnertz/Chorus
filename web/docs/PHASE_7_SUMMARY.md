@@ -39,7 +39,9 @@ Tests:
 ## Testing Status
 
 - Added unit tests for the new history view and error boundaries.
+- Added unit tests for UTC date/cascade/streak utilities, Toaster positioning, and the Today/Schedule completion flows.
 - Verified `npm run lint && npm run test && npm run build` passes on this branch.
+- Verified `npm run test -- --coverage` reports >80% statement/line coverage for the current unit-test scope.
 
 ## Known Limitations
 
