@@ -61,6 +61,7 @@ model Schedule {
   scheduledFor DateTime  // When this task should be done
   slotType     Frequency // What kind of slot (WEEKLY, MONTHLY, etc)
   suggested    Boolean   @default(true) // Was this auto-suggested or manually selected
+  hidden       Boolean   @default(false) // Hidden from views; used to "remove" auto-generated schedules
 
   completion ChoreCompletion?
 

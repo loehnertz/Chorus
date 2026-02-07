@@ -73,12 +73,12 @@ export default async function SchedulePage({
         title: true,
         description: true,
         frequency: true,
-        assignments: { select: { userId: true } },
+        assignments: { select: { userId: true }, orderBy: [{ createdAt: 'asc' }, { userId: 'asc' }] },
       },
       orderBy: { title: 'asc' },
     }),
     db.schedule.findMany({
-      where: { scheduledFor: { gte: gridStart, lt: gridEnd } },
+      where: { hidden: false, scheduledFor: { gte: gridStart, lt: gridEnd } },
       include: {
         chore: {
           select: {
@@ -86,7 +86,7 @@ export default async function SchedulePage({
             title: true,
             description: true,
             frequency: true,
-            assignments: { select: { userId: true } },
+            assignments: { select: { userId: true }, orderBy: [{ createdAt: 'asc' }, { userId: 'asc' }] },
           },
         },
         completion: {
@@ -97,6 +97,7 @@ export default async function SchedulePage({
     }),
     db.schedule.findMany({
       where: {
+        hidden: false,
         scheduledFor: { gte: upcomingStart, lt: upcomingEnd },
         completion: { is: null },
       },
@@ -107,7 +108,7 @@ export default async function SchedulePage({
             title: true,
             description: true,
             frequency: true,
-            assignments: { select: { userId: true } },
+            assignments: { select: { userId: true }, orderBy: [{ createdAt: 'asc' }, { userId: 'asc' }] },
           },
         },
         completion: {
@@ -118,6 +119,7 @@ export default async function SchedulePage({
     }),
     db.schedule.findMany({
       where: {
+        hidden: false,
         scheduledFor: { gte: yearStart, lt: yearEnd },
         chore: { frequency: 'YEARLY' },
       },

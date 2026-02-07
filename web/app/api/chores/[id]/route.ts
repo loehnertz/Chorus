@@ -58,6 +58,11 @@ export const PUT = withApproval(async (
 
     const { title, frequency, description, assigneeIds } = parsed.data;
 
+    const normalizedAssigneeIds =
+      assigneeIds === undefined
+        ? undefined
+        : Array.from(new Set(assigneeIds.map((id) => id.trim()).filter(Boolean)));
+
     // Check chore exists
     const existing = await db.chore.findUnique({ where: { id } });
     if (!existing) {
@@ -70,7 +75,28 @@ export const PUT = withApproval(async (
     if (frequency !== undefined) updateData.frequency = frequency;
     if (description !== undefined) updateData.description = description;
 
-    if (assigneeIds !== undefined) {
+    if (normalizedAssigneeIds !== undefined) {
+      if (normalizedAssigneeIds.length) {
+        const users = await db.user.findMany({
+          where: { id: { in: normalizedAssigneeIds }, approved: true },
+          select: { id: true },
+        });
+        if (users.length !== normalizedAssigneeIds.length) {
+          return Response.json(
+            {
+              error: 'Validation failed',
+              details: {
+                formErrors: [],
+                fieldErrors: {
+                  assigneeIds: ['One or more assignees were not found or not approved'],
+                },
+              },
+            },
+            { status: 400 },
+          );
+        }
+      }
+
       // Use transaction to replace assignments atomically
       const chore = await db.$transaction(async (tx) => {
         await tx.choreAssignment.deleteMany({ where: { choreId: id } });
@@ -78,9 +104,9 @@ export const PUT = withApproval(async (
           where: { id },
           data: {
             ...updateData,
-            ...(assigneeIds.length && {
+            ...(normalizedAssigneeIds.length && {
               assignments: {
-                create: assigneeIds.map((userId: string) => ({ userId })),
+                create: normalizedAssigneeIds.map((userId: string) => ({ userId })),
               },
             }),
           },

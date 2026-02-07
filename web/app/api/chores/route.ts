@@ -54,14 +54,39 @@ export const POST = withApproval(async (_session, request: Request) => {
 
     const { title, frequency, description, assigneeIds } = parsed.data;
 
+    const normalizedAssigneeIds = Array.from(
+      new Set((assigneeIds ?? []).map((id) => id.trim()).filter(Boolean)),
+    );
+
+    if (normalizedAssigneeIds.length) {
+      const users = await db.user.findMany({
+        where: { id: { in: normalizedAssigneeIds }, approved: true },
+        select: { id: true },
+      });
+      if (users.length !== normalizedAssigneeIds.length) {
+        return Response.json(
+          {
+            error: 'Validation failed',
+            details: {
+              formErrors: [],
+              fieldErrors: {
+                assigneeIds: ['One or more assignees were not found or not approved'],
+              },
+            },
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     const chore = await db.chore.create({
       data: {
         title,
         frequency,
         description: description ?? null,
-        ...(assigneeIds?.length && {
+        ...(normalizedAssigneeIds.length && {
           assignments: {
-            create: assigneeIds.map((userId: string) => ({ userId })),
+            create: normalizedAssigneeIds.map((userId: string) => ({ userId })),
           },
         }),
       },

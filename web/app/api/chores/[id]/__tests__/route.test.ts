@@ -25,6 +25,9 @@ jest.mock('@/lib/db', () => ({
       update: jest.fn(),
       delete: jest.fn(),
     },
+    user: {
+      findMany: jest.fn(),
+    },
     choreAssignment: {
       deleteMany: jest.fn(),
     },
@@ -185,6 +188,9 @@ describe('PUT /api/chores/[id]', () => {
     const session = createMockSession();
     (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);
     (db.chore.findUnique as jest.Mock).mockResolvedValue({ id: 'test-id' });
+
+    // Assignee validation
+    (db.user.findMany as jest.Mock).mockResolvedValue([{ id: 'user-1' }]);
 
     const updated = { id: 'test-id', title: 'Dishes', assignments: [] };
     (db.$transaction as jest.Mock).mockResolvedValue(updated);

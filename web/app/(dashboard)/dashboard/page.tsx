@@ -40,14 +40,14 @@ export default async function DashboardPage() {
       orderBy: { completedAt: 'desc' },
     }),
     db.schedule.findMany({
-      where: { scheduledFor: { gte: startToday, lt: startTomorrow } },
+      where: { hidden: false, scheduledFor: { gte: startToday, lt: startTomorrow } },
       include: {
         chore: {
           select: {
             id: true,
             title: true,
             frequency: true,
-            assignments: { select: { userId: true } },
+            assignments: { select: { userId: true }, orderBy: [{ createdAt: 'asc' }, { userId: 'asc' }] },
           },
         },
         completion: { select: { id: true, userId: true } },

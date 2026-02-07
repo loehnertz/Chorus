@@ -24,6 +24,9 @@ jest.mock('@/lib/db', () => ({
       findMany: jest.fn(),
       create: jest.fn(),
     },
+    user: {
+      findMany: jest.fn(),
+    },
   },
 }));
 
@@ -193,6 +196,9 @@ describe('POST /api/chores', () => {
   it('should create a chore with assignees', async () => {
     const session = createMockSession();
     (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);
+
+    // Assignee validation
+    (db.user.findMany as jest.Mock).mockResolvedValue([{ id: 'user-1' }]);
 
     const mockChore = {
       id: 'new-id',
