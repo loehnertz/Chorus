@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ChoreCard } from '@/components/chore-card'
 import { ChoreForm } from '@/components/chore-form'
+import { PageFadeIn } from '@/components/page-fade-in'
 
 export type ChoresViewUser = { id: string; name: string }
 
@@ -74,7 +75,7 @@ export function ChoresView({ chores, users }: ChoresViewProps) {
     'px-3 py-1.5 rounded-full text-sm font-[var(--font-display)] font-medium cursor-pointer transition-colors'
 
   return (
-    <div className="space-y-7 md:space-y-8">
+    <PageFadeIn className="space-y-7 md:space-y-8">
       <div className="flex items-start justify-between gap-5">
         <div>
           <h1 className="text-2xl md:text-3xl font-[var(--font-display)] font-bold text-[var(--foreground)]">
@@ -170,6 +171,6 @@ export function ChoresView({ chores, users }: ChoresViewProps) {
         }
         onSaved={() => router.refresh()}
       />
-    </div>
+    </PageFadeIn>
   )
 }

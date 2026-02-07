@@ -15,6 +15,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { FrequencyBadge } from '@/components/ui/frequency-badge'
 import { CompletionCheckbox } from '@/components/completion-checkbox'
 import { SlotPicker, type SlotPickerChore } from '@/components/slot-picker'
+import { PageFadeIn } from '@/components/page-fade-in'
 
 export type ScheduleViewChore = {
   id: string
@@ -297,7 +298,7 @@ export function ScheduleView({
     'px-3 py-1.5 rounded-full text-sm font-[var(--font-display)] font-medium cursor-pointer transition-colors'
 
   return (
-    <div className={cn('space-y-7 md:space-y-8', className)}>
+    <PageFadeIn className={cn('space-y-7 md:space-y-8', className)}>
       <div>
         <h1 className="text-2xl md:text-3xl font-[var(--font-display)] font-bold text-[var(--foreground)]">
           Schedule
@@ -571,6 +572,6 @@ export function ScheduleView({
           </Card>
         </div>
       </div>
-    </div>
+    </PageFadeIn>
   )
 }
