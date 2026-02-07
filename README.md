@@ -89,15 +89,16 @@ chorus/                  # Repository root
 ### Development Setup
 
 ```bash
-# Navigate to the web directory
+# (Optional) Link to Vercel project (for env sync)
+# Run from the repository root (the Vercel project Root Directory is `web`)
+vercel link
+vercel env pull web/.env.development.local
+
+# Now do all app/dev work in the web directory
 cd web
 
 # Install dependencies
 npm install
-
-# Link to Vercel project (optional, to pull environment variables)
-vercel link
-vercel env pull .env.development.local
 
 # Or manually set up environment variables
 cp .env .env.local

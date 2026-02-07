@@ -1,15 +1,13 @@
 import { db } from '@/lib/db';
-import { requireApprovedUserApi, isErrorResponse } from '@/lib/auth/require-approval';
+import { withApproval } from '@/lib/auth/with-approval';
 import { updateChoreSchema, formatValidationError } from '@/lib/validations';
 
-export async function GET(
+export const GET = withApproval(async (
+  _session,
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
-) {
+) => {
   try {
-    const result = await requireApprovedUserApi();
-    if (isErrorResponse(result)) return result;
-
     const { id } = await params;
 
     const chore = await db.chore.findUnique({
@@ -42,16 +40,14 @@ export async function GET(
     console.error('Failed to fetch chore:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function PUT(
+export const PUT = withApproval(async (
+  _session,
   request: Request,
   { params }: { params: Promise<{ id: string }> },
-) {
+) => {
   try {
-    const result = await requireApprovedUserApi();
-    if (isErrorResponse(result)) return result;
-
     const { id } = await params;
     const body = await request.json();
     const parsed = updateChoreSchema.safeParse(body);
@@ -61,6 +57,11 @@ export async function PUT(
     }
 
     const { title, frequency, description, assigneeIds } = parsed.data;
+
+    const normalizedAssigneeIds =
+      assigneeIds === undefined
+        ? undefined
+        : Array.from(new Set(assigneeIds.map((id) => id.trim()).filter(Boolean)));
 
     // Check chore exists
     const existing = await db.chore.findUnique({ where: { id } });
@@ -74,7 +75,28 @@ export async function PUT(
     if (frequency !== undefined) updateData.frequency = frequency;
     if (description !== undefined) updateData.description = description;
 
-    if (assigneeIds !== undefined) {
+    if (normalizedAssigneeIds !== undefined) {
+      if (normalizedAssigneeIds.length) {
+        const users = await db.user.findMany({
+          where: { id: { in: normalizedAssigneeIds }, approved: true },
+          select: { id: true },
+        });
+        if (users.length !== normalizedAssigneeIds.length) {
+          return Response.json(
+            {
+              error: 'Validation failed',
+              details: {
+                formErrors: [],
+                fieldErrors: {
+                  assigneeIds: ['One or more assignees were not found or not approved'],
+                },
+              },
+            },
+            { status: 400 },
+          );
+        }
+      }
+
       // Use transaction to replace assignments atomically
       const chore = await db.$transaction(async (tx) => {
         await tx.choreAssignment.deleteMany({ where: { choreId: id } });
@@ -82,9 +104,9 @@ export async function PUT(
           where: { id },
           data: {
             ...updateData,
-            ...(assigneeIds.length && {
+            ...(normalizedAssigneeIds.length && {
               assignments: {
-                create: assigneeIds.map((userId: string) => ({ userId })),
+                create: normalizedAssigneeIds.map((userId: string) => ({ userId })),
               },
             }),
           },
@@ -118,16 +140,14 @@ export async function PUT(
     console.error('Failed to update chore:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withApproval(async (
+  _session,
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
-) {
+) => {
   try {
-    const result = await requireApprovedUserApi();
-    if (isErrorResponse(result)) return result;
-
     const { id } = await params;
 
     const existing = await db.chore.findUnique({ where: { id } });
@@ -142,4 +162,4 @@ export async function DELETE(
     console.error('Failed to delete chore:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

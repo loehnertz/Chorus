@@ -26,11 +26,11 @@ describe('FrequencyBadge', () => {
   it('renders intermediate frequency badges correctly', () => {
     const { rerender } = render(<FrequencyBadge frequency={'BIWEEKLY' as Frequency} />)
     expect(screen.getByText('Bi-weekly')).toBeInTheDocument()
-    expect(screen.getByText('BW')).toBeInTheDocument()
+    expect(screen.getByText('2W')).toBeInTheDocument()
 
     rerender(<FrequencyBadge frequency={'BIMONTHLY' as Frequency} />)
     expect(screen.getByText('Bi-monthly')).toBeInTheDocument()
-    expect(screen.getByText('BM')).toBeInTheDocument()
+    expect(screen.getByText('2M')).toBeInTheDocument()
 
     rerender(<FrequencyBadge frequency={'SEMIANNUAL' as Frequency} />)
     expect(screen.getByText('Semi-annual')).toBeInTheDocument()

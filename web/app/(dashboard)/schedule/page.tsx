@@ -76,12 +76,12 @@ export default async function SchedulePage({
         title: true,
         description: true,
         frequency: true,
-        assignments: { select: { userId: true } },
+        assignments: { select: { userId: true }, orderBy: [{ createdAt: 'asc' }, { userId: 'asc' }] },
       },
       orderBy: { title: 'asc' },
     }),
     db.schedule.findMany({
-      where: { scheduledFor: { gte: gridStart, lt: gridEnd } },
+      where: { hidden: false, scheduledFor: { gte: gridStart, lt: gridEnd } },
       include: {
         chore: {
           select: {
@@ -89,25 +89,7 @@ export default async function SchedulePage({
             title: true,
             description: true,
             frequency: true,
-            assignments: { select: { userId: true } },
-          },
-        },
-        completion: {
-          select: { id: true, userId: true, completedAt: true },
-        },
-      },
-      orderBy: { scheduledFor: 'asc' },
-    }),
-    db.schedule.findMany({
-      where: { scheduledFor: { gte: upcomingStart, lt: upcomingEnd } },
-      include: {
-        chore: {
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            frequency: true,
-            assignments: { select: { userId: true } },
+            assignments: { select: { userId: true }, orderBy: [{ createdAt: 'asc' }, { userId: 'asc' }] },
           },
         },
         completion: {
@@ -118,6 +100,29 @@ export default async function SchedulePage({
     }),
     db.schedule.findMany({
       where: {
+        hidden: false,
+        scheduledFor: { gte: upcomingStart, lt: upcomingEnd },
+        completion: { is: null },
+      },
+      include: {
+        chore: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            frequency: true,
+            assignments: { select: { userId: true }, orderBy: [{ createdAt: 'asc' }, { userId: 'asc' }] },
+          },
+        },
+        completion: {
+          select: { id: true, userId: true, completedAt: true },
+        },
+      },
+      orderBy: { scheduledFor: 'asc' },
+    }),
+    db.schedule.findMany({
+      where: {
+        hidden: false,
         scheduledFor: { gte: yearStart, lt: yearEnd },
         chore: { frequency: 'YEARLY' },
       },

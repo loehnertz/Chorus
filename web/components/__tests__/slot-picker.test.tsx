@@ -63,7 +63,7 @@ describe('SlotPicker', () => {
       '/api/schedules/suggest',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ currentFrequency: 'DAILY', userId: 'u1' }),
+        body: JSON.stringify({ currentFrequency: 'DAILY', userId: 'u1', forDate: '2026-02-06T00:00:00.000Z' }),
       })
     )
 

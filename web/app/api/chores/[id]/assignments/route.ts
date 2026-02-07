@@ -1,15 +1,13 @@
 import { db } from '@/lib/db';
-import { requireApprovedUserApi, isErrorResponse } from '@/lib/auth/require-approval';
+import { withApproval } from '@/lib/auth/with-approval';
 import { assignChoreSchema, formatValidationError } from '@/lib/validations';
 
-export async function POST(
+export const POST = withApproval(async (
+  _session,
   request: Request,
   { params }: { params: Promise<{ id: string }> },
-) {
+) => {
   try {
-    const result = await requireApprovedUserApi();
-    if (isErrorResponse(result)) return result;
-
     const { id: choreId } = await params;
     const body = await request.json();
     const parsed = assignChoreSchema.safeParse(body);
@@ -53,4 +51,4 @@ export async function POST(
     console.error('Failed to assign chore:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

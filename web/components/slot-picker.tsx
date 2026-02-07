@@ -74,7 +74,7 @@ export function SlotPicker({
       const res = await fetch('/api/schedules/suggest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentFrequency: slotType, userId }),
+        body: JSON.stringify({ currentFrequency: slotType, userId, forDate: scheduledFor }),
       })
 
       if (!res.ok) {
@@ -96,7 +96,7 @@ export function SlotPicker({
     } finally {
       setLoading(false)
     }
-  }, [slotType, sourceFrequency, userId])
+  }, [slotType, sourceFrequency, userId, scheduledFor])
 
   React.useEffect(() => {
     void loadSuggestion()

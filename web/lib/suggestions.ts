@@ -117,6 +117,7 @@ export async function suggestCascadedChore(params: {
 
   const scheduled = await db.schedule.findMany({
     where: {
+      hidden: false,
       scheduledFor: { gte: cycleStart, lt: cycleEnd },
       chore: { frequency: sourceFrequency },
     },
@@ -196,6 +197,7 @@ export async function checkCascadePace(params?: { now?: Date }): Promise<PaceWar
       db.chore.count({ where: { frequency: sourceFrequency } }),
       db.schedule.findMany({
         where: {
+          hidden: false,
           scheduledFor: { gte: cycleStart, lt: cycleEnd },
           chore: { frequency: sourceFrequency },
         },

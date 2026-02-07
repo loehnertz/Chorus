@@ -1,15 +1,12 @@
 import { db } from '@/lib/db';
-import { requireApprovedUserApi, isErrorResponse } from '@/lib/auth/require-approval';
+import { withApproval } from '@/lib/auth/with-approval';
 import { Frequency } from '@prisma/client';
 import { createChoreSchema, formatValidationError } from '@/lib/validations';
 
 const VALID_FREQUENCIES = Object.values(Frequency);
 
-export async function GET(request: Request) {
+export const GET = withApproval(async (_session, request: Request) => {
   try {
-    const result = await requireApprovedUserApi();
-    if (isErrorResponse(result)) return result;
-
     const { searchParams } = new URL(request.url);
     const frequency = searchParams.get('frequency');
     const search = searchParams.get('search');
@@ -44,13 +41,10 @@ export async function GET(request: Request) {
     console.error('Failed to fetch chores:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withApproval(async (_session, request: Request) => {
   try {
-    const result = await requireApprovedUserApi();
-    if (isErrorResponse(result)) return result;
-
     const body = await request.json();
     const parsed = createChoreSchema.safeParse(body);
 
@@ -60,14 +54,39 @@ export async function POST(request: Request) {
 
     const { title, frequency, description, assigneeIds } = parsed.data;
 
+    const normalizedAssigneeIds = Array.from(
+      new Set((assigneeIds ?? []).map((id) => id.trim()).filter(Boolean)),
+    );
+
+    if (normalizedAssigneeIds.length) {
+      const users = await db.user.findMany({
+        where: { id: { in: normalizedAssigneeIds }, approved: true },
+        select: { id: true },
+      });
+      if (users.length !== normalizedAssigneeIds.length) {
+        return Response.json(
+          {
+            error: 'Validation failed',
+            details: {
+              formErrors: [],
+              fieldErrors: {
+                assigneeIds: ['One or more assignees were not found or not approved'],
+              },
+            },
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     const chore = await db.chore.create({
       data: {
         title,
         frequency,
         description: description ?? null,
-        ...(assigneeIds?.length && {
+        ...(normalizedAssigneeIds.length && {
           assignments: {
-            create: assigneeIds.map((userId: string) => ({ userId })),
+            create: normalizedAssigneeIds.map((userId: string) => ({ userId })),
           },
         }),
       },
@@ -85,4 +104,4 @@ export async function POST(request: Request) {
     console.error('Failed to create chore:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

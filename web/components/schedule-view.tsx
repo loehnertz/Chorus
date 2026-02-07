@@ -67,7 +67,7 @@ export interface ScheduleViewProps {
   className?: string
 }
 
-const VIEW_MODES: Frequency[] = ['DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY', 'BIMONTHLY', 'SEMIANNUAL']
+const VIEW_MODES: Frequency[] = ['DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY', 'BIMONTHLY', 'SEMIANNUAL', 'YEARLY']
 
 function pad2(n: number) {
   return String(n).padStart(2, '0')
@@ -149,7 +149,7 @@ export function ScheduleView({
   const router = useRouter()
 
   const [selectedDayKey, setSelectedDayKey] = React.useState(() => initialSelectedDayKey ?? todayDayKey)
-  const [viewMode, setViewMode] = React.useState<(typeof VIEW_MODES)[number]>('DAILY')
+  const [viewMode, setViewMode] = React.useState<Frequency>('DAILY')
   const [savingId, setSavingId] = React.useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null)
   const [items, setItems] = React.useState<ScheduleViewItem[]>(monthSchedules)
@@ -172,6 +172,10 @@ export function ScheduleView({
   React.useEffect(() => {
     setUpcoming(upcomingSchedules)
   }, [upcomingSchedules])
+
+  const upcomingVisible = React.useMemo(() => {
+    return upcoming.filter((u) => !u.completed)
+  }, [upcoming])
 
   React.useEffect(() => {
     const cell = buildMonthGridUtc({ year, monthIndex }).find((c) => c.dayKey === selectedDayKey)
@@ -524,11 +528,11 @@ export function ScheduleView({
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-7 gap-0.5 sm:gap-2 text-xs font-[var(--font-display)] text-[var(--foreground)]/50">
+              <div className="grid grid-cols-7 gap-0.5 sm:gap-2 text-xs font-[var(--font-display)] text-[var(--foreground)]/50 text-center">
                 {(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const).map((d, i) => {
                   const short = ['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]
                   return (
-                    <div key={d} className="px-1">
+                    <div key={d} className="px-1 sm:px-2">
                       <span className="sm:hidden">{short}</span>
                       <span className="hidden sm:inline">{d}</span>
                     </div>
@@ -607,11 +611,11 @@ export function ScheduleView({
               <CardTitle className="text-xl md:text-2xl">Upcoming</CardTitle>
             </CardHeader>
             <CardContent>
-              {upcoming.length === 0 ? (
+              {upcomingVisible.length === 0 ? (
                 <p className="text-sm text-[var(--foreground)]/50">No upcoming tasks.</p>
               ) : (
                 <div className="space-y-3">
-                  {upcoming
+                  {upcomingVisible
                     .slice()
                     .sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime())
                     .slice(0, 8)

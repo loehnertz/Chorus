@@ -37,8 +37,7 @@ describe('ScheduleView', () => {
     toastSuccess.mockReset()
     toastError.mockReset()
     toastMessage.mockReset()
-    // @ts-expect-error - test env
-    global.fetch = jest.fn()
+    ;(globalThis as unknown as { fetch: unknown }).fetch = jest.fn()
   })
 
   afterEach(() => {
@@ -280,6 +279,46 @@ describe('ScheduleView', () => {
     expect(screen.getAllByText('My upcoming').length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText('Their upcoming').length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText('Unassigned upcoming').length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('filters completed tasks out of the Upcoming card', () => {
+    render(
+      <ScheduleView
+        userId="u1"
+        year={2026}
+        monthIndex={1}
+        todayDayKey="2026-02-06"
+        initialSelectedDayKey="2026-02-06"
+        chores={[]}
+        monthSchedules={[]}
+        upcomingSchedules={[
+          {
+            id: 's1',
+            scheduledFor: '2026-02-07T00:00:00.000Z',
+            slotType: 'DAILY',
+            suggested: false,
+            completed: true,
+            completedByUserId: 'u1',
+            chore: { id: 'c1', title: 'Already done', frequency: 'DAILY', assigneeIds: [] },
+          },
+          {
+            id: 's2',
+            scheduledFor: '2026-02-08T00:00:00.000Z',
+            slotType: 'DAILY',
+            suggested: false,
+            completed: false,
+            chore: { id: 'c2', title: 'Still upcoming', frequency: 'DAILY', assigneeIds: [] },
+          },
+        ]}
+        users={defaultUsers}
+      />
+    )
+
+    const upcomingHeading = screen.getByRole('heading', { name: 'Upcoming' })
+    const upcomingCard = upcomingHeading.parentElement?.parentElement as HTMLElement
+
+    expect(within(upcomingCard).queryByText('Already done')).not.toBeInTheDocument()
+    expect(within(upcomingCard).getByText('Still upcoming')).toBeInTheDocument()
   })
 
   it('marks task as completed when any user completes it', () => {
