@@ -3,6 +3,7 @@ import { requireApprovedUser } from '@/lib/auth/require-approval'
 import { db } from '@/lib/db'
 import { startOfTodayUtc } from '@/lib/date'
 import { ScheduleView } from '@/components/schedule-view'
+import { ensureDailySchedules } from '@/lib/auto-schedule'
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -37,6 +38,8 @@ export default async function SchedulePage({
   const dayRaw = Array.isArray(sp.day) ? sp.day[0] : sp.day
 
   const now = new Date()
+  await ensureDailySchedules(now)
+
   const parsedMonth = parseMonthParam(monthRaw)
   const year = parsedMonth?.year ?? now.getUTCFullYear()
   const monthIndex = parsedMonth?.monthIndex ?? now.getUTCMonth()
