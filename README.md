@@ -1,6 +1,28 @@
-# Chorus
+<div align="center">
+  <img src="web/public/icon.png" alt="Chorus icon" width="120" height="120" />
 
-A chore tracking app for households with a cascading schedule system. Built for couples and small households who want chores to just get done without micromanaging a calendar.
+  # Chorus
+
+  A chore tracking app for households with a cascading schedule system.
+
+  Built for couples and small households who want chores to just get done without micromanaging a calendar.
+</div>
+
+<div align="center">
+  <img src="web/public/screenshot.png" alt="Chorus app screenshot" width="900" />
+</div>
+
+## Contents
+
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Project Status](#project-status)
+- [Design Philosophy](#design-philosophy)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Overview
 
