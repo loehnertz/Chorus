@@ -10,7 +10,7 @@ jest.mock('@/lib/db', () => ({
 }))
 
 import { db } from '@/lib/db'
-import { ensureDailySchedules } from '../auto-schedule'
+import { ensureDailySchedules, ensureWeeklyPinnedSchedules } from '../auto-schedule'
 
 describe('ensureDailySchedules', () => {
   beforeEach(() => {
@@ -156,5 +156,57 @@ describe('ensureDailySchedules', () => {
     const data = (db.schedule.createMany as jest.Mock).mock.calls[0][0].data
     expect(data).toHaveLength(1)
     expect(data[0].scheduledFor).toEqual(new Date('2026-02-07T00:00:00Z'))
+  })
+})
+
+describe('ensureWeeklyPinnedSchedules', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('should return zero and skip createMany when no weekly pinned chores exist', async () => {
+    ;(db.chore.findMany as jest.Mock).mockResolvedValue([])
+
+    const result = await ensureWeeklyPinnedSchedules(new Date('2026-02-07T10:00:00Z'))
+
+    expect(result).toEqual({ created: 0 })
+    expect(db.schedule.createMany).not.toHaveBeenCalled()
+  })
+
+  it('should create schedules only on the configured weekday within a date range', async () => {
+    // 2026-02-07 is a Saturday. The first Monday in this range is 2026-02-09.
+    ;(db.chore.findMany as jest.Mock).mockResolvedValue([
+      { id: 'weekly-1', weeklyAutoPlanDay: 0 },
+      { id: 'weekly-2', weeklyAutoPlanDay: 0 },
+    ])
+    ;(db.schedule.createMany as jest.Mock).mockResolvedValue({ count: 2 })
+
+    const result = await ensureWeeklyPinnedSchedules(
+      new Date('2026-02-07T10:00:00Z'),
+      new Date('2026-02-16T00:00:00Z')
+    )
+
+    expect(result).toEqual({ created: 2 })
+
+    expect(db.schedule.createMany).toHaveBeenCalledWith({
+      data: [
+        { choreId: 'weekly-1', scheduledFor: new Date('2026-02-09T00:00:00Z'), slotType: 'DAILY', suggested: false },
+        { choreId: 'weekly-2', scheduledFor: new Date('2026-02-09T00:00:00Z'), slotType: 'DAILY', suggested: false },
+      ],
+      skipDuplicates: true,
+    })
+  })
+
+  it('should use start-of-day UTC for scheduledFor', async () => {
+    ;(db.chore.findMany as jest.Mock).mockResolvedValue([{ id: 'weekly-1', weeklyAutoPlanDay: 0 }])
+    ;(db.schedule.createMany as jest.Mock).mockResolvedValue({ count: 1 })
+
+    await ensureWeeklyPinnedSchedules(
+      new Date('2026-02-09T23:59:59Z'),
+      new Date('2026-02-10T00:00:00Z')
+    )
+
+    const data = (db.schedule.createMany as jest.Mock).mock.calls[0][0].data
+    expect(data[0].scheduledFor).toEqual(new Date('2026-02-09T00:00:00Z'))
   })
 })

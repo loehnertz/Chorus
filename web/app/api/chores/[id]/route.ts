@@ -58,7 +58,7 @@ export const PUT = withApproval(async (
       return Response.json(formatValidationError(parsed.error), { status: 400 });
     }
 
-    const { title, frequency, description, assigneeIds } = parsed.data;
+    const { title, frequency, description, assigneeIds, weeklyAutoPlanDay } = parsed.data;
 
     const normalizedAssigneeIds =
       assigneeIds === undefined
@@ -71,11 +71,30 @@ export const PUT = withApproval(async (
       return Response.json({ error: 'Chore not found' }, { status: 404 });
     }
 
+    if (weeklyAutoPlanDay !== undefined && weeklyAutoPlanDay !== null) {
+      const effectiveFrequency = (frequency ?? existing.frequency) as string;
+      if (effectiveFrequency !== 'WEEKLY') {
+        return Response.json(
+          {
+            error: 'Validation failed',
+            details: {
+              formErrors: [],
+              fieldErrors: {
+                weeklyAutoPlanDay: ['weeklyAutoPlanDay is only allowed for WEEKLY chores'],
+              },
+            },
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     // Build update data
     const updateData: Record<string, unknown> = {};
     if (title !== undefined) updateData.title = title;
     if (frequency !== undefined) updateData.frequency = frequency;
     if (description !== undefined) updateData.description = description;
+    if (weeklyAutoPlanDay !== undefined) updateData.weeklyAutoPlanDay = weeklyAutoPlanDay;
 
     if (normalizedAssigneeIds !== undefined) {
       if (normalizedAssigneeIds.length) {

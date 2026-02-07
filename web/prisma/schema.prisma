@@ -31,6 +31,10 @@ model Chore {
   description String?
   frequency   Frequency // DAILY, WEEKLY, BIWEEKLY, MONTHLY, BIMONTHLY, SEMIANNUAL, YEARLY
 
+  // For WEEKLY chores only: optional pinned weekday to auto-plan onto the daily schedule.
+  // Stored as Monday-first index: 0=Mon .. 6=Sun.
+  weeklyAutoPlanDay Int?
+
   assignments ChoreAssignment[]
   schedules   Schedule[]
   completions ChoreCompletion[]

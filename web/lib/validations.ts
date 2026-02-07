@@ -9,13 +9,31 @@ export const createChoreSchema = z.object({
   frequency: z.enum(VALID_FREQUENCIES, {
     message: `Must be one of: ${VALID_FREQUENCIES.join(', ')}`,
   }),
+  weeklyAutoPlanDay: z
+    .number()
+    .int()
+    .min(0)
+    .max(6)
+    .nullable()
+    .optional()
+    .default(null),
   description: z
     .string()
     .transform((s) => s.trim() || null)
     .optional()
     .default(''),
   assigneeIds: z.array(z.string()).optional(),
-});
+})
+  .refine((data) => {
+    // Only weekly chores can have a pinned weekday.
+    if (data.frequency !== 'WEEKLY') {
+      return data.weeklyAutoPlanDay == null
+    }
+    return true
+  }, {
+    message: 'weeklyAutoPlanDay is only allowed for WEEKLY chores',
+    path: ['weeklyAutoPlanDay'],
+  });
 
 export const updateChoreSchema = z
   .object({
@@ -35,6 +53,7 @@ export const updateChoreSchema = z
       .nullable()
       .optional(),
     assigneeIds: z.array(z.string()).optional(),
+    weeklyAutoPlanDay: z.number().int().min(0).max(6).nullable().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: 'At least one field must be provided',

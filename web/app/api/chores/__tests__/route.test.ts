@@ -193,6 +193,37 @@ describe('POST /api/chores', () => {
     expect(body).toEqual(mockChore);
   });
 
+  it('should create a weekly chore with weeklyAutoPlanDay', async () => {
+    const session = createMockSession();
+    (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);
+
+    const mockChore = {
+      id: 'new-id',
+      title: 'Trash',
+      frequency: 'WEEKLY',
+      weeklyAutoPlanDay: 0,
+      description: null,
+      assignments: [],
+    };
+    (db.chore.create as jest.Mock).mockResolvedValue(mockChore);
+
+    const request = createMockRequest('/api/chores', {
+      method: 'POST',
+      body: { title: 'Trash', frequency: 'WEEKLY', weeklyAutoPlanDay: 0 },
+    });
+    const response = await POST(request as never);
+
+    expect(response.status).toBe(201);
+    expect(db.chore.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          frequency: 'WEEKLY',
+          weeklyAutoPlanDay: 0,
+        }),
+      }),
+    );
+  });
+
   it('should create a chore with assignees', async () => {
     const session = createMockSession();
     (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);

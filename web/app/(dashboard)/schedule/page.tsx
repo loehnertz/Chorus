@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 import { startOfTodayUtc, startOfHalfYearUtc, endOfHalfYearUtc } from '@/lib/date'
 import { getTodayDayKeyUtc } from '@/lib/calendar'
 import { ScheduleView } from '@/components/schedule-view'
-import { ensureDailySchedules } from '@/lib/auto-schedule'
+import { ensureDailySchedules, ensureWeeklyPinnedSchedules } from '@/lib/auto-schedule'
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -62,9 +62,15 @@ export default async function SchedulePage({
   const todayStart = startOfTodayUtc(now)
   const scheduleStart = gridStart < todayStart ? todayStart : gridStart
   if (gridEnd > scheduleStart) {
-    await ensureDailySchedules(scheduleStart, gridEnd)
+    await Promise.all([
+      ensureDailySchedules(scheduleStart, gridEnd),
+      ensureWeeklyPinnedSchedules(scheduleStart, gridEnd),
+    ])
   } else {
-    await ensureDailySchedules(scheduleStart)
+    await Promise.all([
+      ensureDailySchedules(scheduleStart),
+      ensureWeeklyPinnedSchedules(scheduleStart),
+    ])
   }
 
   const yearStart = new Date(Date.UTC(year, 0, 1))

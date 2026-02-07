@@ -35,10 +35,11 @@ export type ChoreFormInitialValues = {
   title: string
   description?: string | null
   frequency: Frequency
+  weeklyAutoPlanDay?: number | null
   assigneeIds: string[]
 }
 
-type FieldErrors = Partial<Record<'title' | 'description' | 'frequency' | 'assigneeIds', string>> & {
+type FieldErrors = Partial<Record<'title' | 'description' | 'frequency' | 'assigneeIds' | 'weeklyAutoPlanDay', string>> & {
   form?: string
 }
 
@@ -69,6 +70,7 @@ function getFieldErrorsFromResponse(json: unknown): FieldErrors {
     out.description = pickFirst(fieldErrors.description)
     out.frequency = pickFirst(fieldErrors.frequency)
     out.assigneeIds = pickFirst(fieldErrors.assigneeIds)
+    out.weeklyAutoPlanDay = pickFirst(fieldErrors.weeklyAutoPlanDay)
   }
 
   const formMsg = pickFirst(formErrors)
@@ -92,6 +94,9 @@ export function ChoreForm({ open, onOpenChange, users, initialValues, onSaved }:
   const [title, setTitle] = React.useState(initialValues?.title ?? '')
   const [description, setDescription] = React.useState(initialValues?.description ?? '')
   const [frequency, setFrequency] = React.useState<Frequency>(initialValues?.frequency ?? 'WEEKLY')
+  const [weeklyAutoPlanDay, setWeeklyAutoPlanDay] = React.useState<number | null>(
+    initialValues?.weeklyAutoPlanDay ?? null
+  )
   const [assigneeIds, setAssigneeIds] = React.useState<string[]>(initialValues?.assigneeIds ?? [])
   const [errors, setErrors] = React.useState<FieldErrors>({})
   const [saving, setSaving] = React.useState(false)
@@ -101,10 +106,17 @@ export function ChoreForm({ open, onOpenChange, users, initialValues, onSaved }:
     setTitle(initialValues?.title ?? '')
     setDescription(initialValues?.description ?? '')
     setFrequency(initialValues?.frequency ?? 'WEEKLY')
+    setWeeklyAutoPlanDay(initialValues?.weeklyAutoPlanDay ?? null)
     setAssigneeIds(initialValues?.assigneeIds ?? [])
     setErrors({})
     setSaving(false)
   }, [open, initialValues])
+
+  React.useEffect(() => {
+    if (frequency !== 'WEEKLY' && weeklyAutoPlanDay !== null) {
+      setWeeklyAutoPlanDay(null)
+    }
+  }, [frequency, weeklyAutoPlanDay])
 
   const toggleAssignee = (userId: string) => {
     setAssigneeIds((prev) =>
@@ -131,6 +143,7 @@ export function ChoreForm({ open, onOpenChange, users, initialValues, onSaved }:
       title,
       description,
       frequency,
+      weeklyAutoPlanDay: frequency === 'WEEKLY' ? weeklyAutoPlanDay : null,
       assigneeIds,
     }
 
@@ -233,6 +246,39 @@ export function ChoreForm({ open, onOpenChange, users, initialValues, onSaved }:
               <p className="text-xs text-red-600 mt-0.5">{errors.frequency}</p>
             ) : null}
           </div>
+
+          {frequency === 'WEEKLY' ? (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium font-[var(--font-display)] text-[var(--foreground)]">
+                Auto-plan on
+              </label>
+              <Select
+                value={weeklyAutoPlanDay === null ? 'NONE' : String(weeklyAutoPlanDay)}
+                onValueChange={(v) => setWeeklyAutoPlanDay(v === 'NONE' ? null : Number(v))}
+              >
+                <SelectTrigger aria-label="Auto-plan weekday">
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NONE">None</SelectItem>
+                  <SelectItem value="0">Monday</SelectItem>
+                  <SelectItem value="1">Tuesday</SelectItem>
+                  <SelectItem value="2">Wednesday</SelectItem>
+                  <SelectItem value="3">Thursday</SelectItem>
+                  <SelectItem value="4">Friday</SelectItem>
+                  <SelectItem value="5">Saturday</SelectItem>
+                  <SelectItem value="6">Sunday</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.weeklyAutoPlanDay ? (
+                <p className="text-xs text-red-600 mt-0.5">{errors.weeklyAutoPlanDay}</p>
+              ) : (
+                <p className="text-xs text-[var(--foreground)]/60">
+                  Optional. If set, this weekly chore is automatically added to the selected weekday each week.
+                </p>
+              )}
+            </div>
+          ) : null}
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium font-[var(--font-display)] text-[var(--foreground)]">

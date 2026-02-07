@@ -110,6 +110,27 @@ describe('createChoreSchema', () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it('should allow weeklyAutoPlanDay for weekly chores', () => {
+    const result = createChoreSchema.safeParse({
+      title: 'Trash',
+      frequency: 'WEEKLY',
+      weeklyAutoPlanDay: 0,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.weeklyAutoPlanDay).toBe(0);
+    }
+  });
+
+  it('should reject weeklyAutoPlanDay for non-weekly chores', () => {
+    const result = createChoreSchema.safeParse({
+      title: 'Dishes',
+      frequency: 'DAILY',
+      weeklyAutoPlanDay: 0,
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('updateChoreSchema', () => {
@@ -136,6 +157,16 @@ describe('updateChoreSchema', () => {
   it('should reject invalid frequency', () => {
     const result = updateChoreSchema.safeParse({ frequency: 'INVALID' });
     expect(result.success).toBe(false);
+  });
+
+  it('should accept weeklyAutoPlanDay as a partial update', () => {
+    const result = updateChoreSchema.safeParse({ weeklyAutoPlanDay: 3 });
+    expect(result.success).toBe(true);
+  });
+
+  it('should accept clearing weeklyAutoPlanDay with null', () => {
+    const result = updateChoreSchema.safeParse({ weeklyAutoPlanDay: null });
+    expect(result.success).toBe(true);
   });
 });
 

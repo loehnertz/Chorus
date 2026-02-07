@@ -5,7 +5,7 @@ import { DashboardView } from '@/components/dashboard-view'
 import { PageFadeIn } from '@/components/page-fade-in'
 import { startOfTomorrowUtc, startOfTodayUtc, startOfWeekUtc } from '@/lib/date'
 import { computeStreakDaysUtc } from '@/lib/streak'
-import { ensureDailySchedules } from '@/lib/auto-schedule'
+import { ensureDailySchedules, ensureWeeklyPinnedSchedules } from '@/lib/auto-schedule'
 
 /**
  * Dashboard Page
@@ -17,7 +17,10 @@ export default async function DashboardPage() {
   const userId = session.user.id
 
   const now = new Date()
-  await ensureDailySchedules(now)
+  await Promise.all([
+    ensureDailySchedules(now),
+    ensureWeeklyPinnedSchedules(now),
+  ])
 
   const startToday = startOfTodayUtc(now)
   const startTomorrow = startOfTomorrowUtc(now)

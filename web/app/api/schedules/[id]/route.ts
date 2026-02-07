@@ -14,7 +14,7 @@ export const DELETE = withApproval(async (
     const existing = await db.schedule.findUnique({
       where: { id },
       include: {
-        chore: { select: { frequency: true } },
+        chore: { select: { frequency: true, weeklyAutoPlanDay: true } },
       },
     });
     if (!existing) {
@@ -23,11 +23,25 @@ export const DELETE = withApproval(async (
 
     const isDailyAutoSlot = existing.slotType === 'DAILY' && existing.chore.frequency === 'DAILY';
 
+    const isWeeklyPinnedAutoSlot = (() => {
+      if (existing.chore.frequency !== 'WEEKLY') return false
+      if (existing.chore.weeklyAutoPlanDay == null) return false
+
+      // Stored as Monday-first index: 0=Mon .. 6=Sun
+      const weekday = (existing.scheduledFor.getUTCDay() + 6) % 7
+      return existing.chore.weeklyAutoPlanDay === weekday
+    })()
+
     await db.$transaction(async (tx) => {
       // If the schedule item is removed, remove any schedule-specific completion too.
       await tx.choreCompletion.deleteMany({ where: { scheduleId: id } });
 
       if (isDailyAutoSlot) {
+        await tx.schedule.update({ where: { id }, data: { hidden: true } });
+        return;
+      }
+
+      if (isWeeklyPinnedAutoSlot) {
         await tx.schedule.update({ where: { id }, data: { hidden: true } });
         return;
       }

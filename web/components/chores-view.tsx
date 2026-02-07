@@ -21,6 +21,7 @@ export type ChoresViewChore = {
   title: string
   description?: string | null
   frequency: Frequency
+  weeklyAutoPlanDay?: number | null
   completionCount: number
   assignees: { id: string; name: string; image?: string | null }[]
 }
@@ -174,6 +175,7 @@ export function ChoresView({ chores, users }: ChoresViewProps) {
                 title: editing.title,
                 description: editing.description,
                 frequency: editing.frequency,
+                weeklyAutoPlanDay: editing.weeklyAutoPlanDay ?? null,
                 assigneeIds: editing.assignees.map((u) => u.id),
               }
             : undefined

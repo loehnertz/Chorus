@@ -51,7 +51,9 @@ export const POST = withApproval(async (_session, request: Request) => {
       return Response.json(formatValidationError(parsed.error), { status: 400 });
     }
 
-    const { title, frequency, description, assigneeIds } = parsed.data;
+    const { title, frequency, description, assigneeIds, weeklyAutoPlanDay } = parsed.data;
+
+    const normalizedWeeklyAutoPlanDay = frequency === 'WEEKLY' ? weeklyAutoPlanDay : null;
 
     const normalizedAssigneeIds = Array.from(
       new Set((assigneeIds ?? []).map((id) => id.trim()).filter(Boolean)),
@@ -82,6 +84,7 @@ export const POST = withApproval(async (_session, request: Request) => {
       data: {
         title,
         frequency,
+        weeklyAutoPlanDay: normalizedWeeklyAutoPlanDay,
         description: description ?? null,
         ...(normalizedAssigneeIds.length && {
           assignments: {

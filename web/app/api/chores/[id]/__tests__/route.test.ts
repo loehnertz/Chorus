@@ -147,7 +147,7 @@ describe('PUT /api/chores/[id]', () => {
   it('should update chore title', async () => {
     const session = createMockSession();
     (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);
-    (db.chore.findUnique as jest.Mock).mockResolvedValue({ id: 'test-id' });
+    (db.chore.findUnique as jest.Mock).mockResolvedValue({ id: 'test-id', frequency: 'DAILY' });
 
     const updated = { id: 'test-id', title: 'Updated', assignments: [] };
     (db.chore.update as jest.Mock).mockResolvedValue(updated);
@@ -187,7 +187,7 @@ describe('PUT /api/chores/[id]', () => {
   it('should use transaction when updating assigneeIds', async () => {
     const session = createMockSession();
     (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);
-    (db.chore.findUnique as jest.Mock).mockResolvedValue({ id: 'test-id' });
+    (db.chore.findUnique as jest.Mock).mockResolvedValue({ id: 'test-id', frequency: 'DAILY' });
 
     // Assignee validation
     (db.user.findMany as jest.Mock).mockResolvedValue([{ id: 'user-1' }]);
@@ -205,10 +205,29 @@ describe('PUT /api/chores/[id]', () => {
     expect(db.$transaction).toHaveBeenCalled();
   });
 
+  it('should update weeklyAutoPlanDay for weekly chores', async () => {
+    const session = createMockSession();
+    (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);
+    (db.chore.findUnique as jest.Mock).mockResolvedValue({ id: 'test-id', frequency: 'WEEKLY' });
+
+    const updated = { id: 'test-id', title: 'Trash', weeklyAutoPlanDay: 0, assignments: [] };
+    (db.chore.update as jest.Mock).mockResolvedValue(updated);
+
+    const request = makeRequest({ method: 'PUT', body: { weeklyAutoPlanDay: 0 } });
+    const response = await PUT(request, makeParams('test-id'));
+
+    expect(response.status).toBe(200);
+    expect(db.chore.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ weeklyAutoPlanDay: 0 }),
+      }),
+    );
+  });
+
   it('should return 500 on database error', async () => {
     const session = createMockSession();
     (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);
-    (db.chore.findUnique as jest.Mock).mockResolvedValue({ id: 'test-id' });
+    (db.chore.findUnique as jest.Mock).mockResolvedValue({ id: 'test-id', frequency: 'DAILY' });
     (db.chore.update as jest.Mock).mockRejectedValue(new Error('DB error'));
 
     const request = makeRequest({ method: 'PUT', body: { title: 'Updated' } });
@@ -246,7 +265,7 @@ describe('DELETE /api/chores/[id]', () => {
   it('should delete chore and return 204', async () => {
     const session = createMockSession();
     (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);
-    (db.chore.findUnique as jest.Mock).mockResolvedValue({ id: 'test-id' });
+    (db.chore.findUnique as jest.Mock).mockResolvedValue({ id: 'test-id', frequency: 'DAILY' });
     (db.chore.delete as jest.Mock).mockResolvedValue({ id: 'test-id' });
 
     const request = makeRequest({ method: 'DELETE' });
@@ -259,7 +278,7 @@ describe('DELETE /api/chores/[id]', () => {
   it('should return 500 on database error', async () => {
     const session = createMockSession();
     (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);
-    (db.chore.findUnique as jest.Mock).mockResolvedValue({ id: 'test-id' });
+    (db.chore.findUnique as jest.Mock).mockResolvedValue({ id: 'test-id', frequency: 'DAILY' });
     (db.chore.delete as jest.Mock).mockRejectedValue(new Error('DB error'));
 
     const request = makeRequest({ method: 'DELETE' });
