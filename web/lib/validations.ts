@@ -138,6 +138,19 @@ export const listSchedulesQuerySchema = z
     path: ['from'],
   });
 
+export const listChoresQuerySchema = z.object({
+  frequency: z
+    .enum(VALID_FREQUENCIES, {
+      message: `Must be one of: ${VALID_FREQUENCIES.join(', ')}`,
+    })
+    .optional(),
+  search: z
+    .string()
+    .transform((s) => s.trim())
+    .optional()
+    .transform((s) => (s && s.length ? s : undefined)),
+});
+
 /**
  * Format Zod validation errors into a structured API response
  */

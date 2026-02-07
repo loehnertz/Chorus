@@ -1,6 +1,9 @@
 import { withApproval } from '@/lib/auth/with-approval';
 import { formatValidationError, scheduleSuggestSchema } from '@/lib/validations';
 import { checkCascadePace, suggestCascadedChore } from '@/lib/suggestions';
+import { startOfTodayUtc } from '@/lib/date';
+
+export const runtime = 'nodejs';
 
 export const POST = withApproval(async (_session, request: Request) => {
   try {
@@ -11,7 +14,7 @@ export const POST = withApproval(async (_session, request: Request) => {
     }
 
     const { currentFrequency, userId, forDate } = parsed.data;
-    const planningDate = forDate ?? new Date();
+    const planningDate = forDate ?? startOfTodayUtc(new Date());
     const [suggestion, paceWarnings] = await Promise.all([
       suggestCascadedChore({ currentFrequency, userId, now: planningDate }),
       checkCascadePace({ now: planningDate }),

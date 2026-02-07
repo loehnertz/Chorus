@@ -4,7 +4,7 @@ import { createAuthServer } from '@neondatabase/auth/next/server';
  * Neon Auth server instance
  * Provides server-side authentication methods:
  * - auth.getSession() - Get current session in server components/actions
- * - auth.middleware() - Protect routes with middleware
+ * - Protect routes at the edge using Next.js `proxy.ts` + `neonAuthMiddleware()`
  * - auth.apiHandler() - Handle auth API routes
  *
  * Note: createAuthServer() automatically reads from environment variables:
@@ -17,6 +17,6 @@ import { createAuthServer } from '@neondatabase/auth/next/server';
  * - OAuth provider configuration
  * - Password policies
  *
- * See: https://console.neon.tech → Your Project → Auth → Settings
+ * See: https://console.neon.tech -> Your Project -> Auth -> Settings
  */
 export const auth = createAuthServer();

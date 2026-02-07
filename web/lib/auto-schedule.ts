@@ -16,6 +16,10 @@ export async function ensureDailySchedules(
 ): Promise<{ created: number }> {
   const today = startOfTodayUtc(now)
 
+  const maxDays = 90
+  const maxThrough = new Date(today)
+  maxThrough.setUTCDate(maxThrough.getUTCDate() + maxDays)
+
   const dailyChores = await db.chore.findMany({
     where: { frequency: 'DAILY' },
     select: { id: true },
@@ -28,9 +32,10 @@ export async function ensureDailySchedules(
   const days: Date[] = [today]
   if (through) {
     const end = startOfTodayUtc(through)
+    const effectiveEnd = end > maxThrough ? maxThrough : end
     const cursor = new Date(today)
     cursor.setUTCDate(cursor.getUTCDate() + 1)
-    while (cursor < end) {
+    while (cursor < effectiveEnd) {
       days.push(new Date(cursor))
       cursor.setUTCDate(cursor.getUTCDate() + 1)
     }

@@ -39,8 +39,16 @@ const authMiddleware = neonAuthMiddleware({
 });
 
 export default async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
   // Allow public routes without authentication
-  if (isPublicRoute(request.nextUrl.pathname)) {
+  if (isPublicRoute(pathname)) {
+    return NextResponse.next();
+  }
+
+  // Do not redirect API clients to HTML login pages.
+  // API handlers enforce auth/approval and return JSON error responses.
+  if (pathname.startsWith('/api/')) {
     return NextResponse.next();
   }
 

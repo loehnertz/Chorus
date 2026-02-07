@@ -7,6 +7,8 @@ import {
 } from '@/lib/validations';
 import { startOfTodayUtc, startOfTomorrowUtc } from '@/lib/date';
 
+export const runtime = 'nodejs';
+
 export const GET = withApproval(async (_session, request: Request) => {
   try {
     const { searchParams } = new URL(request.url);

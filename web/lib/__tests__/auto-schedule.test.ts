@@ -107,6 +107,21 @@ describe('ensureDailySchedules', () => {
     ])
   })
 
+  it('should clamp schedule generation to 90 days', async () => {
+    ;(db.chore.findMany as jest.Mock).mockResolvedValue([{ id: 'chore-1' }])
+    ;(db.schedule.createMany as jest.Mock).mockResolvedValue({ count: 90 })
+
+    await ensureDailySchedules(
+      new Date('2026-02-07T10:00:00Z'),
+      new Date('2027-02-07T00:00:00Z'),
+    )
+
+    const data = (db.schedule.createMany as jest.Mock).mock.calls[0][0].data
+    expect(data).toHaveLength(90)
+    expect(data[0].scheduledFor).toEqual(new Date('2026-02-07T00:00:00Z'))
+    expect(data[data.length - 1].scheduledFor).toEqual(new Date('2026-05-07T00:00:00Z'))
+  })
+
   it('should create cross-product of days and chores for a date range', async () => {
     ;(db.chore.findMany as jest.Mock).mockResolvedValue([
       { id: 'chore-1' },

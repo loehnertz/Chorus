@@ -96,7 +96,7 @@ describe('POST /api/chores/[id]/assignments', () => {
     const session = createMockSession();
     (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);
     (db.chore.findUnique as jest.Mock).mockResolvedValue({ id: 'chore-1' });
-    (db.user.findUnique as jest.Mock).mockResolvedValue({ id: 'user-1' });
+    (db.user.findUnique as jest.Mock).mockResolvedValue({ id: 'user-1', approved: true });
     (db.choreAssignment.findUnique as jest.Mock).mockResolvedValue({ id: 'existing' });
 
     const request = makeRequest({ body: { userId: 'user-1' } });
@@ -108,7 +108,7 @@ describe('POST /api/chores/[id]/assignments', () => {
     const session = createMockSession();
     (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);
     (db.chore.findUnique as jest.Mock).mockResolvedValue({ id: 'chore-1' });
-    (db.user.findUnique as jest.Mock).mockResolvedValue({ id: 'user-1' });
+    (db.user.findUnique as jest.Mock).mockResolvedValue({ id: 'user-1', approved: true });
     (db.choreAssignment.findUnique as jest.Mock).mockResolvedValue(null);
 
     const mockAssignment = {

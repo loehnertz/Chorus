@@ -37,6 +37,8 @@ model Chore {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([frequency])
 }
 
 // Assignment of chore to a user
@@ -50,6 +52,7 @@ model ChoreAssignment {
   createdAt DateTime @default(now())
 
   @@unique([userId, choreId])
+  @@index([choreId])
 }
 
 // Scheduled instance (slot-based system)
@@ -69,6 +72,8 @@ model Schedule {
   updatedAt DateTime @updatedAt
 
   @@unique([choreId, scheduledFor])
+  @@index([hidden, scheduledFor])
+  @@index([slotType, scheduledFor])
 }
 
 // Completion record
@@ -85,6 +90,9 @@ model ChoreCompletion {
 
   completedAt DateTime @default(now())
   notes       String?
+
+  @@index([userId, completedAt])
+  @@index([choreId, completedAt])
 }
 
 enum Frequency {

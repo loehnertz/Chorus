@@ -2,6 +2,8 @@ import { db } from '@/lib/db';
 import { withApproval } from '@/lib/auth/with-approval';
 import { assignChoreSchema, formatValidationError } from '@/lib/validations';
 
+export const runtime = 'nodejs';
+
 export const POST = withApproval(async (
   _session,
   request: Request,
@@ -24,9 +26,9 @@ export const POST = withApproval(async (
       return Response.json({ error: 'Chore not found' }, { status: 404 });
     }
 
-    // Verify user exists
-    const user = await db.user.findUnique({ where: { id: userId } });
-    if (!user) {
+    // Verify user exists and is approved
+    const user = await db.user.findUnique({ where: { id: userId }, select: { id: true, approved: true } });
+    if (!user || !user.approved) {
       return Response.json({ error: 'User not found' }, { status: 404 });
     }
 

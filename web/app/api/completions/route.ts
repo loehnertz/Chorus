@@ -7,6 +7,8 @@ import {
 } from '@/lib/validations';
 import { startOfTodayUtc, startOfTomorrowUtc } from '@/lib/date';
 
+export const runtime = 'nodejs';
+
 export const POST = withApproval(async (session, request: Request) => {
   try {
     const body = await request.json();
@@ -129,8 +131,8 @@ export const GET = withApproval(async (_session, request: Request) => {
 export const DELETE = withApproval(async (session, request: Request) => {
   try {
     const { searchParams } = new URL(request.url);
-    const scheduleId = searchParams.get('scheduleId');
-    if (!scheduleId?.trim()) {
+    const scheduleId = searchParams.get('scheduleId')?.trim();
+    if (!scheduleId) {
       return Response.json({ error: 'scheduleId is required' }, { status: 400 });
     }
 

@@ -1,6 +1,8 @@
 import { db } from '@/lib/db';
 import { withApproval } from '@/lib/auth/with-approval';
 
+export const runtime = 'nodejs';
+
 export const DELETE = withApproval(async (
   _session,
   _request: Request,

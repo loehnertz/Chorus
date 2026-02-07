@@ -2,6 +2,8 @@ import { db } from '@/lib/db';
 import { withApproval } from '@/lib/auth/with-approval';
 import { updateChoreSchema, formatValidationError } from '@/lib/validations';
 
+export const runtime = 'nodejs';
+
 export const GET = withApproval(async (
   _session,
   _request: Request,

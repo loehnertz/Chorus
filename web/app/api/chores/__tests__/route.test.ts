@@ -135,7 +135,7 @@ describe('GET /api/chores', () => {
 
     expect(response.status).toBe(400);
     const body = await response.json();
-    expect(body.error).toContain('Invalid frequency');
+    expect(body.error).toBe('Validation failed');
   });
 
   it('should return 500 on database error', async () => {
