@@ -129,6 +129,21 @@ describe('POST /api/schedules', () => {
     expect(body.error).toBe('Validation failed');
   });
 
+  it('should return 400 for timezone-less scheduledFor', async () => {
+    const session = createMockSession();
+    (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);
+
+    const request = createMockRequest('/api/schedules', {
+      method: 'POST',
+      body: { choreId: 'c1', scheduledFor: '2026-02-01T00:00:00', slotType: 'DAILY' },
+    });
+    const response = await POST(request as never);
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body.error).toBe('Validation failed');
+  });
+
   it('should return 404 when chore does not exist', async () => {
     const session = createMockSession();
     (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);

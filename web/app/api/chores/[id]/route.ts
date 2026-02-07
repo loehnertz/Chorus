@@ -1,15 +1,13 @@
 import { db } from '@/lib/db';
-import { requireApprovedUserApi, isErrorResponse } from '@/lib/auth/require-approval';
+import { withApproval } from '@/lib/auth/with-approval';
 import { updateChoreSchema, formatValidationError } from '@/lib/validations';
 
-export async function GET(
+export const GET = withApproval(async (
+  _session,
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
-) {
+) => {
   try {
-    const result = await requireApprovedUserApi();
-    if (isErrorResponse(result)) return result;
-
     const { id } = await params;
 
     const chore = await db.chore.findUnique({
@@ -42,16 +40,14 @@ export async function GET(
     console.error('Failed to fetch chore:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function PUT(
+export const PUT = withApproval(async (
+  _session,
   request: Request,
   { params }: { params: Promise<{ id: string }> },
-) {
+) => {
   try {
-    const result = await requireApprovedUserApi();
-    if (isErrorResponse(result)) return result;
-
     const { id } = await params;
     const body = await request.json();
     const parsed = updateChoreSchema.safeParse(body);
@@ -118,16 +114,14 @@ export async function PUT(
     console.error('Failed to update chore:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withApproval(async (
+  _session,
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
-) {
+) => {
   try {
-    const result = await requireApprovedUserApi();
-    if (isErrorResponse(result)) return result;
-
     const { id } = await params;
 
     const existing = await db.chore.findUnique({ where: { id } });
@@ -142,4 +136,4 @@ export async function DELETE(
     console.error('Failed to delete chore:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

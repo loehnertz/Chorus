@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { parseUtcDateInput } from '@/lib/date';
+
 const VALID_FREQUENCIES = ['DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY', 'BIMONTHLY', 'SEMIANNUAL', 'YEARLY'] as const;
 
 export const createChoreSchema = z.object({
@@ -52,9 +54,19 @@ export const createCompletionSchema = z.object({
 export const assignChoreSchema = z.object({
   userId: z.string().min(1, 'userId is required'),
 });
+
+function utcDateField(fieldName: string) {
+  return z.preprocess(
+    (value) => parseUtcDateInput(value) ?? value,
+    z.date({
+      message: `${fieldName} must be an ISO date with timezone (e.g. 2026-02-01T00:00:00Z) or YYYY-MM-DD`,
+    }),
+  );
+}
+
 export const createScheduleSchema = z.object({
   choreId: z.string().transform((s) => s.trim()).pipe(z.string().min(1, 'choreId is required')),
-  scheduledFor: z.coerce.date({ message: 'scheduledFor must be a valid date' }),
+  scheduledFor: utcDateField('scheduledFor'),
   slotType: z.enum(VALID_FREQUENCIES, {
     message: `Must be one of: ${VALID_FREQUENCIES.join(', ')}`,
   }),
@@ -75,6 +87,8 @@ export const scheduleSuggestSchema = z
       })
       .optional(),
     userId: z.string().transform((s) => s.trim()).pipe(z.string().min(1)).optional(),
+    forDate: utcDateField('forDate').optional(),
+    scheduledFor: utcDateField('scheduledFor').optional(),
   })
   .refine((data) => data.currentFrequency || data.slotType, {
     message: 'currentFrequency is required',
@@ -83,12 +97,13 @@ export const scheduleSuggestSchema = z
   .transform((data) => ({
     currentFrequency: (data.currentFrequency ?? data.slotType)!,
     userId: data.userId,
+    forDate: data.forDate ?? data.scheduledFor,
   }));
 
 export const listSchedulesQuerySchema = z
   .object({
-    from: z.coerce.date({ message: 'from must be a valid date' }).optional(),
-    to: z.coerce.date({ message: 'to must be a valid date' }).optional(),
+    from: utcDateField('from').optional(),
+    to: utcDateField('to').optional(),
     frequency: z
       .enum(VALID_FREQUENCIES, {
         message: `Must be one of: ${VALID_FREQUENCIES.join(', ')}`,

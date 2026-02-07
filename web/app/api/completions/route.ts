@@ -1,13 +1,9 @@
 import { db } from '@/lib/db';
-import { requireApprovedUserApi, isErrorResponse } from '@/lib/auth/require-approval';
+import { withApproval } from '@/lib/auth/with-approval';
 import { createCompletionSchema, formatValidationError } from '@/lib/validations';
 
-export async function POST(request: Request) {
+export const POST = withApproval(async (session, request: Request) => {
   try {
-    const result = await requireApprovedUserApi();
-    if (isErrorResponse(result)) return result;
-    const session = result;
-
     const body = await request.json();
     const parsed = createCompletionSchema.safeParse(body);
 
@@ -70,13 +66,10 @@ export async function POST(request: Request) {
     console.error('Failed to create completion:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function GET(request: Request) {
+export const GET = withApproval(async (_session, request: Request) => {
   try {
-    const result = await requireApprovedUserApi();
-    if (isErrorResponse(result)) return result;
-
     const { searchParams } = new URL(request.url);
     const choreId = searchParams.get('choreId');
     const userId = searchParams.get('userId');
@@ -117,14 +110,10 @@ export async function GET(request: Request) {
     console.error('Failed to fetch completions:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(request: Request) {
+export const DELETE = withApproval(async (session, request: Request) => {
   try {
-    const result = await requireApprovedUserApi();
-    if (isErrorResponse(result)) return result;
-    const session = result;
-
     const { searchParams } = new URL(request.url);
     const scheduleId = searchParams.get('scheduleId');
     if (!scheduleId?.trim()) {
@@ -143,4 +132,4 @@ export async function DELETE(request: Request) {
     console.error('Failed to delete completion:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

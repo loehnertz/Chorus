@@ -1,15 +1,12 @@
 import { db } from '@/lib/db';
-import { requireApprovedUserApi, isErrorResponse } from '@/lib/auth/require-approval';
+import { withApproval } from '@/lib/auth/with-approval';
 import { Frequency } from '@prisma/client';
 import { createChoreSchema, formatValidationError } from '@/lib/validations';
 
 const VALID_FREQUENCIES = Object.values(Frequency);
 
-export async function GET(request: Request) {
+export const GET = withApproval(async (_session, request: Request) => {
   try {
-    const result = await requireApprovedUserApi();
-    if (isErrorResponse(result)) return result;
-
     const { searchParams } = new URL(request.url);
     const frequency = searchParams.get('frequency');
     const search = searchParams.get('search');
@@ -44,13 +41,10 @@ export async function GET(request: Request) {
     console.error('Failed to fetch chores:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withApproval(async (_session, request: Request) => {
   try {
-    const result = await requireApprovedUserApi();
-    if (isErrorResponse(result)) return result;
-
     const body = await request.json();
     const parsed = createChoreSchema.safeParse(body);
 
@@ -85,4 +79,4 @@ export async function POST(request: Request) {
     console.error('Failed to create chore:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

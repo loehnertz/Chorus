@@ -1,16 +1,13 @@
 import { db } from '@/lib/db';
-import { requireApprovedUserApi, isErrorResponse } from '@/lib/auth/require-approval';
+import { withApproval } from '@/lib/auth/with-approval';
 import {
   createScheduleSchema,
   formatValidationError,
   listSchedulesQuerySchema,
 } from '@/lib/validations';
 
-export async function GET(request: Request) {
+export const GET = withApproval(async (_session, request: Request) => {
   try {
-    const result = await requireApprovedUserApi();
-    if (isErrorResponse(result)) return result;
-
     const { searchParams } = new URL(request.url);
     const rawQuery = {
       from: searchParams.get('from') ?? undefined,
@@ -55,13 +52,10 @@ export async function GET(request: Request) {
     console.error('Failed to fetch schedules:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withApproval(async (_session, request: Request) => {
   try {
-    const result = await requireApprovedUserApi();
-    if (isErrorResponse(result)) return result;
-
     const body = await request.json();
     const parsed = createScheduleSchema.safeParse(body);
     if (!parsed.success) {
@@ -144,4 +138,4 @@ export async function POST(request: Request) {
     console.error('Failed to create schedule:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

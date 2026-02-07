@@ -309,23 +309,28 @@ Special endpoints:
 - `POST /api/schedules/suggest` - Get suggested task for a slot type (body: `{ slotType, userId? }`)
 - `POST /api/completions` - Record task completion
 
-**Authentication and approval pattern for API routes**:
+**Authentication and approval pattern for API routes** (Route Handlers):
 ```typescript
-import { requireApprovedUser } from '@/lib/auth/require-approval';
+import { withApproval } from '@/lib/auth/with-approval';
 
-export async function GET() {
-  const session = await requireApprovedUser(); // Checks auth AND approval
-  // ... handle authenticated and approved request
-}
+export const GET = withApproval(async (_session, request) => {
+  const { searchParams } = new URL(request.url);
+  // ... handle authenticated + approved request
+  return Response.json({ ok: true });
+});
 ```
 
-Or manually (not recommended - use requireApprovedUser instead):
+Or manually (not recommended - use withApproval instead):
 ```typescript
-const { data: session } = await auth.getSession();
-if (!session?.user) {
-  return Response.json({ error: 'Unauthorized' }, { status: 401 });
+import { requireApprovedUserApi, isErrorResponse } from '@/lib/auth/require-approval';
+
+export async function GET() {
+  const result = await requireApprovedUserApi();
+  if (isErrorResponse(result)) return result;
+  const session = result;
+  // ... handle request
+  return Response.json({ userId: session.user.id });
 }
-// Still need to check approval!
 ```
 
 ## Idiomatic Usage Patterns

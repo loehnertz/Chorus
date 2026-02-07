@@ -1,14 +1,12 @@
 import { db } from '@/lib/db';
-import { requireApprovedUserApi, isErrorResponse } from '@/lib/auth/require-approval';
+import { withApproval } from '@/lib/auth/with-approval';
 
-export async function DELETE(
+export const DELETE = withApproval(async (
+  _session,
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
-) {
+) => {
   try {
-    const result = await requireApprovedUserApi();
-    if (isErrorResponse(result)) return result;
-
     const { id } = await params;
 
     const existing = await db.schedule.findUnique({ where: { id } });
@@ -22,4 +20,4 @@ export async function DELETE(
     console.error('Failed to delete schedule:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

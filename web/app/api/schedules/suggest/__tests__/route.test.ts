@@ -75,4 +75,29 @@ describe('POST /api/schedules/suggest', () => {
       expect.objectContaining({ currentFrequency: 'DAILY' }),
     );
   });
+
+  it('threads forDate through suggestion + pace computations', async () => {
+    const session = createMockSession();
+    (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);
+    (suggestCascadedChore as jest.Mock).mockResolvedValue(null);
+    (checkCascadePace as jest.Mock).mockResolvedValue([]);
+
+    const forDate = '2026-02-15';
+    const request = createMockRequest('/api/schedules/suggest', {
+      method: 'POST',
+      body: { currentFrequency: 'DAILY', forDate },
+    });
+    const response = await POST(request as never);
+    expect(response.status).toBe(200);
+
+    expect(suggestCascadedChore).toHaveBeenCalledWith(
+      expect.objectContaining({
+        currentFrequency: 'DAILY',
+        now: new Date('2026-02-15T00:00:00.000Z'),
+      }),
+    );
+    expect(checkCascadePace).toHaveBeenCalledWith(
+      expect.objectContaining({ now: new Date('2026-02-15T00:00:00.000Z') }),
+    );
+  });
 });
