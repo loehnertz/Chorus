@@ -11,12 +11,11 @@ import type { NextRequest } from 'next/server';
  *
  * Public routes (no authentication required):
  * - /sign-in (login page)
- * - /sign-up (registration page)
  * - /pending-approval (waiting for approval page)
  * - /api/auth/* (authentication API routes)
  */
 
-const publicRoutes = ['/sign-in', '/sign-up', '/pending-approval'];
+const publicRoutes = ['/sign-in', '/pending-approval'];
 
 const authMiddleware = neonAuthMiddleware({
   loginUrl: '/sign-in',
