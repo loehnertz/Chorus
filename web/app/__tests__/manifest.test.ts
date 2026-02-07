@@ -6,7 +6,7 @@ describe('PWA manifest', () => {
 
     expect(m.name).toBe('Chorus')
     expect(m.short_name).toBe('Chorus')
-    expect(m.start_url).toBe('/')
+    expect(m.start_url).toBe('/sign-in')
     expect(m.scope).toBe('/')
     expect(m.display).toBe('standalone')
 

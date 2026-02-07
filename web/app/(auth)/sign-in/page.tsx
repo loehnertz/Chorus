@@ -1,116 +1,19 @@
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { authClient } from '@/lib/auth/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { redirect } from 'next/navigation';
+import { auth } from '@/lib/auth/server';
+import SignInClient from './SignInClient';
 
 /**
  * Sign In Page
- * Allows users to sign in with email/password
+ * Keeps /sign-in as a stable PWA start_url while still redirecting
+ * authenticated users straight to the dashboard.
  */
-export default function SignInPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+export default async function SignInPage() {
+  const { data: session } = await auth.getSession();
+  if (session?.user) {
+    redirect('/dashboard');
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const result = await authClient.signIn.email({
-        email,
-        password,
-      });
-
-      // Check for errors in the response
-      if (result.error) {
-        setError(result.error.message || 'Invalid email or password');
-        setLoading(false);
-        return;
-      }
-
-      // Only redirect if authentication was successful
-      router.push('/dashboard');
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to sign in. Please check your credentials.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--background)] p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center font-[var(--font-display)]">
-            Welcome back to Chorus
-          </CardTitle>
-          <CardDescription className="text-center">
-            Sign in to manage your household chores
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 rounded-[var(--radius-md)] bg-red-50 border border-red-200 text-red-800 text-sm">
-                {error}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-[var(--foreground)]">
-                Email
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-                autoComplete="email"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-[var(--foreground)]">
-                Password
-              </label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-                autoComplete="current-password"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </Button>
-
-            <p className="text-center text-sm text-[var(--foreground)]/70">
-              Accounts are invite-only for this household.
-            </p>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return <SignInClient />;
 }
+
+export const dynamic = 'force-dynamic';

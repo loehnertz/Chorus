@@ -13,9 +13,26 @@ import type { NextRequest } from 'next/server';
  * - /sign-in (login page)
  * - /pending-approval (waiting for approval page)
  * - /api/auth/* (authentication API routes)
+ * - /manifest.webmanifest (PWA manifest)
+ * - /sw.js (service worker)
+ * - /~offline (offline fallback)
+ * - /robots.txt (crawler directives)
  */
 
-const publicRoutes = ['/sign-in', '/pending-approval'];
+const exactPublicRoutes = new Set([
+  '/sign-in',
+  '/pending-approval',
+  '/manifest.webmanifest',
+  '/sw.js',
+  '/~offline',
+  '/robots.txt',
+]);
+
+function isPublicRoute(pathname: string) {
+  if (exactPublicRoutes.has(pathname)) return true;
+  if (pathname.startsWith('/api/auth')) return true;
+  return false;
+}
 
 const authMiddleware = neonAuthMiddleware({
   loginUrl: '/sign-in',
@@ -23,7 +40,7 @@ const authMiddleware = neonAuthMiddleware({
 
 export default async function middleware(request: NextRequest) {
   // Allow public routes without authentication
-  if (publicRoutes.some(route => request.nextUrl.pathname === route)) {
+  if (isPublicRoute(request.nextUrl.pathname)) {
     return NextResponse.next();
   }
 
