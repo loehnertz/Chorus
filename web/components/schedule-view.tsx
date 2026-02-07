@@ -3,11 +3,11 @@
 import * as React from 'react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react'
+import { AlertTriangle, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react'
 import type { Frequency } from '@/types/frequency'
 import { cn } from '@/lib/utils'
 import { buildMonthGridUtc, getMonthTitleUtc, getTodayDayKeyUtc } from '@/lib/calendar'
-import { dayKeyUtc } from '@/lib/date'
+import { dayKeyUtc, startOfWeekUtc } from '@/lib/date'
 import { getCascadeSourceFrequency } from '@/lib/cascade'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -49,6 +49,7 @@ export interface ScheduleViewProps {
   chores: ScheduleViewChore[]
   monthSchedules: ScheduleViewItem[]
   upcomingSchedules: ScheduleViewItem[]
+  yearlyScheduledChoreIds?: string[]
   className?: string
 }
 
@@ -81,6 +82,20 @@ function isAssignedOrUnassigned(assigneeIds: string[], userId: string) {
   return assigneeIds.length === 0 || assigneeIds.includes(userId)
 }
 
+type PaceWarning = { title: string; description: string }
+
+function countWeekSlotsInMonthUtc(year: number, monthIndex: number) {
+  const monthStart = new Date(Date.UTC(year, monthIndex, 1))
+  const monthEnd = new Date(Date.UTC(year, monthIndex + 1, 1))
+  const lastDay = new Date(monthEnd)
+  lastDay.setUTCDate(lastDay.getUTCDate() - 1)
+
+  const first = startOfWeekUtc(monthStart)
+  const last = startOfWeekUtc(lastDay)
+  const diffDays = Math.floor((last.getTime() - first.getTime()) / (1000 * 60 * 60 * 24))
+  return Math.floor(diffDays / 7) + 1
+}
+
 export function ScheduleView({
   userId,
   year,
@@ -89,6 +104,7 @@ export function ScheduleView({
   chores,
   monthSchedules,
   upcomingSchedules,
+  yearlyScheduledChoreIds,
   className,
 }: ScheduleViewProps) {
   const router = useRouter()
@@ -101,6 +117,10 @@ export function ScheduleView({
   const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null)
   const [items, setItems] = React.useState<ScheduleViewItem[]>(monthSchedules)
   const [upcoming, setUpcoming] = React.useState<ScheduleViewItem[]>(upcomingSchedules)
+
+  const scheduledYearlyChoreIdSet = React.useMemo(() => {
+    return new Set(yearlyScheduledChoreIds ?? [])
+  }, [yearlyScheduledChoreIds])
 
   React.useEffect(() => {
     setItems(monthSchedules)
@@ -119,6 +139,10 @@ export function ScheduleView({
 
   const monthTitle = getMonthTitleUtc(year, monthIndex)
   const grid = React.useMemo(() => buildMonthGridUtc({ year, monthIndex }), [year, monthIndex])
+  const inMonthKeys = React.useMemo(() => {
+    return new Set(grid.filter((c) => c.inMonth).map((c) => c.dayKey))
+  }, [grid])
+  const todayKey = React.useMemo(() => getTodayDayKeyUtc(), [])
 
   const countsByDay = React.useMemo(() => {
     const counts: Record<string, number> = {}
@@ -134,6 +158,111 @@ export function ScheduleView({
       .filter((s) => dayKeyUtc(new Date(s.scheduledFor)) === selectedDayKey)
       .sort((a, b) => a.chore.title.localeCompare(b.chore.title))
   }, [items, selectedDayKey])
+
+  const paceWarnings: PaceWarning[] = React.useMemo(() => {
+    const warnings: PaceWarning[] = []
+
+    const selectedDate = new Date(`${selectedDayKey}T00:00:00.000Z`)
+    const totalWeekly = chores.filter((c) => c.frequency === 'WEEKLY').length
+    const totalMonthly = chores.filter((c) => c.frequency === 'MONTHLY').length
+    const totalYearly = chores.filter((c) => c.frequency === 'YEARLY').length
+
+    if (viewMode === 'DAILY') {
+      if (totalWeekly > 7) {
+        warnings.push({
+          title: 'Weekly capacity warning',
+          description: `You have ${totalWeekly} weekly chores but the default pace is 1 per day (7 per week). Plan to double up on some days.`,
+        })
+      }
+
+      const weekStart = startOfWeekUtc(selectedDate)
+      const weekEnd = new Date(weekStart)
+      weekEnd.setUTCDate(weekEnd.getUTCDate() + 7)
+
+      const scheduledWeeklyIds = new Set(
+        items
+          .filter((s) => {
+            const dt = new Date(s.scheduledFor)
+            return dt >= weekStart && dt < weekEnd && s.chore.frequency === 'WEEKLY'
+          })
+          .map((s) => s.chore.id)
+      )
+
+      const backlog = totalWeekly - scheduledWeeklyIds.size
+      const day = selectedDate.getUTCDay() // 0 (Sun) .. 6 (Sat)
+      const daysSinceMonday = (day + 6) % 7
+      const daysRemaining = 7 - daysSinceMonday
+
+      if (backlog > daysRemaining) {
+        warnings.push({
+          title: 'Behind weekly pace',
+          description: `${backlog} weekly chores are still unscheduled for this week, with ${daysRemaining} day${daysRemaining === 1 ? '' : 's'} left at the default pace.`,
+        })
+      }
+    }
+
+    if (viewMode === 'WEEKLY') {
+      const monthStart = new Date(Date.UTC(year, monthIndex, 1))
+      const monthEnd = new Date(Date.UTC(year, monthIndex + 1, 1))
+
+      const scheduledMonthlyIds = new Set(
+        items
+          .filter((s) => {
+            const dt = new Date(s.scheduledFor)
+            return dt >= monthStart && dt < monthEnd && s.chore.frequency === 'MONTHLY'
+          })
+          .map((s) => s.chore.id)
+      )
+
+      const backlog = totalMonthly - scheduledMonthlyIds.size
+
+      const lastDay = new Date(monthEnd)
+      lastDay.setUTCDate(lastDay.getUTCDate() - 1)
+      const weekSlotsTotal = countWeekSlotsInMonthUtc(year, monthIndex)
+      const weekSlotsRemaining = (() => {
+        const start = startOfWeekUtc(selectedDate)
+        const end = startOfWeekUtc(lastDay)
+        const diffDays = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+        return diffDays < 0 ? 0 : Math.floor(diffDays / 7) + 1
+      })()
+
+      if (totalMonthly > weekSlotsTotal) {
+        warnings.push({
+          title: 'Monthly capacity warning',
+          description: `You have ${totalMonthly} monthly chores but only ${weekSlotsTotal} week slot${weekSlotsTotal === 1 ? '' : 's'} in this month at the default pace. Plan to schedule multiple monthly chores in some weeks.`,
+        })
+      }
+
+      if (backlog > weekSlotsRemaining) {
+        warnings.push({
+          title: 'Behind monthly pace',
+          description: `${backlog} monthly chores are still unscheduled for this month, with ${weekSlotsRemaining} week slot${weekSlotsRemaining === 1 ? '' : 's'} left at the default pace.`,
+        })
+      }
+    }
+
+    if (viewMode === 'MONTHLY') {
+      const scheduledYearlyCount = scheduledYearlyChoreIdSet.size
+      const backlog = totalYearly - scheduledYearlyCount
+      const monthsRemaining = 12 - monthIndex
+
+      if (totalYearly > 12) {
+        warnings.push({
+          title: 'Yearly capacity warning',
+          description: `You have ${totalYearly} yearly chores but only 12 months at the default pace (1 per month). Plan to schedule multiple yearly chores in some months.`,
+        })
+      }
+
+      if (backlog > monthsRemaining) {
+        warnings.push({
+          title: 'Behind yearly pace',
+          description: `${backlog} yearly chores are still unscheduled for this year, with ${monthsRemaining} month${monthsRemaining === 1 ? '' : 's'} left at the default pace.`,
+        })
+      }
+    }
+
+    return warnings
+  }, [chores, items, monthIndex, selectedDayKey, scheduledYearlyChoreIdSet, viewMode, year])
 
   const planChores = React.useMemo(() => {
     return chores
@@ -363,12 +492,41 @@ export function ScheduleView({
                     <button
                       key={cell.dayKey}
                       type="button"
+                      data-daykey={cell.dayKey}
                       onClick={() => {
                         if (!cell.inMonth) return
                         setSelectedDayKey(cell.dayKey)
                       }}
+                      onKeyDown={(e) => {
+                        if (!cell.inMonth) return
+                        const key = e.key
+                        const delta =
+                          key === 'ArrowLeft'
+                            ? -1
+                            : key === 'ArrowRight'
+                              ? 1
+                              : key === 'ArrowUp'
+                                ? -7
+                                : key === 'ArrowDown'
+                                  ? 7
+                                  : 0
+                        if (!delta) return
+
+                        e.preventDefault()
+                        const next = new Date(cell.date)
+                        next.setUTCDate(next.getUTCDate() + delta)
+                        const nextKey = dayKeyUtc(next)
+                        if (!inMonthKeys.has(nextKey)) return
+
+                        setSelectedDayKey(nextKey)
+                        const el = document.querySelector<HTMLButtonElement>(`button[data-daykey="${nextKey}"]`)
+                        el?.focus()
+                      }}
                       disabled={!cell.inMonth}
-                      aria-label={`Select ${cell.dayKey}`}
+                      aria-label={`Select ${cell.dayKey} (${formatDayTitleUtc(cell.dayKey)})`}
+                      aria-pressed={selected}
+                      aria-current={cell.dayKey === todayKey ? 'date' : undefined}
+                      tabIndex={cell.inMonth ? (selected ? 0 : -1) : -1}
                       className={cn(
                         'relative flex h-12 flex-col items-start justify-between rounded-[var(--radius-md)] border px-2 py-1.5 text-left',
                         cell.inMonth
@@ -382,7 +540,7 @@ export function ScheduleView({
                         {cell.date.getUTCDate()}
                       </span>
                       {count ? (
-                        <span className="text-[10px] text-[var(--foreground)]/60">{count} item</span>
+                        <span className="text-[10px] text-[var(--foreground)]/60">{count} {count === 1 ? 'item' : 'items'}</span>
                       ) : (
                         <span className="text-[10px] text-[var(--foreground)]/40">&nbsp;</span>
                       )}
@@ -494,6 +652,25 @@ export function ScheduleView({
               <CardTitle className="text-xl md:text-2xl">Plan</CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
+              {paceWarnings.length ? (
+                <div className="space-y-2">
+                  {paceWarnings.map((w) => (
+                    <div
+                      key={w.title}
+                      className="flex gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-2)] p-3"
+                    >
+                      <AlertTriangle className="mt-0.5 h-4 w-4 text-[var(--color-terracotta)]" aria-hidden="true" />
+                      <div>
+                        <p className="text-sm font-[var(--font-display)] font-medium text-[var(--foreground)]">
+                          {w.title}
+                        </p>
+                        <p className="mt-0.5 text-xs text-[var(--foreground)]/60">{w.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
               <div className="flex flex-wrap gap-2">
                 {VIEW_MODES.map((mode) => (
                   <button

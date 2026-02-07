@@ -78,7 +78,7 @@ describe('ScheduleView', () => {
     const firstCheckbox = screen.getByRole('checkbox')
     expect(within(firstCheckbox.parentElement as HTMLElement).getByText('Daily')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Select 2026-02-07' }))
+    await user.click(screen.getByRole('button', { name: /Select 2026-02-07/ }))
 
     const nextCheckbox = screen.getByRole('checkbox')
     expect(within(nextCheckbox.parentElement as HTMLElement).getByText('Daily 2')).toBeInTheDocument()

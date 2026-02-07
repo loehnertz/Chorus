@@ -44,13 +44,23 @@ export default async function SchedulePage({
   const initialSelectedDayKey = parseDayParam(dayRaw)
 
   const monthStart = new Date(Date.UTC(year, monthIndex, 1))
-  const monthEnd = new Date(Date.UTC(year, monthIndex + 1, 1))
+
+  // Calendar grid spans 6 full weeks starting Monday.
+  const monthStartDow = monthStart.getUTCDay() // 0 (Sun) .. 6 (Sat)
+  const daysSinceMonday = (monthStartDow + 6) % 7
+  const gridStart = new Date(monthStart)
+  gridStart.setUTCDate(gridStart.getUTCDate() - daysSinceMonday)
+  const gridEnd = new Date(gridStart)
+  gridEnd.setUTCDate(gridEnd.getUTCDate() + 42)
+
+  const yearStart = new Date(Date.UTC(year, 0, 1))
+  const yearEnd = new Date(Date.UTC(year + 1, 0, 1))
 
   const upcomingStart = startOfTodayUtc(now)
   const upcomingEnd = new Date(upcomingStart)
   upcomingEnd.setUTCDate(upcomingEnd.getUTCDate() + 14)
 
-  const [chores, monthSchedulesRaw, upcomingRaw] = await Promise.all([
+  const [chores, monthSchedulesRaw, upcomingRaw, yearlyScheduledRaw] = await Promise.all([
     db.chore.findMany({
       select: {
         id: true,
@@ -62,7 +72,7 @@ export default async function SchedulePage({
       orderBy: { title: 'asc' },
     }),
     db.schedule.findMany({
-      where: { scheduledFor: { gte: monthStart, lt: monthEnd } },
+      where: { scheduledFor: { gte: gridStart, lt: gridEnd } },
       include: {
         chore: {
           select: {
@@ -92,6 +102,14 @@ export default async function SchedulePage({
         completions: { where: { userId }, select: { id: true } },
       },
       orderBy: { scheduledFor: 'asc' },
+    }),
+    db.schedule.findMany({
+      where: {
+        scheduledFor: { gte: yearStart, lt: yearEnd },
+        chore: { frequency: 'YEARLY' },
+      },
+      distinct: ['choreId'],
+      select: { choreId: true },
     }),
   ])
 
@@ -127,6 +145,7 @@ export default async function SchedulePage({
       chores={mappedChores}
       monthSchedules={monthSchedulesRaw.map(mapSchedule)}
       upcomingSchedules={upcomingRaw.map(mapSchedule)}
+      yearlyScheduledChoreIds={yearlyScheduledRaw.map((r) => r.choreId)}
     />
   )
 }
