@@ -8,6 +8,8 @@ import { NAV_ITEMS } from '@/lib/nav'
 import { Avatar } from '@/components/ui/avatar'
 import { authClient } from '@/lib/auth/client'
 
+const NAV_PREFETCH = process.env.NEXT_PUBLIC_NAV_PREFETCH === '1'
+
 export interface SidebarProps {
   user: { id: string; name: string; image?: string | null }
   className?: string
@@ -34,7 +36,7 @@ export function Sidebar({ user, className }: SidebarProps) {
       <div className="flex h-full flex-col p-5">
         <Link
           href="/dashboard"
-          prefetch={false}
+          prefetch={NAV_PREFETCH}
           className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-terracotta)] focus-visible:ring-offset-2"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -59,7 +61,7 @@ export function Sidebar({ user, className }: SidebarProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                prefetch={false}
+                prefetch={NAV_PREFETCH}
                 className={cn(
                   'flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5',
                   'text-sm font-[var(--font-display)] font-medium transition-colors duration-150',
