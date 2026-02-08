@@ -3,9 +3,9 @@
 
   # Chorus
 
-  A chore tracking app for households with a cascading schedule system.
+  A chore planning and tracking app for a single household, built around a cascading schedule.
 
-  Built for couples and small households who want chores to just get done without micromanaging a calendar.
+  Designed for couples and small households who want chores to happen reliably without micromanaging a calendar.
 </div>
 
 <div align="center">
@@ -25,7 +25,7 @@
 
 ## Overview
 
-Chorus organizes household chores by frequency — daily, weekly, monthly, yearly — and uses a **cascading schedule** to make sure everything gets done. The idea is simple: each frequency level automatically pulls in one chore from the next higher level.
+Chorus organizes chores by frequency (daily through yearly, with optional intermediate tiers) and uses a **cascading schedule** to keep work moving forward. The idea: each level pulls a small amount of work down from the next higher level so nothing gets forgotten.
 
 - Each **day**: your daily chores + 1 weekly chore
 - Each **week**: your weekly chores + 1 monthly chore
@@ -39,18 +39,17 @@ Everything ultimately lands on your **daily schedule**: you open the app, see wh
 
 ## Key Features
 
-- **Cascading schedule** - Higher-frequency chores automatically trickle down into your daily plan
-- **Smart suggestions** - Algorithm suggests the most overdue chore to cascade next
-- **Day-level scheduling** - One daily view as your single source of truth
-- **Multi-user support** - Track who's assigned to what and who completed tasks
-- **Personal dashboards** - Each user sees their assigned tasks and quick stats
-- **Completion tracking** - Full history of who did what and when
-- **Pace warnings** - Get notified if you're falling behind (e.g., too many yearly chores left for remaining months)
-- **Mobile-friendly** - Responsive design optimized for touch interactions
+- **Cascading planning** - Higher-frequency chores pull down into lower-frequency slots
+- **Daily schedule is truth** - Everything resolves onto specific days
+- **Pinned auto-planning** - Weekly/biweekly chores can be auto-placed on a preferred weekday
+- **Smart suggestions** - Overdue / never-done chores are prioritized
+- **Multi-user** - Assign chores and see completions per user
+- **Warnings** - Pace/planning warnings when you're falling behind
+- **Mobile-first UI** - Built for quick check-ins and tap targets
 
 ## Tech Stack
 
-- **Framework**: Next.js 14+ (App Router)
+- **Framework**: Next.js (App Router)
 - **Database**: PostgreSQL (Neon)
 - **ORM**: Prisma
 - **Authentication**: Neon Auth (built on Better Auth)
@@ -112,6 +111,27 @@ npm run dev
 ```
 
 Visit `http://localhost:3001` to see the app.
+
+### Environment Variables
+
+Required (see `web/.env.example`):
+
+- `DATABASE_URL`: Postgres connection string
+- `NEON_AUTH_BASE_URL`: Neon Auth base URL
+- `NEON_AUTH_COOKIE_SECRET`: cookie secret
+
+Optional (debug/perf knobs; defaults are off):
+
+- `CHORUS_PROFILE=1`: logs coarse timings for auth + autoscheduling
+- `PRISMA_LOG_QUERIES=1`: Prisma query logging (stdout)
+- `PRISMA_PROFILE_QUERIES=1`: logs query durations (stdout)
+- `PRISMA_SLOW_QUERY_MS=50`: logs only queries slower than N ms (implies profiling)
+- `NEXT_PUBLIC_NAV_PREFETCH=1`: enables Next.js Link prefetch in primary nav
+- `CHORUS_ASYNC_AUTOSCHEDULE=1`: schedule view runs auto-scheduling best-effort (non-blocking)
+
+Cron (optional):
+
+- `CHORUS_CRON_SECRET`: enables `/api/cron/autoschedule` (authorize with `Authorization: Bearer <secret>` or `x-chorus-cron-secret: <secret>`)
 
 ### Common Commands
 
