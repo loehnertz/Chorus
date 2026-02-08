@@ -1,28 +1,58 @@
 import { redirect } from 'next/navigation';
+import { cache } from 'react';
 import { auth } from './server';
 import { syncUser } from './user-sync';
 import type { NeonAuthSession } from '@/types/auth';
 
+type AppUserProfile = {
+  id: string
+  name: string | null
+  image: string | null
+  approved: boolean
+}
+
 type ApprovalResult =
   | { kind: 'unauthenticated' }
-  | { kind: 'unapproved'; session: NeonAuthSession }
-  | { kind: 'approved'; session: NeonAuthSession };
+  | { kind: 'unapproved'; session: NeonAuthSession; appUser: AppUserProfile | null }
+  | { kind: 'approved'; session: NeonAuthSession; appUser: AppUserProfile };
 
 async function getApprovalResult(): Promise<ApprovalResult> {
+  const profile = process.env.CHORUS_PROFILE === '1'
+
+  const t0 = profile ? performance.now() : 0
   const { data: session } = await auth.getSession();
+  if (profile) {
+    console.info(`perf: auth.getSession ${(performance.now() - t0).toFixed(1)}ms`)
+  }
 
   if (!session?.user) {
     return { kind: 'unauthenticated' };
   }
 
+  const t1 = profile ? performance.now() : 0
   const user = await syncUser(session.user);
+  if (profile) {
+    console.info(`perf: syncUser ${(performance.now() - t1).toFixed(1)}ms`)
+  }
+  const appUser =
+    user
+      ? ({
+          id: user.id,
+          name: user.name,
+          image: user.image,
+          approved: user.approved,
+        } satisfies AppUserProfile)
+      : null
 
   if (!user?.approved) {
-    return { kind: 'unapproved', session: session as unknown as NeonAuthSession };
+    return { kind: 'unapproved', session: session as unknown as NeonAuthSession, appUser };
   }
 
-  return { kind: 'approved', session: session as unknown as NeonAuthSession };
+  return { kind: 'approved', session: session as unknown as NeonAuthSession, appUser: appUser! };
 }
+
+// Request-level memoization for Server Components.
+const getApprovalResultRsc = cache(getApprovalResult);
 
 /**
  * Require user approval for data access
@@ -71,8 +101,8 @@ async function getApprovalResult(): Promise<ApprovalResult> {
  * }
  * ```
  */
-export async function requireApprovedUser() {
-  const result = await getApprovalResult();
+async function requireApprovedUserUncached() {
+  const result = await getApprovalResultRsc();
 
   if (result.kind === 'unauthenticated') {
     redirect('/sign-in');
@@ -84,6 +114,25 @@ export async function requireApprovedUser() {
 
   return result.session;
 }
+
+// In RSC (layout + page), this prevents duplicate auth + DB work within a single request.
+export const requireApprovedUser = cache(requireApprovedUserUncached);
+
+async function requireApprovedUserAndAppUserUncached() {
+  const result = await getApprovalResultRsc();
+
+  if (result.kind === 'unauthenticated') {
+    redirect('/sign-in');
+  }
+
+  if (result.kind === 'unapproved') {
+    redirect('/pending-approval');
+  }
+
+  return { session: result.session, appUser: result.appUser };
+}
+
+export const requireApprovedUserAndAppUser = cache(requireApprovedUserAndAppUserUncached);
 
 /**
  * Check if current user is approved (without redirecting)
@@ -141,8 +190,10 @@ export function isErrorResponse(result: Response | NeonAuthSession): result is R
   return result instanceof Response;
 }
 
-export async function checkApprovedUser() {
-  const result = await getApprovalResult();
+async function checkApprovedUserUncached() {
+  const result = await getApprovalResultRsc();
   if (result.kind !== 'approved') return null;
   return result.session;
 }
+
+export const checkApprovedUser = cache(checkApprovedUserUncached);

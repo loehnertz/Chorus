@@ -1,5 +1,4 @@
-import { requireApprovedUser } from '@/lib/auth/require-approval'
-import { db } from '@/lib/db'
+import { requireApprovedUserAndAppUser } from '@/lib/auth/require-approval'
 import { Sidebar } from '@/components/sidebar'
 import { BottomBar } from '@/components/bottom-bar'
 
@@ -14,16 +13,10 @@ export default async function DashboardLayout({
   children: React.ReactNode
 }) {
   // Require user to be authenticated and approved
-  const session = await requireApprovedUser()
+  const { session, appUser } = await requireApprovedUserAndAppUser()
 
-  // Pull the canonical profile image from the app DB (falls back to session).
-  const dbUser = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { name: true, image: true },
-  })
-
-  const userName = dbUser?.name?.trim() || session.user.name?.trim() || 'You'
-  const userImage = dbUser?.image ?? session.user.image ?? null
+  const userName = appUser?.name?.trim() || session.user.name?.trim() || 'You'
+  const userImage = appUser?.image ?? session.user.image ?? null
 
   // User is authenticated and approved - render dashboard
   return (

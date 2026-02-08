@@ -1,3 +1,5 @@
+import { Prisma } from '@prisma/client';
+
 import { db } from '@/lib/db';
 import type { NeonAuthUser } from '@/types/auth';
 import { logError } from '@/lib/logger';
@@ -41,21 +43,58 @@ export async function syncUser(neonUser: NeonAuthUser, approved?: boolean) {
       : (validated.name?.trim() ? validated.name.trim() : null);
 
   try {
-    // Use upsert to atomically create or update the user record
-    // This avoids race conditions where concurrent requests both try to create
-    return await db.user.upsert({
+    // IMPORTANT: Avoid writing on every request.
+    // `User.updatedAt` is `@updatedAt`, so an unconditional upsert turns every
+    // approval check into a DB write.
+
+    const existing = await db.user.findUnique({ where: { id: validated.id } });
+
+    if (!existing) {
+      try {
+        return await db.user.create({
+          data: {
+            id: validated.id,
+            name: normalizedName ?? null,
+            image: validated.image ?? null,
+            approved: approved ?? false,
+          },
+        });
+      } catch (error) {
+        // Concurrent requests can race on first-login user creation.
+        const isUniqueConstraint =
+          (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') ||
+          (typeof error === 'object' &&
+            error !== null &&
+            'code' in error &&
+            (error as { code?: unknown }).code === 'P2002');
+
+        if (isUniqueConstraint) {
+          const afterRace = await db.user.findUnique({ where: { id: validated.id } });
+          if (afterRace) return afterRace;
+        }
+        throw error;
+      }
+    }
+
+    const update: { name?: string | null; image?: string | null; approved?: boolean } = {};
+
+    if (normalizedName !== undefined && normalizedName !== existing.name) {
+      update.name = normalizedName;
+    }
+    if (validated.image !== undefined && validated.image !== existing.image) {
+      update.image = validated.image;
+    }
+    if (approved !== undefined && approved !== existing.approved) {
+      update.approved = approved;
+    }
+
+    if (Object.keys(update).length === 0) {
+      return existing;
+    }
+
+    return await db.user.update({
       where: { id: validated.id },
-      update: {
-        ...(normalizedName !== undefined ? { name: normalizedName } : {}),
-        ...(validated.image !== undefined ? { image: validated.image } : {}),
-        ...(approved !== undefined && { approved }),
-      },
-      create: {
-        id: validated.id,
-        name: normalizedName ?? null,
-        image: validated.image ?? null,
-        approved: approved ?? false,
-      },
+      data: update,
     });
   } catch (error) {
     logError('user-sync', error, { userId: validated.id });
