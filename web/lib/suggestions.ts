@@ -71,6 +71,19 @@ function getRemainingSlotsForSourceFrequency(sourceFrequency: Frequency, now: Da
   const dayStart = startOfTodayUtc(now);
   const remainingDays = Math.max(0, Math.ceil((cycleEnd.getTime() - dayStart.getTime()) / (24 * 60 * 60 * 1000)));
 
+  const countRemainingCalendarWeeksInMonthUtc = () => {
+    // Weeks are Monday-start in this codebase (see startOfWeekUtc).
+    // Count how many distinct week-starts remain from the current week through the final week that overlaps this month.
+    const lastDayInCycle = new Date(cycleEnd);
+    lastDayInCycle.setUTCDate(lastDayInCycle.getUTCDate() - 1);
+
+    const currentWeekStart = startOfWeekUtc(now);
+    const lastWeekStart = startOfWeekUtc(lastDayInCycle);
+    const diffDays = Math.floor((lastWeekStart.getTime() - currentWeekStart.getTime()) / (24 * 60 * 60 * 1000));
+    if (diffDays < 0) return 0;
+    return Math.floor(diffDays / 7) + 1;
+  };
+
   switch (sourceFrequency) {
     case Frequency.WEEKLY:
       // Weekly chores should fit into remaining days of the week (1 per day).
@@ -80,7 +93,7 @@ function getRemainingSlotsForSourceFrequency(sourceFrequency: Frequency, now: Da
       return Math.max(1, Math.ceil(remainingDays / 7));
     case Frequency.MONTHLY:
       // Monthly chores should fit into remaining weeks of the month (1 per week).
-      return Math.max(1, Math.ceil(remainingDays / 7));
+      return Math.max(1, countRemainingCalendarWeeksInMonthUtc());
     case Frequency.BIMONTHLY:
       // Bi-monthly chores: remaining months in bi-month (max 2).
       return Math.max(1, Math.ceil(remainingDays / 30));

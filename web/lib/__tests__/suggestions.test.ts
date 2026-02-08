@@ -188,4 +188,19 @@ describe('checkCascadePace', () => {
     expect(yearly?.remainingChores).toBe(3);
     expect(yearly?.remainingSlots).toBe(1);
   });
+
+  it('uses calendar-week slots for MONTHLY pace warnings', async () => {
+    (db.chore.count as jest.Mock).mockImplementation(async ({ where }: { where: { frequency: string } }) => {
+      if (where.frequency === 'MONTHLY') return 99;
+      return 0;
+    });
+
+    (db.schedule.findMany as jest.Mock).mockResolvedValue([]);
+
+    const warnings = await checkCascadePace({ now: new Date('2026-08-01T00:00:00Z') });
+
+    const monthly = warnings.find((w) => w.sourceFrequency === 'MONTHLY');
+    expect(monthly).toBeTruthy();
+    expect(monthly?.remainingSlots).toBe(6);
+  });
 });
