@@ -1,6 +1,8 @@
 import { db } from '@/lib/db';
 import { withApproval } from '@/lib/auth/with-approval';
 import { assignChoreSchema, formatValidationError } from '@/lib/validations';
+import { CACHE_TAGS } from '@/lib/cached-queries';
+import { safeRevalidateTag } from '@/lib/revalidate';
 
 export const runtime = 'nodejs';
 
@@ -47,6 +49,8 @@ export const POST = withApproval(async (
         chore: { select: { id: true, title: true, frequency: true } },
       },
     });
+
+    safeRevalidateTag(CACHE_TAGS.chores);
 
     return Response.json(assignment, { status: 201 });
   } catch (error) {

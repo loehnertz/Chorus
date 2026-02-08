@@ -2,6 +2,7 @@ import { unstable_noStore as noStore } from 'next/cache'
 import { requireApprovedUser } from '@/lib/auth/require-approval'
 import { db } from '@/lib/db'
 import { ChoresView } from '@/components/chores-view'
+import { getApprovedUsersCached } from '@/lib/cached-queries'
 
 export default async function ChoresPage() {
   noStore()
@@ -15,11 +16,7 @@ export default async function ChoresPage() {
       },
       orderBy: { createdAt: 'desc' },
     }),
-    db.user.findMany({
-      where: { approved: true },
-      select: { id: true, name: true, image: true },
-      orderBy: { createdAt: 'asc' },
-    }),
+    getApprovedUsersCached(),
   ])
 
   return (

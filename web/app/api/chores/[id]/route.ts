@@ -2,6 +2,8 @@ import { db } from '@/lib/db';
 import { withApproval } from '@/lib/auth/with-approval';
 import { updateChoreSchema, formatValidationError } from '@/lib/validations';
 import { startOfTodayUtc } from '@/lib/date';
+import { CACHE_TAGS } from '@/lib/cached-queries';
+import { safeRevalidateTag } from '@/lib/revalidate';
 
 export const runtime = 'nodejs';
 
@@ -174,6 +176,8 @@ export const PUT = withApproval(async (
         });
       });
 
+      safeRevalidateTag(CACHE_TAGS.chores);
+
       return Response.json(chore);
     }
 
@@ -188,6 +192,8 @@ export const PUT = withApproval(async (
         },
       },
     });
+
+    safeRevalidateTag(CACHE_TAGS.chores);
 
     return Response.json(chore);
   } catch (error) {
@@ -210,6 +216,8 @@ export const DELETE = withApproval(async (
     }
 
     await db.chore.delete({ where: { id } });
+
+    safeRevalidateTag(CACHE_TAGS.chores);
 
     return new Response(null, { status: 204 });
   } catch (error) {

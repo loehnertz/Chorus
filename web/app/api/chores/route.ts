@@ -2,6 +2,8 @@ import { db } from '@/lib/db';
 import { withApproval } from '@/lib/auth/with-approval';
 import { createChoreSchema, formatValidationError, listChoresQuerySchema } from '@/lib/validations';
 import { startOfTodayUtc } from '@/lib/date';
+import { CACHE_TAGS } from '@/lib/cached-queries';
+import { safeRevalidateTag } from '@/lib/revalidate';
 
 export const runtime = 'nodejs';
 
@@ -115,6 +117,8 @@ export const POST = withApproval(async (_session, request: Request) => {
         },
       },
     });
+
+    safeRevalidateTag(CACHE_TAGS.chores);
 
     return Response.json(chore, { status: 201 });
   } catch (error) {
