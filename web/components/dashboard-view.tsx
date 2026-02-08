@@ -4,8 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { DashboardStats, type DashboardStatsData } from '@/components/dashboard-stats'
 import { TodaysTasks, type TodaysTask } from '@/components/todays-tasks'
+import { DashboardPlanningWarnings } from '@/components/dashboard-planning-warnings'
 import { FrequencyBadge } from '@/components/ui/frequency-badge'
 import { Avatar } from '@/components/ui/avatar'
+import { LocalDateTime } from '@/components/ui/local-datetime'
+import type { DashboardPlanningWarning } from '@/lib/dashboard-planning-warnings'
 
 export type RecentActivityItem = {
   id: string
@@ -14,7 +17,7 @@ export type RecentActivityItem = {
   userId: string
   userName: string
   userImage?: string | null
-  completedAtLabel: string
+  completedAtIso: string
 }
 
 export interface DashboardViewProps {
@@ -22,12 +25,15 @@ export interface DashboardViewProps {
   stats: DashboardStatsData
   todaysTasks: TodaysTask[]
   recentActivity: RecentActivityItem[]
+  planningWarnings?: DashboardPlanningWarning[]
 }
 
-export function DashboardView({ userId, stats, todaysTasks, recentActivity }: DashboardViewProps) {
+export function DashboardView({ userId, stats, todaysTasks, recentActivity, planningWarnings }: DashboardViewProps) {
   return (
     <div className="space-y-7 md:space-y-8">
       <DashboardStats stats={stats} />
+
+      <DashboardPlanningWarnings warnings={planningWarnings ?? []} />
 
       <Card>
         <CardHeader>
@@ -70,7 +76,7 @@ export function DashboardView({ userId, stats, todaysTasks, recentActivity }: Da
                         {item.title}
                       </p>
                       <p className="mt-0.5 text-xs text-[var(--foreground)]/50">
-                        {item.userName} · {item.completedAtLabel}
+                        {item.userName} · <LocalDateTime iso={item.completedAtIso} />
                       </p>
                     </div>
                   </div>

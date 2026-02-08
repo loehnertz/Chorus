@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { HistoryView } from '@/components/history-view'
+import { formatLocalDateTimeCompact } from '@/lib/format-local-datetime'
 
 describe('HistoryView', () => {
   it('renders an empty state', () => {
@@ -11,7 +12,12 @@ describe('HistoryView', () => {
     expect(screen.getByRole('link', { name: 'Household' })).toBeInTheDocument()
   })
 
-  it('shows household items with user labels', () => {
+  it('shows household items with user labels', async () => {
+    const aIso = '2026-02-07T12:00:00.000Z'
+    const bIso = '2026-02-07T12:05:00.000Z'
+    const aLabel = formatLocalDateTimeCompact(aIso)
+    const bLabel = formatLocalDateTimeCompact(bIso)
+
     render(
       <HistoryView
         currentUserId="me"
@@ -21,7 +27,7 @@ describe('HistoryView', () => {
             id: 'c1',
             title: 'Vacuum',
             frequency: 'WEEKLY',
-            completedAtLabel: '2026-02-07 12:00',
+            completedAtIso: aIso,
             scheduleId: 's1',
             notes: null,
             user: { id: 'me', name: 'Alice' },
@@ -30,7 +36,7 @@ describe('HistoryView', () => {
             id: 'c2',
             title: 'Dishes',
             frequency: 'DAILY',
-            completedAtLabel: '2026-02-07 12:05',
+            completedAtIso: bIso,
             scheduleId: null,
             notes: 'Kitchen only',
             user: { id: 'u2', name: 'Bob' },
@@ -41,8 +47,23 @@ describe('HistoryView', () => {
 
     expect(screen.getByText('Vacuum')).toBeInTheDocument()
     expect(screen.getByText('Dishes')).toBeInTheDocument()
-    expect(screen.getByText(/You .*2026-02-07 12:00.*scheduled/)).toBeInTheDocument()
-    expect(screen.getByText(/Bob .*2026-02-07 12:05/)).toBeInTheDocument()
+    expect(aLabel).not.toBeNull()
+    expect(bLabel).not.toBeNull()
+    expect(
+      await screen.findByText((_, node) => {
+        const text = node?.textContent ?? ''
+        if (node?.tagName !== 'P') return false
+        return text.includes(`You · ${aLabel}`) && text.includes('scheduled')
+      })
+    ).toBeInTheDocument()
+
+    expect(
+      await screen.findByText((_, node) => {
+        const text = node?.textContent ?? ''
+        if (node?.tagName !== 'P') return false
+        return text.includes(`Bob · ${bLabel}`)
+      })
+    ).toBeInTheDocument()
     expect(screen.getByText('Kitchen only')).toBeInTheDocument()
   })
 })

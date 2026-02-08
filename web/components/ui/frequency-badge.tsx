@@ -31,8 +31,8 @@ const frequencyAbbreviations: Record<Frequency, string> = {
   BIWEEKLY: '2W',
   MONTHLY: 'M',
   BIMONTHLY: '2M',
-  SEMIANNUAL: 'SA',
-  YEARLY: 'Y',
+  SEMIANNUAL: '2A',
+  YEARLY: 'A',
 }
 
 export function FrequencyBadge({ frequency, className }: FrequencyBadgeProps) {

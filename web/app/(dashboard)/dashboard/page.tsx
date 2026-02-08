@@ -6,6 +6,7 @@ import { PageFadeIn } from '@/components/page-fade-in'
 import { startOfTomorrowUtc, startOfTodayUtc, startOfWeekUtc } from '@/lib/date'
 import { computeStreakDaysUtc } from '@/lib/streak'
 import { ensureBiweeklyPinnedSchedules, ensureDailySchedules, ensureWeeklyPinnedSchedules } from '@/lib/auto-schedule'
+import { getDashboardPlanningWarnings } from '@/lib/dashboard-planning-warnings'
 
 /**
  * Dashboard Page
@@ -34,6 +35,7 @@ export default async function DashboardPage() {
     completionDates,
     schedules,
     recent,
+    planningWarnings,
   ] = await Promise.all([
     db.chore.count(),
     db.choreCompletion.count({ where: { userId } }),
@@ -66,6 +68,7 @@ export default async function DashboardPage() {
         user: { select: { id: true, name: true, image: true } },
       },
     }),
+    getDashboardPlanningWarnings(now, { remainingThreshold: 0.25 }),
   ])
 
   const streakDays = computeStreakDaysUtc(completionDates.map((c) => c.completedAt), now)
@@ -91,7 +94,7 @@ export default async function DashboardPage() {
     userId: c.user.id,
     userName: c.user.name?.trim() || 'Someone',
     userImage: c.user.image,
-    completedAtLabel: c.completedAt.toISOString().slice(0, 16).replace('T', ' '),
+    completedAtIso: c.completedAt.toISOString(),
   }))
 
   return (
@@ -106,6 +109,7 @@ export default async function DashboardPage() {
         }}
         todaysTasks={todaysTasks}
         recentActivity={recentActivity}
+        planningWarnings={planningWarnings}
       />
     </PageFadeIn>
   )

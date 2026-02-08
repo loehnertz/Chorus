@@ -49,7 +49,7 @@ export default async function HistoryPage({
           name: c.user.name?.trim() || 'Someone',
           image: c.user.image,
         },
-        completedAtLabel: c.completedAt.toISOString().slice(0, 16).replace('T', ' '),
+        completedAtIso: c.completedAt.toISOString(),
       }))}
     />
   )

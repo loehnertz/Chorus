@@ -11,12 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FrequencyBadge } from '@/components/ui/frequency-badge'
 import { Avatar } from '@/components/ui/avatar'
+import { LocalDateTime } from '@/components/ui/local-datetime'
 
 export type HistoryItem = {
   id: string
   title: string
   frequency: Frequency
-  completedAtLabel: string
+  completedAtIso: string
   scheduleId: string | null
   notes: string | null
   user: { id: string; name: string; image?: string | null }
@@ -116,7 +117,7 @@ export function HistoryView({ currentUserId, scope, items, className }: HistoryV
                         </p>
                         <p className="mt-0.5 text-xs text-[var(--foreground)]/50">
                           {scope === 'household' ? `${isMe ? 'You' : item.user.name} · ` : ''}
-                          {item.completedAtLabel}
+                          <LocalDateTime iso={item.completedAtIso} />
                           {item.scheduleId ? ' · scheduled' : ''}
                         </p>
                         {item.notes?.trim() ? (

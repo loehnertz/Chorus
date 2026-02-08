@@ -34,6 +34,6 @@ describe('FrequencyBadge', () => {
 
     rerender(<FrequencyBadge frequency={'SEMIANNUAL' as Frequency} />)
     expect(screen.getByText('Semi-annual')).toBeInTheDocument()
-    expect(screen.getByText('SA')).toBeInTheDocument()
+    expect(screen.getByText('2A')).toBeInTheDocument()
   })
 })
