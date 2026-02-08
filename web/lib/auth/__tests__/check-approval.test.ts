@@ -149,10 +149,7 @@ describe('check-approval utilities', () => {
       const result = await isUserApproved(session);
 
       expect(result).toBe(false);
-      expect(console.error).toHaveBeenCalledWith(
-        'Error checking user approval status:',
-        dbError
-      );
+      expect(console.error).toHaveBeenCalledWith('[check-approval]', dbError, { userId: 'user-123' });
     });
   });
 

@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import type { NeonAuthUser } from '@/types/auth';
+import { logError } from '@/lib/logger';
 
 /**
  * User Sync Logic
@@ -34,7 +35,7 @@ export async function syncUser(neonUser: NeonAuthUser, approved?: boolean) {
       },
     });
   } catch (error) {
-    console.error('Failed to sync user:', error);
+    logError('user-sync', error, { userId: neonUser?.id });
     throw new Error('Failed to sync user data');
   }
 }

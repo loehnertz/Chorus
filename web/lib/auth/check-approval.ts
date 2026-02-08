@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import type { NeonAuthSession } from '@/types/auth';
+import { logError } from '@/lib/logger';
 
 /**
  * Check if a user is approved to access the application
@@ -21,7 +22,7 @@ export async function isUserApproved(session: NeonAuthSession | null): Promise<b
 
     return user?.approved ?? false;
   } catch (error) {
-    console.error('Error checking user approval status:', error);
+    logError('check-approval', error, { userId: session.user.id });
     return false;
   }
 }
