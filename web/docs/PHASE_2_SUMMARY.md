@@ -17,13 +17,13 @@ Phase 2 has been successfully implemented with all required features plus enhanc
    - Auto-detects base URL from window.location
 
 3. **Auth API Handlers** (`app/api/auth/[...path]/route.ts`)
-   - Handles sign-in, sign-up, sign-out, session management
+   - Handles sign-in, sign-out, session management
    - OAuth flows support (configured in Neon dashboard)
    - All standard Neon Auth endpoints exposed
 
 4. **Middleware Route Protection** (`proxy.ts`)
    - Uses `neonAuthMiddleware()` for authentication
-   - Custom wrapper to allow public routes: `/sign-in`, `/sign-up`, `/pending-approval`
+   - Custom wrapper to allow public routes: `/sign-in`, `/pending-approval`
    - Redirects unauthenticated users to `/sign-in`
    - Runs on edge runtime for optimal performance
    - **Note**: Renamed from `middleware.ts` to `proxy.ts` per Next.js 16 deprecation
@@ -35,8 +35,8 @@ Phase 2 has been successfully implemented with all required features plus enhanc
 
 6. **Authentication Pages**
    - `/sign-in` - Email/password login
-   - `/sign-up` - Account creation (requires approval)
    - `/pending-approval` - Waiting for admin approval
+   - Note: sign-up is disabled for this deployment (invite-only household)
 
 7. **User Sync Logic** (`lib/auth/user-sync.ts`)
    - `syncUser()` - Syncs Neon Auth users to app database
@@ -73,11 +73,7 @@ npx tsx scripts/manual-sync-user.ts <email>
 - Auto-approves the synced user (`approved: true`)
 - Useful for troubleshooting sync issues
 
-**Approval Utilities** (`lib/auth/check-approval.ts`):
-- `isUserApproved()` - Check if user is approved
-- `approveUser()` - Approve a user by ID
-- `revokeUserApproval()` - Revoke approval
-- `getUnapprovedUsers()` - List all pending users
+Approval utilities live in CLI scripts (and the `requireApprovedUser*()` helpers in `lib/auth/require-approval.ts`).
 
 ### Database Changes
 
@@ -91,11 +87,11 @@ model User {
 
 ### Authentication Flow
 
-1. **Sign Up**:
-   - User fills out sign-up form
-   - Account created in Neon Auth
-   - User record created with `approved: false`
-   - Redirected to `/pending-approval`
+1. **Account Creation (Invite-Only)**:
+   - Admin creates the account in Neon Auth (Neon Console)
+   - User signs in at `/sign-in`
+   - User record is created in the app DB with `approved: false`
+   - User is redirected to `/pending-approval` until approved
 
 2. **First Sign In (Unapproved)**:
    - User enters credentials
@@ -126,8 +122,7 @@ model User {
 ```
 app/
 ├── (auth)/
-│   ├── sign-in/page.tsx          # Login page
-│   └── sign-up/page.tsx          # Registration page (approval required)
+│   └── sign-in/page.tsx          # Login page
 ├── (dashboard)/
 │   ├── layout.tsx                # Approval checking + user sync
 │   └── dashboard/
@@ -138,8 +133,7 @@ app/
 lib/auth/
 ├── server.ts                     # Server-side auth instance
 ├── client.ts                     # Client-side auth instance
-├── user-sync.ts                  # User synchronization logic
-└── check-approval.ts             # Approval utilities
+└── user-sync.ts                  # User synchronization logic
 
 scripts/
 ├── approve-user.ts               # User approval CLI tool
@@ -180,7 +174,7 @@ NEXT_PUBLIC_APP_URL="http://localhost:3001"  # Development
 - [x] Approval script lists unapproved users
 - [x] Approval script approves users successfully
 - [x] Approved users can access dashboard
-- [ ] Full end-to-end test with real user signup → approval → login
+- [ ] Full end-to-end test with real user creation → approval → login
 
 ### Known Limitations
 
@@ -203,7 +197,7 @@ NEXT_PUBLIC_APP_URL="http://localhost:3001"  # Development
 - **Middleware Limitation**: Approval checking happens in dashboard layout (not middleware) because middleware runs on edge runtime which doesn't support Prisma database queries
 - **User Sync**: Happens automatically on every dashboard access via layout.tsx
 - **Session Management**: Handled entirely by Neon Auth (no custom session logic needed)
-- **Security**: Two-layer approach ensures even if signup is somehow exploited, users still can't access data without approval
+- **Security**: Two-layer approach ensures even if account creation is somehow exploited, users still can't access data without approval
 - **Route Structure**: Dashboard at `/dashboard` using Next.js route group: `app/(dashboard)/dashboard/page.tsx`
 
 ## Documentation

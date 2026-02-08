@@ -9,7 +9,7 @@ const toastSuccess = jest.fn()
 const toastError = jest.fn()
 const toastMessage = jest.fn()
 
-const slotPickerMock = jest.fn(() => null)
+const slotPickerMock = jest.fn<null, [unknown]>(() => null)
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush, refresh: mockRefresh }),
@@ -122,7 +122,7 @@ describe('ScheduleView', () => {
     )
 
     expect(slotPickerMock).toHaveBeenCalled()
-    const lastProps = slotPickerMock.mock.calls[slotPickerMock.mock.calls.length - 1]?.[0] as {
+    const lastProps = slotPickerMock.mock.calls[slotPickerMock.mock.calls.length - 1][0] as {
       existingChoreIds?: string[]
     }
     expect(lastProps.existingChoreIds).toEqual(expect.arrayContaining(['w1']))

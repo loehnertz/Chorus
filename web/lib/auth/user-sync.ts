@@ -6,7 +6,7 @@ import { z } from 'zod';
 const neonUserSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
-  name: z.string().max(255),
+  name: z.string().max(255).nullable().optional(),
   image: z.string().url().nullable().optional(),
 });
 
@@ -34,7 +34,11 @@ export async function syncUser(neonUser: NeonAuthUser, approved?: boolean) {
   }
 
   const validated = parsed.data;
-  const normalizedName = validated.name.trim() ? validated.name.trim() : null;
+
+  const normalizedName =
+    validated.name === undefined
+      ? undefined
+      : (validated.name?.trim() ? validated.name.trim() : null);
 
   try {
     // Use upsert to atomically create or update the user record
@@ -42,14 +46,14 @@ export async function syncUser(neonUser: NeonAuthUser, approved?: boolean) {
     return await db.user.upsert({
       where: { id: validated.id },
       update: {
-        name: normalizedName,
-        ...(validated.image ? { image: validated.image } : {}),
+        ...(normalizedName !== undefined ? { name: normalizedName } : {}),
+        ...(validated.image !== undefined ? { image: validated.image } : {}),
         ...(approved !== undefined && { approved }),
       },
       create: {
         id: validated.id,
-        name: normalizedName,
-        image: validated.image || null,
+        name: normalizedName ?? null,
+        image: validated.image ?? null,
         approved: approved ?? false,
       },
     });

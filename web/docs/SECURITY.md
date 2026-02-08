@@ -6,11 +6,11 @@ Chorus implements a **two-layer security model** where all users must be both au
 
 ### Security Model Overview
 
-1. **Public Sign-Up with Approval Requirement**
-   - Users can self-register at `/sign-up`
-   - New accounts are created with `approved: false` by default
-   - Users see "Pending Approval" page after registration
-   - Administrator must manually approve accounts via CLI script
+1. **Invite-Only Access (Sign-Up Disabled)**
+   - This deployment is intended for a single household
+   - Sign-up is disabled at the API layer (`app/api/auth/[...path]/route.ts` blocks `/sign-up`)
+   - New users must be created via Neon Console (or other admin workflow)
+   - App users are still created with `approved: false` by default and require manual approval
 
 2. **Two-Layer Security Model**
    - **Layer 1: Authentication** (Neon Auth) - Verifies identity
@@ -52,10 +52,10 @@ npx tsx scripts/approve-user.ts <user-id>
 - ✅ Use strong passwords (enforced: min 8 characters)
 - ✅ Review approval requests promptly
 - ✅ Revoke approval for inactive users
-- ✅ Monitor sign-up activity for abuse
+- ✅ Monitor sign-in activity for abuse
 
 **Future Enhancements (Phase 3+):**
-- Rate limiting on sign-up/sign-in endpoints (5 attempts/min per IP)
+ - Rate limiting on sign-in endpoints (5 attempts/min per IP)
 - Account lockout after failed login attempts
 - Enhanced password complexity requirements
 - Session timeout configuration
@@ -63,7 +63,7 @@ npx tsx scripts/approve-user.ts <user-id>
 
 ## User Sync Behavior
 
-After creating a user in Neon Auth or signing up:
+After creating a user in Neon Auth:
 1. User signs in at `/sign-in`
 2. Neon Auth authenticates the user
 3. On successful sign-in, the app automatically:
@@ -77,16 +77,17 @@ After creating a user in Neon Auth or signing up:
 To verify that the approval system works correctly:
 
 ```bash
-# 1. Sign up a new user at http://localhost:3001/sign-up
-# 2. Try to access dashboard (should redirect to /pending-approval)
+# 1. Create a user in Neon Auth (Neon Console)
+# 2. Sign in at http://localhost:3001/sign-in
+# 3. Try to access dashboard (should redirect to /pending-approval)
 
-# 3. List unapproved users
+# 4. List unapproved users
 npx tsx scripts/approve-user.ts
 
-# 4. Approve the user
-npx tsx scripts/approve-user.ts <user-id-from-step-3>
+# 5. Approve the user
+npx tsx scripts/approve-user.ts <user-id-from-step-4>
 
-# 5. Sign in again and verify dashboard access works
+# 6. Refresh and verify dashboard access works
 ```
 
 ## Manual User Sync (Troubleshooting)
@@ -183,12 +184,12 @@ This will enable:
 
 ## Emergency: Disabling Sign-Up
 
-If you need to temporarily disable sign-up (e.g., abuse):
+Sign-up is already disabled for this deployment.
 
-1. **Remove sign-up route:**
-   ```bash
-   git mv web/app/(auth)/sign-up/page.tsx web/app/(auth)/sign-up/page.tsx.disabled
-   ```
+If you need to (re-)disable sign-up (e.g., after enabling it for a future phase):
+
+1. **Remove any sign-up UI route (if added):**
+   - Ensure no `/sign-up` page exists under `app/(auth)/`
 
 2. **Add API blocking (optional):**
    ```typescript
@@ -208,7 +209,7 @@ If you need to temporarily disable sign-up (e.g., abuse):
    ```
 
 3. **Re-enable after fixing issue:**
-   - Restore the sign-up page
+   - Restore the sign-up page (if you use one)
    - Remove API blocking code
    - Deploy
 

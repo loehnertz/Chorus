@@ -1,3 +1,5 @@
+import type { Prisma } from '@prisma/client';
+
 import { db } from '@/lib/db';
 import { withApproval } from '@/lib/auth/with-approval';
 import {
@@ -97,7 +99,7 @@ export const GET = withApproval(async (_session, request: Request) => {
     const toIsDateOnly = typeof rawQuery.to === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rawQuery.to);
     const fromIsDateOnly = typeof rawQuery.from === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rawQuery.from);
 
-    const where: Record<string, unknown> = {};
+    const where: Prisma.ChoreCompletionWhereInput = {};
     if (choreId) where.choreId = choreId;
     if (userId) where.userId = userId;
     if (from || to) {

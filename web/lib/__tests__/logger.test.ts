@@ -14,21 +14,21 @@ describe('logger', () => {
 
   describe('sanitizeErrorMessage', () => {
     it('returns generic message in production', () => {
-      process.env.NODE_ENV = 'production'
+      process.env = { ...process.env, NODE_ENV: 'production' }
       expect(sanitizeErrorMessage(new Error('secret details'))).toBe(
         'An error occurred. Please try again later.',
       )
     })
 
     it('returns detailed message outside production', () => {
-      process.env.NODE_ENV = 'test'
+      process.env = { ...process.env, NODE_ENV: 'test' }
       expect(sanitizeErrorMessage(new Error('secret details'))).toBe('secret details')
     })
   })
 
   describe('logError', () => {
     it('logs JSON in production', () => {
-      process.env.NODE_ENV = 'production'
+      process.env = { ...process.env, NODE_ENV: 'production' }
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
       logError('ctx', new Error('boom'), { userId: 'u1' })
@@ -40,7 +40,7 @@ describe('logger', () => {
     })
 
     it('logs raw error outside production', () => {
-      process.env.NODE_ENV = 'test'
+      process.env = { ...process.env, NODE_ENV: 'test' }
       const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
       const err = new Error('boom')
