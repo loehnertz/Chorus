@@ -176,7 +176,7 @@ export function PushRemindersOptIn({ className }: PushRemindersOptInProps) {
         <div className="flex items-start gap-3 text-sm text-[var(--foreground)]/70">
           <Info className="mt-0.5 h-4 w-4 text-[var(--color-terracotta)]" aria-hidden="true" />
           <p>
-            Get a morning digest and an evening nudge when you still have tasks scheduled for today.
+            Get a daily reminder when you still have tasks scheduled for today.
           </p>
         </div>
 

@@ -83,25 +83,17 @@ export async function GET(request: Request) {
   let removed = 0;
   let skipped = 0;
 
-  const kindOrder: ReminderKind[] = ['morning', 'evening'];
+  const kind: ReminderKind = 'daily';
 
   for (const sub of subs) {
     const tz = sub.timezone?.trim() ? sub.timezone.trim() : 'UTC';
 
-    let kindToSend: ReminderKind | null = null;
-    let dayKey: string | null = null;
+    const check = shouldSendReminder(now, tz);
+    // NOTE: Schema has morning/evening keys from an earlier design.
+    // On Vercel Hobby we only send once/day, so we store the daily dedupe key in lastMorningKey.
+    const already = sub.lastMorningKey === check.dayKey;
 
-    for (const kind of kindOrder) {
-      const check = shouldSendReminder(now, tz, kind);
-      const already = kind === 'morning' ? sub.lastMorningKey === check.dayKey : sub.lastEveningKey === check.dayKey;
-      if (check.send && !already) {
-        kindToSend = kind;
-        dayKey = check.dayKey;
-        break;
-      }
-    }
-
-    if (!kindToSend || !dayKey) {
+    if (!check.send || already) {
       skipped++;
       continue;
     }
@@ -115,8 +107,8 @@ export async function GET(request: Request) {
     }
 
     const payload = buildReminderNotificationPayload({
-      kind: kindToSend,
-      dayKey,
+      kind,
+      dayKey: check.dayKey,
       incomplete: relevant.map((s) => ({ title: s.chore.title })),
     });
 
@@ -129,7 +121,7 @@ export async function GET(request: Request) {
 
       await db.webPushSubscription.update({
         where: { id: sub.id },
-        data: kindToSend === 'morning' ? { lastMorningKey: dayKey } : { lastEveningKey: dayKey },
+        data: { lastMorningKey: check.dayKey },
       });
     } catch (err: unknown) {
       const statusCode = (err as { statusCode?: number } | null)?.statusCode;

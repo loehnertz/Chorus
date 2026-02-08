@@ -1,6 +1,6 @@
 import type { Frequency } from '@/types/frequency'
 
-export type ReminderKind = 'morning' | 'evening'
+export type ReminderKind = 'daily'
 
 export type IncompleteSchedule = {
   id: string
@@ -30,36 +30,12 @@ export function getLocalDayKey(date: Date, timeZone: string): string {
   return `${year}-${month}-${day}`
 }
 
-export function getLocalTimeHM(date: Date, timeZone: string): { hour: number; minute: number } {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(date)
-
-  const hourRaw = parts.find((p) => p.type === 'hour')?.value
-  const minuteRaw = parts.find((p) => p.type === 'minute')?.value
-  const hour = hourRaw ? Number(hourRaw) : NaN
-  const minute = minuteRaw ? Number(minuteRaw) : NaN
-  return {
-    hour: Number.isFinite(hour) ? hour : date.getUTCHours(),
-    minute: Number.isFinite(minute) ? minute : date.getUTCMinutes(),
-  }
-}
-
-export function shouldSendReminder(now: Date, timeZone: string, kind: ReminderKind): { send: boolean; dayKey: string } {
+export function shouldSendReminder(now: Date, timeZone: string): { send: boolean; dayKey: string } {
+  // On Vercel Hobby, cron jobs can only run once/day.
+  // We still compute a per-timezone dayKey so dedupe works across timezones.
   const tz = timeZone?.trim() ? timeZone.trim() : 'UTC'
   const dayKey = getLocalDayKey(now, tz)
-  const { hour } = getLocalTimeHM(now, tz)
-
-  // Robust windows for 10-minute cron cadence.
-  // Morning: 08:00-11:59, Evening: 17:00-20:59
-  if (kind === 'morning') {
-    return { send: hour >= 8 && hour <= 11, dayKey }
-  }
-
-  return { send: hour >= 17 && hour <= 20, dayKey }
+  return { send: true, dayKey }
 }
 
 export function filterSchedulesForUser(schedules: IncompleteSchedule[], userId: string): IncompleteSchedule[] {
