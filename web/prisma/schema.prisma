@@ -19,8 +19,36 @@ model User {
 
   assignedChores ChoreAssignment[]
   completions    ChoreCompletion[]
+  pushSubscriptions WebPushSubscription[]
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
+}
+
+model WebPushSubscription {
+  id       String @id @default(uuid())
+
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Web Push subscription endpoint (unique per browser profile/device).
+  endpoint String @unique
+
+  // Stored redundantly for convenience/debugging; canonical copy is in subscription.
+  p256dh   String
+  auth     String
+
+  subscription Json
+  userAgent    String?
+  timezone     String?
+
+  // Per-subscription idempotency keys for reminder delivery.
+  lastMorningKey String?
+  lastEveningKey String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 // Chore definition (the pool of tasks)

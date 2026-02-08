@@ -5,6 +5,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { DashboardStats, type DashboardStatsData } from '@/components/dashboard-stats'
 import { TodaysTasks, type TodaysTask } from '@/components/todays-tasks'
 import { DashboardPlanningWarnings } from '@/components/dashboard-planning-warnings'
+import { PushRemindersOptIn } from '@/components/pwa/push-reminders-opt-in'
 import { FrequencyBadge } from '@/components/ui/frequency-badge'
 import { Avatar } from '@/components/ui/avatar'
 import { LocalDateTime } from '@/components/ui/local-datetime'
@@ -34,6 +35,8 @@ export function DashboardView({ userId, stats, todaysTasks, recentActivity, plan
       <DashboardStats stats={stats} />
 
       <DashboardPlanningWarnings warnings={planningWarnings ?? []} />
+
+      <PushRemindersOptIn />
 
       <Card>
         <CardHeader>

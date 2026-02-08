@@ -189,6 +189,24 @@ export const listChoresQuerySchema = z.object({
     .transform((s) => (s && s.length ? s : undefined)),
 });
 
+export const webPushSubscriptionSchema = z.object({
+  endpoint: z.string().url('endpoint must be a URL'),
+  expirationTime: z.number().nullable().optional(),
+  keys: z.object({
+    p256dh: z.string().min(1, 'p256dh is required'),
+    auth: z.string().min(1, 'auth is required'),
+  }),
+});
+
+export const upsertWebPushSubscriptionSchema = z.object({
+  subscription: webPushSubscriptionSchema,
+  timezone: z.string().transform((s) => s.trim()).optional(),
+});
+
+export const deleteWebPushSubscriptionSchema = z.object({
+  endpoint: z.string().url('endpoint must be a URL').optional(),
+});
+
 /**
  * Format Zod validation errors into a structured API response
  */
