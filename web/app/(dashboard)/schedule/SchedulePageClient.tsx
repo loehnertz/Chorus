@@ -3,6 +3,7 @@
 import * as React from 'react'
 
 import { ScheduleView } from '@/components/schedule-view'
+import { ScheduleLoadingSkeleton } from '@/components/schedule-loading-skeleton'
 
 type ApiScheduleViewResponse = React.ComponentProps<typeof ScheduleView> & {
   userId: string
@@ -22,6 +23,7 @@ export function SchedulePageClient(props: { month: string; day?: string | null }
 
     const run = async () => {
       setError(null)
+      setData(null)
       try {
         const qs = new URLSearchParams()
         qs.set('month', month)
@@ -57,11 +59,7 @@ export function SchedulePageClient(props: { month: string; day?: string | null }
   }
 
   if (!data) {
-    return (
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4">
-        <p className="text-sm text-[var(--foreground)]/60">Loading schedule…</p>
-      </div>
-    )
+    return <ScheduleLoadingSkeleton />
   }
 
   return (
