@@ -1,6 +1,14 @@
 import { db } from '@/lib/db';
 import type { NeonAuthUser } from '@/types/auth';
 import { logError } from '@/lib/logger';
+import { z } from 'zod';
+
+const neonUserSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  name: z.string().max(255),
+  image: z.string().url().nullable().optional(),
+});
 
 /**
  * User Sync Logic
@@ -17,25 +25,36 @@ import { logError } from '@/lib/logger';
  * @returns The synced User record from the app database
  */
 export async function syncUser(neonUser: NeonAuthUser, approved?: boolean) {
+  const parsed = neonUserSchema.safeParse(neonUser);
+  if (!parsed.success) {
+    logError('user-sync.validation', parsed.error, {
+      userId: (neonUser as unknown as { id?: string })?.id,
+    });
+    throw new Error('Invalid user data');
+  }
+
+  const validated = parsed.data;
+  const normalizedName = validated.name.trim() ? validated.name.trim() : null;
+
   try {
     // Use upsert to atomically create or update the user record
     // This avoids race conditions where concurrent requests both try to create
     return await db.user.upsert({
-      where: { id: neonUser.id },
+      where: { id: validated.id },
       update: {
-        name: neonUser.name || null,
-        ...(neonUser.image ? { image: neonUser.image } : {}),
+        name: normalizedName,
+        ...(validated.image ? { image: validated.image } : {}),
         ...(approved !== undefined && { approved }),
       },
       create: {
-        id: neonUser.id,
-        name: neonUser.name || null,
-        image: neonUser.image || null,
+        id: validated.id,
+        name: normalizedName,
+        image: validated.image || null,
         approved: approved ?? false,
       },
     });
   } catch (error) {
-    logError('user-sync', error, { userId: neonUser?.id });
+    logError('user-sync', error, { userId: validated.id });
     throw new Error('Failed to sync user data');
   }
 }

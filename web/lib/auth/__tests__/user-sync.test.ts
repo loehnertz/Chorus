@@ -17,7 +17,7 @@ jest.mock('@/lib/db', () => ({
 
 describe('syncUser', () => {
   const mockNeonUser: NeonAuthUser = {
-    id: 'test-user-id',
+    id: '11111111-1111-4111-8111-111111111111',
     email: 'test@example.com',
     name: 'Test User',
     image: 'https://example.com/avatar.jpg',
@@ -182,10 +182,22 @@ describe('syncUser', () => {
   });
 
   describe('error handling', () => {
+    it('should throw error when user data is invalid', async () => {
+      const invalid: NeonAuthUser = {
+        ...mockNeonUser,
+        id: 'not-a-uuid',
+      };
+
+      jest.spyOn(console, 'error').mockImplementation(() => {});
+      await expect(syncUser(invalid)).rejects.toThrow('Invalid user data');
+      expect(db.user.upsert).not.toHaveBeenCalled();
+    });
+
     it('should throw error when database operation fails', async () => {
       const dbError = new Error('Database connection failed');
       (db.user.upsert as jest.Mock).mockRejectedValue(dbError);
 
+      jest.spyOn(console, 'error').mockImplementation(() => {});
       await expect(syncUser(mockNeonUser)).rejects.toThrow('Failed to sync user data');
     });
   });

@@ -106,9 +106,9 @@ describe('POST /api/completions', () => {
     const mockCompletion = {
       id: 'comp-1',
       choreId: 'chore-1',
-      userId: 'test-user-id',
+      userId: session.user.id,
       chore: { id: 'chore-1', title: 'Dishes', frequency: 'DAILY' },
-      user: { id: 'test-user-id', name: 'Test User', image: null },
+      user: { id: session.user.id, name: 'Test User', image: null },
     };
     (db.choreCompletion.create as jest.Mock).mockResolvedValue(mockCompletion);
 
@@ -125,7 +125,7 @@ describe('POST /api/completions', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           choreId: 'chore-1',
-          userId: 'test-user-id',
+          userId: session.user.id,
         }),
       }),
     );
@@ -142,9 +142,9 @@ describe('POST /api/completions', () => {
       choreId: 'chore-1',
       scheduleId: 'sched-1',
       notes: 'Done well',
-      userId: 'test-user-id',
+      userId: session.user.id,
       chore: { id: 'chore-1', title: 'Dishes', frequency: 'DAILY' },
-      user: { id: 'test-user-id', name: 'Test User', image: null },
+      user: { id: session.user.id, name: 'Test User', image: null },
     };
     (db.choreCompletion.create as jest.Mock).mockResolvedValue(mockCompletion);
 
@@ -176,9 +176,9 @@ describe('POST /api/completions', () => {
       choreId: 'chore-1',
       scheduleId: 'sched-1',
       notes: null,
-      userId: 'test-user-id',
+      userId: session.user.id,
       chore: { id: 'chore-1', title: 'Dishes', frequency: 'DAILY' },
-      user: { id: 'test-user-id', name: 'Test User', image: null },
+      user: { id: session.user.id, name: 'Test User', image: null },
     };
     (db.choreCompletion.findUnique as jest.Mock).mockResolvedValue(existing);
 

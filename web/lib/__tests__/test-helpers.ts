@@ -9,7 +9,7 @@ export function createMockSession(overrides?: Partial<{
   name: string;
   image: string | null;
 }>): NeonAuthSession {
-  const userId = overrides?.userId ?? 'test-user-id';
+  const userId = overrides?.userId ?? '11111111-1111-4111-8111-111111111111';
   return {
     user: {
       id: userId,
