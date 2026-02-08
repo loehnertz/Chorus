@@ -137,37 +137,56 @@ export async function suggestCascadedChore(params: {
 
   const scheduledIds = scheduled.map((s) => s.choreId);
 
-  const chores = await db.chore.findMany({
-    where: {
-      frequency: sourceFrequency,
-      ...(scheduledIds.length ? { id: { notIn: scheduledIds } } : {}),
-    },
-    include: {
-      assignments: { select: { userId: true } },
-      completions: {
-        orderBy: { completedAt: 'desc' },
-        take: 1,
-        select: { completedAt: true },
-      },
-    },
-  });
+  const baseWhere = {
+    frequency: sourceFrequency,
+    ...(scheduledIds.length ? { id: { notIn: scheduledIds } } : {}),
+  } as const;
 
-  if (!chores.length) return null;
+  const select = {
+    id: true,
+    title: true,
+    description: true,
+    frequency: true,
+  } as const;
 
+  // Prefer chores assigned to the user when possible, without pulling assignments for every chore.
   const userId = params.userId;
-  const assigned = userId
-    ? chores.filter((c) => c.assignments.some((a) => a.userId === userId))
+  const chores = userId
+    ? await db.chore.findMany({
+        where: { ...baseWhere, assignments: { some: { userId } } },
+        select,
+      })
     : [];
-  const candidates = assigned.length ? assigned : chores;
+
+  const candidates = chores.length
+    ? chores
+    : await db.chore.findMany({
+        where: baseWhere,
+        select,
+      });
+
+  if (!candidates.length) return null;
+
+  const ids = candidates.map((c) => c.id);
+
+  const lastCompletion = await db.choreCompletion.groupBy({
+    by: ['choreId'],
+    where: { choreId: { in: ids } },
+    _max: { completedAt: true },
+  });
+  const lastById = new Map(lastCompletion.map((r) => [r.choreId, r._max.completedAt] as const));
 
   candidates.sort((a, b) => {
-    const aNever = a.completions.length === 0;
-    const bNever = b.completions.length === 0;
+    const aLast = lastById.get(a.id);
+    const bLast = lastById.get(b.id);
+
+    const aNever = !aLast;
+    const bNever = !bLast;
     if (aNever !== bNever) return aNever ? -1 : 1;
 
-    const aLast = a.completions[0]?.completedAt?.getTime() ?? 0;
-    const bLast = b.completions[0]?.completedAt?.getTime() ?? 0;
-    if (aLast !== bLast) return aLast - bLast;
+    const aMs = aLast?.getTime() ?? 0;
+    const bMs = bLast?.getTime() ?? 0;
+    if (aMs !== bMs) return aMs - bMs;
 
     return a.title.localeCompare(b.title);
   });
@@ -197,30 +216,30 @@ export async function checkCascadePace(params?: { now?: Date }): Promise<PaceWar
     Frequency.YEARLY,
   ];
 
-  const warnings: PaceWarning[] = [];
+  const warnings = await Promise.all(
+    sources.map(async (sourceFrequency) => {
+      const { start: cycleStart, end: cycleEnd } = getCycleRangeForSourceFrequency(sourceFrequency, now);
+      const remainingSlots = getRemainingSlotsForSourceFrequency(sourceFrequency, now, cycleEnd);
 
-  for (const sourceFrequency of sources) {
-    const { start: cycleStart, end: cycleEnd } = getCycleRangeForSourceFrequency(sourceFrequency, now);
-    const remainingSlots = getRemainingSlotsForSourceFrequency(sourceFrequency, now, cycleEnd);
+      const [totalChores, scheduledDistinct] = await Promise.all([
+        db.chore.count({ where: { frequency: sourceFrequency } }),
+        db.schedule.findMany({
+          where: {
+            hidden: false,
+            scheduledFor: { gte: cycleStart, lt: cycleEnd },
+            chore: { frequency: sourceFrequency },
+          },
+          distinct: ['choreId'],
+          select: { choreId: true },
+        }),
+      ]);
 
-    const [totalChores, scheduledDistinct] = await Promise.all([
-      db.chore.count({ where: { frequency: sourceFrequency } }),
-      db.schedule.findMany({
-        where: {
-          hidden: false,
-          scheduledFor: { gte: cycleStart, lt: cycleEnd },
-          chore: { frequency: sourceFrequency },
-        },
-        distinct: ['choreId'],
-        select: { choreId: true },
-      }),
-    ]);
+      const scheduledChores = scheduledDistinct.length;
+      const remainingChores = Math.max(0, totalChores - scheduledChores);
 
-    const scheduledChores = scheduledDistinct.length;
-    const remainingChores = Math.max(0, totalChores - scheduledChores);
+      if (remainingChores <= remainingSlots) return null;
 
-    if (remainingChores > remainingSlots) {
-      warnings.push({
+      return {
         sourceFrequency,
         remainingChores,
         remainingSlots,
@@ -229,9 +248,9 @@ export async function checkCascadePace(params?: { now?: Date }): Promise<PaceWar
         cycleStart,
         cycleEnd,
         message: `Behind pace for ${sourceFrequency}: ${remainingChores} remaining with only ${remainingSlots} slots left in this cycle.`,
-      });
-    }
-  }
+      } satisfies PaceWarning;
+    }),
+  );
 
-  return warnings;
+  return warnings.filter((w): w is PaceWarning => w !== null);
 }

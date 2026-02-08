@@ -16,6 +16,9 @@ jest.mock('@/lib/db', () => ({
       findMany: jest.fn(),
       count: jest.fn(),
     },
+    choreCompletion: {
+      groupBy: jest.fn(),
+    },
     schedule: {
       findMany: jest.fn(),
     },
@@ -54,18 +57,18 @@ describe('suggestCascadedChore', () => {
       {
         id: 'weekly-2',
         title: 'B',
+        description: null,
         frequency: 'WEEKLY',
-        assignments: [],
-        completions: [],
       },
       {
         id: 'weekly-3',
         title: 'C',
+        description: null,
         frequency: 'WEEKLY',
-        assignments: [],
-        completions: [],
       },
     ]);
+
+    ;(db.choreCompletion.groupBy as jest.Mock).mockResolvedValue([])
 
     const res = await suggestCascadedChore({
       currentFrequency: 'DAILY',
@@ -79,6 +82,7 @@ describe('suggestCascadedChore', () => {
           frequency: 'WEEKLY',
           id: { notIn: ['weekly-1'] },
         }),
+        select: expect.any(Object),
       }),
     );
 
@@ -91,18 +95,23 @@ describe('suggestCascadedChore', () => {
       {
         id: 'biweekly-1',
         title: 'Already done',
+        description: null,
         frequency: 'BIWEEKLY',
-        assignments: [],
-        completions: [{ completedAt: new Date('2026-01-01T00:00:00Z') }],
       },
       {
         id: 'biweekly-2',
         title: 'Never done',
+        description: null,
         frequency: 'BIWEEKLY',
-        assignments: [],
-        completions: [],
       },
     ]);
+
+    ;(db.choreCompletion.groupBy as jest.Mock).mockResolvedValue([
+      {
+        choreId: 'biweekly-1',
+        _max: { completedAt: new Date('2026-01-01T00:00:00Z') },
+      },
+    ])
 
     const res = await suggestCascadedChore({
       currentFrequency: 'WEEKLY',
@@ -118,18 +127,27 @@ describe('suggestCascadedChore', () => {
       {
         id: 'bimonthly-1',
         title: 'More recent',
+        description: null,
         frequency: 'BIMONTHLY',
-        assignments: [],
-        completions: [{ completedAt: new Date('2026-01-10T00:00:00Z') }],
       },
       {
         id: 'bimonthly-2',
         title: 'Older',
+        description: null,
         frequency: 'BIMONTHLY',
-        assignments: [],
-        completions: [{ completedAt: new Date('2025-01-10T00:00:00Z') }],
       },
     ]);
+
+    ;(db.choreCompletion.groupBy as jest.Mock).mockResolvedValue([
+      {
+        choreId: 'bimonthly-1',
+        _max: { completedAt: new Date('2026-01-10T00:00:00Z') },
+      },
+      {
+        choreId: 'bimonthly-2',
+        _max: { completedAt: new Date('2025-01-10T00:00:00Z') },
+      },
+    ])
 
     const res = await suggestCascadedChore({
       currentFrequency: 'MONTHLY',
@@ -141,22 +159,17 @@ describe('suggestCascadedChore', () => {
 
   it('should prefer assigned chores when userId is provided and eligible assigned chores exist', async () => {
     (db.schedule.findMany as jest.Mock).mockResolvedValue([]);
-    (db.chore.findMany as jest.Mock).mockResolvedValue([
-      {
-        id: 'weekly-1',
-        title: 'Unassigned',
-        frequency: 'WEEKLY',
-        assignments: [],
-        completions: [],
-      },
+    // First query is the assigned-only candidate set.
+    (db.chore.findMany as jest.Mock).mockResolvedValueOnce([
       {
         id: 'weekly-2',
         title: 'Assigned',
+        description: null,
         frequency: 'WEEKLY',
-        assignments: [{ userId: 'user-1' }],
-        completions: [],
       },
-    ]);
+    ])
+
+    ;(db.choreCompletion.groupBy as jest.Mock).mockResolvedValue([])
 
     const res = await suggestCascadedChore({
       currentFrequency: 'DAILY',

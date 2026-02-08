@@ -114,35 +114,36 @@ export async function getDashboardPlanningWarnings(
     choresByFreq.get(freq)!.push({ id: c.id, title: c.title })
   }
 
-  const warnings: DashboardPlanningWarning[] = []
-  for (const frequency of lateFrequencies) {
-    const cycle = getCycleRangeUtc(frequency, now)
+  const warnings = await Promise.all(
+    lateFrequencies.map(async (frequency) => {
+      const cycle = getCycleRangeUtc(frequency, now)
 
-    const allChores = choresByFreq.get(frequency) ?? []
-    if (allChores.length === 0) continue
+      const allChores = choresByFreq.get(frequency) ?? []
+      if (allChores.length === 0) return null
 
-    const scheduled = await db.schedule.findMany({
-      where: {
-        hidden: false,
-        scheduledFor: { gte: cycle.start, lt: cycle.end },
-        chore: { frequency },
-      },
-      distinct: ['choreId'],
-      select: { choreId: true },
-    })
-    const scheduledIds = new Set(scheduled.map((s) => s.choreId))
+      const scheduled = await db.schedule.findMany({
+        where: {
+          hidden: false,
+          scheduledFor: { gte: cycle.start, lt: cycle.end },
+          chore: { frequency },
+        },
+        distinct: ['choreId'],
+        select: { choreId: true },
+      })
+      const scheduledIds = new Set(scheduled.map((s) => s.choreId))
 
-    const unscheduledChores = allChores.filter((c) => !scheduledIds.has(c.id))
-    if (unscheduledChores.length === 0) continue
+      const unscheduledChores = allChores.filter((c) => !scheduledIds.has(c.id))
+      if (unscheduledChores.length === 0) return null
 
-    warnings.push({
-      frequency,
-      cycleStart: cycle.start,
-      cycleEnd: cycle.end,
-      remainingFraction: getRemainingFractionUtc(cycle, now),
-      unscheduledChores,
-    })
-  }
+      return {
+        frequency,
+        cycleStart: cycle.start,
+        cycleEnd: cycle.end,
+        remainingFraction: getRemainingFractionUtc(cycle, now),
+        unscheduledChores,
+      } satisfies DashboardPlanningWarning
+    }),
+  )
 
-  return warnings
+  return warnings.filter((w): w is DashboardPlanningWarning => w !== null)
 }
