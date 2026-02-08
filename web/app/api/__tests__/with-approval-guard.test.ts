@@ -36,6 +36,11 @@ describe('API approval enforcement', () => {
         continue
       }
 
+      // Internal/cron routes are protected via secrets, not user sessions.
+      if (rel.startsWith(path.join('app', 'api', 'cron') + path.sep)) {
+        continue
+      }
+
       const src = fs.readFileSync(filePath, 'utf8')
       const usesWithApproval = /\bwithApproval\b/.test(src)
 

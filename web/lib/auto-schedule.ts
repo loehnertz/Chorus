@@ -3,6 +3,20 @@ import { startOfTodayUtc } from '@/lib/date'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
+const CREATE_MANY_CHUNK_SIZE = 1000
+
+async function createSchedulesInChunks(
+  data: Array<{ choreId: string; scheduledFor: Date; slotType: 'DAILY'; suggested: boolean }>,
+) {
+  let created = 0
+  for (let i = 0; i < data.length; i += CREATE_MANY_CHUNK_SIZE) {
+    const chunk = data.slice(i, i + CREATE_MANY_CHUNK_SIZE)
+    const result = await db.schedule.createMany({ data: chunk, skipDuplicates: true })
+    created += result.count
+  }
+  return created
+}
+
 /**
  * Auto-schedule all DAILY-frequency chores for a date range.
  *
@@ -19,6 +33,8 @@ export async function ensureDailySchedules(
   now?: Date,
   through?: Date,
 ): Promise<{ created: number }> {
+  const profile = process.env.CHORUS_PROFILE === '1'
+  const t0 = profile ? performance.now() : 0
   const today = startOfTodayUtc(now)
 
   const maxDays = 90
@@ -46,6 +62,20 @@ export async function ensureDailySchedules(
     }
   }
 
+  // Fast-path: if all (choreId, day) pairs already exist, skip the insert.
+  // This avoids repeatedly running a large createMany on every navigation.
+  const dailyIds = dailyChores.map((c) => c.id)
+  const expectedRows = dailyIds.length * days.length
+  const existingRows = await db.schedule.count({
+    where: {
+      choreId: { in: dailyIds },
+      scheduledFor: { in: days },
+    },
+  })
+  if (existingRows === expectedRows) {
+    return { created: 0 }
+  }
+
   const data = days.flatMap((day) =>
     dailyChores.map((chore) => ({
       choreId: chore.id,
@@ -55,9 +85,13 @@ export async function ensureDailySchedules(
     })),
   )
 
-  const result = await db.schedule.createMany({ data, skipDuplicates: true })
-
-  return { created: result.count }
+  const created = await createSchedulesInChunks(data)
+  if (profile) {
+    console.info(
+      `perf: ensureDailySchedules days=${days.length} chores=${dailyIds.length} created=${created} ${(performance.now() - t0).toFixed(1)}ms`,
+    )
+  }
+  return { created }
 }
 
 function mondayIndexFromUtcDay(utcDay: number) {
@@ -80,6 +114,8 @@ export async function ensureWeeklyPinnedSchedules(
   now?: Date,
   through?: Date,
 ): Promise<{ created: number }> {
+  const profile = process.env.CHORUS_PROFILE === '1'
+  const t0 = profile ? performance.now() : 0
   const today = startOfTodayUtc(now)
 
   const weeklyPinned = await db.chore.findMany({
@@ -121,8 +157,24 @@ export async function ensureWeeklyPinnedSchedules(
     return { created: 0 }
   }
 
-  const result = await db.schedule.createMany({ data, skipDuplicates: true })
-  return { created: result.count }
+  const expectedRows = data.length
+  const existingRows = await db.schedule.count({
+    where: {
+      choreId: { in: Array.from(new Set(data.map((d) => d.choreId))) },
+      scheduledFor: { in: Array.from(new Set(data.map((d) => d.scheduledFor))) },
+    },
+  })
+  if (existingRows === expectedRows) {
+    return { created: 0 }
+  }
+
+  const created = await createSchedulesInChunks(data)
+  if (profile) {
+    console.info(
+      `perf: ensureWeeklyPinnedSchedules days=${days.length} candidates=${weeklyPinned.length} created=${created} ${(performance.now() - t0).toFixed(1)}ms`,
+    )
+  }
+  return { created }
 }
 
 function isBiweeklyOccurrenceUtc(day: Date, anchor: Date) {
@@ -147,6 +199,8 @@ export async function ensureBiweeklyPinnedSchedules(
   now?: Date,
   through?: Date,
 ): Promise<{ created: number }> {
+  const profile = process.env.CHORUS_PROFILE === '1'
+  const t0 = profile ? performance.now() : 0
   const today = startOfTodayUtc(now)
 
   const biweeklyPinned = await db.chore.findMany({
@@ -190,6 +244,22 @@ export async function ensureBiweeklyPinnedSchedules(
     return { created: 0 }
   }
 
-  const result = await db.schedule.createMany({ data, skipDuplicates: true })
-  return { created: result.count }
+  const expectedRows = data.length
+  const existingRows = await db.schedule.count({
+    where: {
+      choreId: { in: Array.from(new Set(data.map((d) => d.choreId))) },
+      scheduledFor: { in: Array.from(new Set(data.map((d) => d.scheduledFor))) },
+    },
+  })
+  if (existingRows === expectedRows) {
+    return { created: 0 }
+  }
+
+  const created = await createSchedulesInChunks(data)
+  if (profile) {
+    console.info(
+      `perf: ensureBiweeklyPinnedSchedules days=${days.length} candidates=${biweeklyPinned.length} created=${created} ${(performance.now() - t0).toFixed(1)}ms`,
+    )
+  }
+  return { created }
 }

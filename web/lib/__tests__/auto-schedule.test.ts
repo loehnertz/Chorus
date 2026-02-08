@@ -5,6 +5,7 @@ jest.mock('@/lib/db', () => ({
     },
     schedule: {
       createMany: jest.fn(),
+      count: jest.fn(),
     },
   },
 }))
@@ -15,6 +16,7 @@ import { ensureBiweeklyPinnedSchedules, ensureDailySchedules, ensureWeeklyPinned
 describe('ensureDailySchedules', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    ;(db.schedule.count as jest.Mock).mockResolvedValue(0)
   })
 
   it('should create schedules for all daily chores for today', async () => {
@@ -42,6 +44,16 @@ describe('ensureDailySchedules', () => {
       ],
       skipDuplicates: true,
     })
+  })
+
+  it('should skip createMany when all schedules already exist', async () => {
+    ;(db.chore.findMany as jest.Mock).mockResolvedValue([{ id: 'chore-1' }, { id: 'chore-2' }])
+    ;(db.schedule.count as jest.Mock).mockResolvedValue(2)
+
+    const result = await ensureDailySchedules(new Date('2026-02-07T14:30:00Z'))
+
+    expect(result).toEqual({ created: 0 })
+    expect(db.schedule.createMany).not.toHaveBeenCalled()
   })
 
   it('should return count less than total when some schedules already exist', async () => {
@@ -162,6 +174,7 @@ describe('ensureDailySchedules', () => {
 describe('ensureWeeklyPinnedSchedules', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    ;(db.schedule.count as jest.Mock).mockResolvedValue(0)
   })
 
   it('should return zero and skip createMany when no weekly pinned chores exist', async () => {
@@ -197,6 +210,22 @@ describe('ensureWeeklyPinnedSchedules', () => {
     })
   })
 
+  it('should skip createMany when all weekly pinned schedules already exist', async () => {
+    ;(db.chore.findMany as jest.Mock).mockResolvedValue([
+      { id: 'weekly-1', weeklyAutoPlanDay: 0 },
+      { id: 'weekly-2', weeklyAutoPlanDay: 0 },
+    ])
+    ;(db.schedule.count as jest.Mock).mockResolvedValue(2)
+
+    const result = await ensureWeeklyPinnedSchedules(
+      new Date('2026-02-07T10:00:00Z'),
+      new Date('2026-02-16T00:00:00Z')
+    )
+
+    expect(result).toEqual({ created: 0 })
+    expect(db.schedule.createMany).not.toHaveBeenCalled()
+  })
+
   it('should use start-of-day UTC for scheduledFor', async () => {
     ;(db.chore.findMany as jest.Mock).mockResolvedValue([{ id: 'weekly-1', weeklyAutoPlanDay: 0 }])
     ;(db.schedule.createMany as jest.Mock).mockResolvedValue({ count: 1 })
@@ -214,6 +243,7 @@ describe('ensureWeeklyPinnedSchedules', () => {
 describe('ensureBiweeklyPinnedSchedules', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    ;(db.schedule.count as jest.Mock).mockResolvedValue(0)
   })
 
   it('should return zero and skip createMany when no biweekly pinned chores exist', async () => {
@@ -250,5 +280,25 @@ describe('ensureBiweeklyPinnedSchedules', () => {
       ],
       skipDuplicates: true,
     })
+  })
+
+  it('should skip createMany when all biweekly pinned schedules already exist', async () => {
+    ;(db.chore.findMany as jest.Mock).mockResolvedValue([
+      {
+        id: 'biweekly-1',
+        biweeklyAutoPlanDay: 6,
+        biweeklyAutoPlanAnchor: new Date('2026-02-08T00:00:00Z'),
+      },
+    ])
+    ;(db.schedule.count as jest.Mock).mockResolvedValue(2)
+    ;(db.schedule.createMany as jest.Mock).mockResolvedValue({ count: 0 })
+
+    const result = await ensureBiweeklyPinnedSchedules(
+      new Date('2026-02-07T10:00:00Z'),
+      new Date('2026-03-01T00:00:00Z'),
+    )
+
+    expect(result).toEqual({ created: 0 })
+    expect(db.schedule.createMany).not.toHaveBeenCalled()
   })
 })
