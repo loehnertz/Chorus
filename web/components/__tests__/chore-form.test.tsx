@@ -62,7 +62,7 @@ describe('ChoreForm', () => {
     globalThis.fetch = originalFetch
   })
 
-  it('allows setting weekly auto-plan day for weekly chores', async () => {
+  it('allows setting weekly auto-schedule day for weekly chores', async () => {
     const user = userEvent.setup()
     const onOpenChange = jest.fn()
 
@@ -75,10 +75,10 @@ describe('ChoreForm', () => {
 
     await user.type(screen.getByPlaceholderText('e.g., Vacuum the living room'), 'Trash')
 
-    // Weekly is the default frequency, so the auto-plan control should be visible
-    expect(screen.getByText('Auto-plan on')).toBeInTheDocument()
+    // Weekly is the default frequency, so the auto-schedule control should be visible
+    expect(screen.getByText('Auto-schedule on')).toBeInTheDocument()
 
-    await user.click(screen.getByLabelText('Auto-plan weekday'))
+    await user.click(screen.getByLabelText('Auto-schedule weekday'))
     const listbox = await screen.findByRole('listbox')
     await user.click(within(listbox).getByText('Monday'))
 
@@ -91,6 +91,51 @@ describe('ChoreForm', () => {
     const parsed = JSON.parse(init.body)
     expect(parsed.frequency).toBe('WEEKLY')
     expect(parsed.weeklyAutoPlanDay).toBe(0)
+
+    globalThis.fetch = originalFetch
+  })
+
+  it('allows setting biweekly auto-schedule day for biweekly chores', async () => {
+    const user = userEvent.setup()
+    const onOpenChange = jest.fn()
+
+    const originalFetch = globalThis.fetch
+    const fetchMock = jest.fn().mockResolvedValueOnce({ ok: true } as unknown as Response)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(globalThis as any).fetch = fetchMock
+
+    render(
+      <ChoreForm
+        open
+        onOpenChange={onOpenChange}
+        users={[{ id: 'u1', name: 'Alice' }]}
+        initialValues={{
+          id: 'c1',
+          title: 'Car cleanup',
+          description: null,
+          frequency: 'BIWEEKLY',
+          biweeklyAutoPlanDay: null,
+          assigneeIds: [],
+        }}
+      />
+    )
+
+    expect(screen.getByText('Auto-schedule on')).toBeInTheDocument()
+
+    await user.click(screen.getByLabelText('Auto-schedule weekday'))
+    const listbox = await screen.findByRole('listbox')
+    await user.click(within(listbox).getByText('Sunday'))
+
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+
+    const call = fetchMock.mock.calls[0]
+    expect(call[0]).toBe('/api/chores/c1')
+    const init = call[1] as { body: string }
+    const parsed = JSON.parse(init.body)
+    expect(parsed.frequency).toBe('BIWEEKLY')
+    expect(parsed.biweeklyAutoPlanDay).toBe(6)
 
     globalThis.fetch = originalFetch
   })

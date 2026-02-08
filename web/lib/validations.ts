@@ -17,6 +17,14 @@ export const createChoreSchema = z.object({
     .nullable()
     .optional()
     .default(null),
+  biweeklyAutoPlanDay: z
+    .number()
+    .int()
+    .min(0)
+    .max(6)
+    .nullable()
+    .optional()
+    .default(null),
   description: z
     .string()
     .transform((s) => s.trim() || null)
@@ -33,6 +41,16 @@ export const createChoreSchema = z.object({
   }, {
     message: 'weeklyAutoPlanDay is only allowed for WEEKLY chores',
     path: ['weeklyAutoPlanDay'],
+  })
+  .refine((data) => {
+    // Only biweekly chores can have a pinned weekday.
+    if (data.frequency !== 'BIWEEKLY') {
+      return data.biweeklyAutoPlanDay == null
+    }
+    return true
+  }, {
+    message: 'biweeklyAutoPlanDay is only allowed for BIWEEKLY chores',
+    path: ['biweeklyAutoPlanDay'],
   });
 
 export const updateChoreSchema = z
@@ -54,6 +72,7 @@ export const updateChoreSchema = z
       .optional(),
     assigneeIds: z.array(z.string()).optional(),
     weeklyAutoPlanDay: z.number().int().min(0).max(6).nullable().optional(),
+    biweeklyAutoPlanDay: z.number().int().min(0).max(6).nullable().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: 'At least one field must be provided',

@@ -224,6 +224,38 @@ describe('PUT /api/chores/[id]', () => {
     );
   });
 
+  it('should update biweeklyAutoPlanDay (and anchor) for biweekly chores', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-02-07T10:00:00Z'))
+
+    const session = createMockSession();
+    (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);
+    (db.chore.findUnique as jest.Mock).mockResolvedValue({ id: 'test-id', frequency: 'BIWEEKLY' });
+
+    const updated = {
+      id: 'test-id',
+      title: 'Clean out car',
+      biweeklyAutoPlanDay: 6,
+      biweeklyAutoPlanAnchor: new Date('2026-02-08T00:00:00Z'),
+      assignments: [],
+    };
+    (db.chore.update as jest.Mock).mockResolvedValue(updated);
+
+    const request = makeRequest({ method: 'PUT', body: { biweeklyAutoPlanDay: 6 } });
+    const response = await PUT(request, makeParams('test-id'));
+
+    expect(response.status).toBe(200);
+    expect(db.chore.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          biweeklyAutoPlanDay: 6,
+          biweeklyAutoPlanAnchor: new Date('2026-02-08T00:00:00Z'),
+        }),
+      }),
+    );
+
+    jest.useRealTimers()
+  });
+
   it('should return 500 on database error', async () => {
     const session = createMockSession();
     (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);

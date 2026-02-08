@@ -35,6 +35,14 @@ model Chore {
   // Stored as Monday-first index: 0=Mon .. 6=Sun.
   weeklyAutoPlanDay Int?
 
+  // For BIWEEKLY chores only: optional pinned weekday to auto-plan onto the daily schedule.
+  // Stored as Monday-first index: 0=Mon .. 6=Sun.
+  //
+  // biweeklyAutoPlanAnchor defines the first occurrence (start-of-day UTC) that should be
+  // scheduled; subsequent occurrences are every 14 days.
+  biweeklyAutoPlanDay    Int?
+  biweeklyAutoPlanAnchor DateTime?
+
   assignments ChoreAssignment[]
   schedules   Schedule[]
   completions ChoreCompletion[]

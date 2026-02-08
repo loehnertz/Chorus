@@ -1,8 +1,18 @@
 import { db } from '@/lib/db';
 import { withApproval } from '@/lib/auth/with-approval';
 import { updateChoreSchema, formatValidationError } from '@/lib/validations';
+import { startOfTodayUtc } from '@/lib/date';
 
 export const runtime = 'nodejs';
+
+function nextUtcDateForMondayIndex(from: Date, mondayIndex: number) {
+  const start = startOfTodayUtc(from)
+  const current = (start.getUTCDay() + 6) % 7 // Mon=0..Sun=6
+  const delta = (mondayIndex - current + 7) % 7
+  const next = new Date(start)
+  next.setUTCDate(next.getUTCDate() + delta)
+  return next
+}
 
 export const GET = withApproval(async (
   _session,
@@ -58,7 +68,7 @@ export const PUT = withApproval(async (
       return Response.json(formatValidationError(parsed.error), { status: 400 });
     }
 
-    const { title, frequency, description, assigneeIds, weeklyAutoPlanDay } = parsed.data;
+    const { title, frequency, description, assigneeIds, weeklyAutoPlanDay, biweeklyAutoPlanDay } = parsed.data;
 
     const normalizedAssigneeIds =
       assigneeIds === undefined
@@ -89,12 +99,35 @@ export const PUT = withApproval(async (
       }
     }
 
+    if (biweeklyAutoPlanDay !== undefined && biweeklyAutoPlanDay !== null) {
+      const effectiveFrequency = (frequency ?? existing.frequency) as string;
+      if (effectiveFrequency !== 'BIWEEKLY') {
+        return Response.json(
+          {
+            error: 'Validation failed',
+            details: {
+              formErrors: [],
+              fieldErrors: {
+                biweeklyAutoPlanDay: ['biweeklyAutoPlanDay is only allowed for BIWEEKLY chores'],
+              },
+            },
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     // Build update data
     const updateData: Record<string, unknown> = {};
     if (title !== undefined) updateData.title = title;
     if (frequency !== undefined) updateData.frequency = frequency;
     if (description !== undefined) updateData.description = description;
     if (weeklyAutoPlanDay !== undefined) updateData.weeklyAutoPlanDay = weeklyAutoPlanDay;
+    if (biweeklyAutoPlanDay !== undefined) {
+      updateData.biweeklyAutoPlanDay = biweeklyAutoPlanDay;
+      updateData.biweeklyAutoPlanAnchor =
+        biweeklyAutoPlanDay == null ? null : nextUtcDateForMondayIndex(new Date(), biweeklyAutoPlanDay);
+    }
 
     if (normalizedAssigneeIds !== undefined) {
       if (normalizedAssigneeIds.length) {

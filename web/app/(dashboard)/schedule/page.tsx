@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 import { startOfTodayUtc, startOfBimonthUtc, endOfBimonthUtc, startOfHalfYearUtc, endOfHalfYearUtc } from '@/lib/date'
 import { getTodayDayKeyUtc } from '@/lib/calendar'
 import { ScheduleView } from '@/components/schedule-view'
-import { ensureDailySchedules, ensureWeeklyPinnedSchedules } from '@/lib/auto-schedule'
+import { ensureBiweeklyPinnedSchedules, ensureDailySchedules, ensureWeeklyPinnedSchedules } from '@/lib/auto-schedule'
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -72,11 +72,13 @@ export default async function SchedulePage({
     await Promise.all([
       ensureDailySchedules(scheduleStart, gridEnd),
       ensureWeeklyPinnedSchedules(scheduleStart, gridEnd),
+      ensureBiweeklyPinnedSchedules(scheduleStart, gridEnd),
     ])
   } else {
     await Promise.all([
       ensureDailySchedules(scheduleStart),
       ensureWeeklyPinnedSchedules(scheduleStart),
+      ensureBiweeklyPinnedSchedules(scheduleStart),
     ])
   }
 

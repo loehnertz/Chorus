@@ -10,7 +10,7 @@ jest.mock('@/lib/db', () => ({
 }))
 
 import { db } from '@/lib/db'
-import { ensureDailySchedules, ensureWeeklyPinnedSchedules } from '../auto-schedule'
+import { ensureBiweeklyPinnedSchedules, ensureDailySchedules, ensureWeeklyPinnedSchedules } from '../auto-schedule'
 
 describe('ensureDailySchedules', () => {
   beforeEach(() => {
@@ -208,5 +208,47 @@ describe('ensureWeeklyPinnedSchedules', () => {
 
     const data = (db.schedule.createMany as jest.Mock).mock.calls[0][0].data
     expect(data[0].scheduledFor).toEqual(new Date('2026-02-09T00:00:00Z'))
+  })
+})
+
+describe('ensureBiweeklyPinnedSchedules', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('should return zero and skip createMany when no biweekly pinned chores exist', async () => {
+    ;(db.chore.findMany as jest.Mock).mockResolvedValue([])
+
+    const result = await ensureBiweeklyPinnedSchedules(new Date('2026-02-07T10:00:00Z'))
+
+    expect(result).toEqual({ created: 0 })
+    expect(db.schedule.createMany).not.toHaveBeenCalled()
+  })
+
+  it('should create schedules every other week based on the stored anchor', async () => {
+    // Range includes Sundays: 2026-02-08, 2026-02-15, 2026-02-22.
+    ;(db.chore.findMany as jest.Mock).mockResolvedValue([
+      {
+        id: 'biweekly-1',
+        biweeklyAutoPlanDay: 6, // Sunday (Mon=0..Sun=6)
+        biweeklyAutoPlanAnchor: new Date('2026-02-08T00:00:00Z'),
+      },
+    ])
+    ;(db.schedule.createMany as jest.Mock).mockResolvedValue({ count: 2 })
+
+    const result = await ensureBiweeklyPinnedSchedules(
+      new Date('2026-02-07T10:00:00Z'),
+      new Date('2026-03-01T00:00:00Z'),
+    )
+
+    expect(result).toEqual({ created: 2 })
+
+    expect(db.schedule.createMany).toHaveBeenCalledWith({
+      data: [
+        { choreId: 'biweekly-1', scheduledFor: new Date('2026-02-08T00:00:00Z'), slotType: 'DAILY', suggested: false },
+        { choreId: 'biweekly-1', scheduledFor: new Date('2026-02-22T00:00:00Z'), slotType: 'DAILY', suggested: false },
+      ],
+      skipDuplicates: true,
+    })
   })
 })

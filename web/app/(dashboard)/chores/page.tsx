@@ -35,6 +35,7 @@ export default async function ChoresPage() {
         description: c.description,
         frequency: c.frequency,
         weeklyAutoPlanDay: c.weeklyAutoPlanDay,
+        biweeklyAutoPlanDay: c.biweeklyAutoPlanDay,
         completionCount: c._count.completions,
         assignees: c.assignments
           .map((a) => ({

@@ -36,10 +36,11 @@ export type ChoreFormInitialValues = {
   description?: string | null
   frequency: Frequency
   weeklyAutoPlanDay?: number | null
+  biweeklyAutoPlanDay?: number | null
   assigneeIds: string[]
 }
 
-type FieldErrors = Partial<Record<'title' | 'description' | 'frequency' | 'assigneeIds' | 'weeklyAutoPlanDay', string>> & {
+type FieldErrors = Partial<Record<'title' | 'description' | 'frequency' | 'assigneeIds' | 'weeklyAutoPlanDay' | 'biweeklyAutoPlanDay', string>> & {
   form?: string
 }
 
@@ -71,6 +72,7 @@ function getFieldErrorsFromResponse(json: unknown): FieldErrors {
     out.frequency = pickFirst(fieldErrors.frequency)
     out.assigneeIds = pickFirst(fieldErrors.assigneeIds)
     out.weeklyAutoPlanDay = pickFirst(fieldErrors.weeklyAutoPlanDay)
+    out.biweeklyAutoPlanDay = pickFirst(fieldErrors.biweeklyAutoPlanDay)
   }
 
   const formMsg = pickFirst(formErrors)
@@ -97,6 +99,9 @@ export function ChoreForm({ open, onOpenChange, users, initialValues, onSaved }:
   const [weeklyAutoPlanDay, setWeeklyAutoPlanDay] = React.useState<number | null>(
     initialValues?.weeklyAutoPlanDay ?? null
   )
+  const [biweeklyAutoPlanDay, setBiweeklyAutoPlanDay] = React.useState<number | null>(
+    initialValues?.biweeklyAutoPlanDay ?? null
+  )
   const [assigneeIds, setAssigneeIds] = React.useState<string[]>(initialValues?.assigneeIds ?? [])
   const [errors, setErrors] = React.useState<FieldErrors>({})
   const [saving, setSaving] = React.useState(false)
@@ -107,6 +112,7 @@ export function ChoreForm({ open, onOpenChange, users, initialValues, onSaved }:
     setDescription(initialValues?.description ?? '')
     setFrequency(initialValues?.frequency ?? 'WEEKLY')
     setWeeklyAutoPlanDay(initialValues?.weeklyAutoPlanDay ?? null)
+    setBiweeklyAutoPlanDay(initialValues?.biweeklyAutoPlanDay ?? null)
     setAssigneeIds(initialValues?.assigneeIds ?? [])
     setErrors({})
     setSaving(false)
@@ -116,7 +122,10 @@ export function ChoreForm({ open, onOpenChange, users, initialValues, onSaved }:
     if (frequency !== 'WEEKLY' && weeklyAutoPlanDay !== null) {
       setWeeklyAutoPlanDay(null)
     }
-  }, [frequency, weeklyAutoPlanDay])
+    if (frequency !== 'BIWEEKLY' && biweeklyAutoPlanDay !== null) {
+      setBiweeklyAutoPlanDay(null)
+    }
+  }, [frequency, weeklyAutoPlanDay, biweeklyAutoPlanDay])
 
   const toggleAssignee = (userId: string) => {
     setAssigneeIds((prev) =>
@@ -144,6 +153,7 @@ export function ChoreForm({ open, onOpenChange, users, initialValues, onSaved }:
       description,
       frequency,
       weeklyAutoPlanDay: frequency === 'WEEKLY' ? weeklyAutoPlanDay : null,
+      biweeklyAutoPlanDay: frequency === 'BIWEEKLY' ? biweeklyAutoPlanDay : null,
       assigneeIds,
     }
 
@@ -250,13 +260,13 @@ export function ChoreForm({ open, onOpenChange, users, initialValues, onSaved }:
           {frequency === 'WEEKLY' ? (
             <div className="space-y-1.5">
               <label className="text-sm font-medium font-[var(--font-display)] text-[var(--foreground)]">
-                Auto-plan on
+                Auto-schedule on
               </label>
               <Select
                 value={weeklyAutoPlanDay === null ? 'NONE' : String(weeklyAutoPlanDay)}
                 onValueChange={(v) => setWeeklyAutoPlanDay(v === 'NONE' ? null : Number(v))}
               >
-                <SelectTrigger aria-label="Auto-plan weekday">
+                <SelectTrigger aria-label="Auto-schedule weekday">
                   <SelectValue placeholder="None" />
                 </SelectTrigger>
                 <SelectContent>
@@ -275,6 +285,37 @@ export function ChoreForm({ open, onOpenChange, users, initialValues, onSaved }:
               ) : (
                 <p className="text-xs text-[var(--foreground)]/60">
                   Optional. If set, this weekly chore is automatically added to the selected weekday each week.
+                </p>
+              )}
+            </div>
+          ) : frequency === 'BIWEEKLY' ? (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium font-[var(--font-display)] text-[var(--foreground)]">
+                Auto-schedule on
+              </label>
+              <Select
+                value={biweeklyAutoPlanDay === null ? 'NONE' : String(biweeklyAutoPlanDay)}
+                onValueChange={(v) => setBiweeklyAutoPlanDay(v === 'NONE' ? null : Number(v))}
+              >
+                <SelectTrigger aria-label="Auto-schedule weekday">
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NONE">None</SelectItem>
+                  <SelectItem value="0">Monday</SelectItem>
+                  <SelectItem value="1">Tuesday</SelectItem>
+                  <SelectItem value="2">Wednesday</SelectItem>
+                  <SelectItem value="3">Thursday</SelectItem>
+                  <SelectItem value="4">Friday</SelectItem>
+                  <SelectItem value="5">Saturday</SelectItem>
+                  <SelectItem value="6">Sunday</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.biweeklyAutoPlanDay ? (
+                <p className="text-xs text-red-600 mt-0.5">{errors.biweeklyAutoPlanDay}</p>
+              ) : (
+                <p className="text-xs text-[var(--foreground)]/60">
+                  Optional. If set, this bi-weekly chore is automatically added to the selected weekday every other week.
                 </p>
               )}
             </div>

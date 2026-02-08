@@ -14,7 +14,14 @@ export const DELETE = withApproval(async (
     const existing = await db.schedule.findUnique({
       where: { id },
       include: {
-        chore: { select: { frequency: true, weeklyAutoPlanDay: true } },
+        chore: {
+          select: {
+            frequency: true,
+            weeklyAutoPlanDay: true,
+            biweeklyAutoPlanDay: true,
+            biweeklyAutoPlanAnchor: true,
+          },
+        },
       },
     });
     if (!existing) {
@@ -32,6 +39,22 @@ export const DELETE = withApproval(async (
       return existing.chore.weeklyAutoPlanDay === weekday
     })()
 
+    const isBiweeklyPinnedAutoSlot = (() => {
+      if (existing.chore.frequency !== 'BIWEEKLY') return false
+      if (existing.chore.biweeklyAutoPlanDay == null) return false
+      if (!existing.chore.biweeklyAutoPlanAnchor) return false
+
+      // Stored as Monday-first index: 0=Mon .. 6=Sun
+      const weekday = (existing.scheduledFor.getUTCDay() + 6) % 7
+      if (existing.chore.biweeklyAutoPlanDay !== weekday) return false
+
+      const dayMs = 24 * 60 * 60 * 1000
+      const diffDays = Math.floor(
+        (existing.scheduledFor.getTime() - existing.chore.biweeklyAutoPlanAnchor.getTime()) / dayMs,
+      )
+      return diffDays >= 0 && diffDays % 14 === 0
+    })()
+
     await db.$transaction(async (tx) => {
       // If the schedule item is removed, remove any schedule-specific completion too.
       await tx.choreCompletion.deleteMany({ where: { scheduleId: id } });
@@ -42,6 +65,11 @@ export const DELETE = withApproval(async (
       }
 
       if (isWeeklyPinnedAutoSlot) {
+        await tx.schedule.update({ where: { id }, data: { hidden: true } });
+        return;
+      }
+
+      if (isBiweeklyPinnedAutoSlot) {
         await tx.schedule.update({ where: { id }, data: { hidden: true } });
         return;
       }

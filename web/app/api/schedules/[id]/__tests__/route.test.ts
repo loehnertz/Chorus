@@ -93,6 +93,29 @@ describe('DELETE /api/schedules/[id]', () => {
     expect(db.schedule.delete).not.toHaveBeenCalled();
   });
 
+  it('should hide pinned BIWEEKLY schedules (auto-planned) instead of deleting', async () => {
+    const session = createMockSession();
+    (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);
+    (db.schedule.findUnique as jest.Mock).mockResolvedValue({
+      id: 's4',
+      slotType: 'DAILY',
+      scheduledFor: new Date('2026-02-22T00:00:00Z'), // Sunday
+      chore: {
+        frequency: 'BIWEEKLY',
+        biweeklyAutoPlanDay: 6, // Sunday (Mon=0..Sun=6)
+        biweeklyAutoPlanAnchor: new Date('2026-02-08T00:00:00Z'),
+      },
+    });
+
+    const request = createMockRequest('/api/schedules/s4', { method: 'DELETE' });
+    const response = await DELETE(request as never, makeParams('s4'));
+    expect(response.status).toBe(204);
+
+    expect(db.choreCompletion.deleteMany).toHaveBeenCalledWith({ where: { scheduleId: 's4' } });
+    expect(db.schedule.update).toHaveBeenCalledWith({ where: { id: 's4' }, data: { hidden: true } });
+    expect(db.schedule.delete).not.toHaveBeenCalled();
+  });
+
   it('should delete non-DAILY schedules and their completions', async () => {
     const session = createMockSession();
     (requireApprovedUserApi as jest.Mock).mockResolvedValue(session);

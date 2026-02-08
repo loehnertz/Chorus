@@ -131,6 +131,27 @@ describe('createChoreSchema', () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it('should allow biweeklyAutoPlanDay for biweekly chores', () => {
+    const result = createChoreSchema.safeParse({
+      title: 'Clean out car',
+      frequency: 'BIWEEKLY',
+      biweeklyAutoPlanDay: 6,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.biweeklyAutoPlanDay).toBe(6);
+    }
+  });
+
+  it('should reject biweeklyAutoPlanDay for non-biweekly chores', () => {
+    const result = createChoreSchema.safeParse({
+      title: 'Dishes',
+      frequency: 'WEEKLY',
+      biweeklyAutoPlanDay: 6,
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('updateChoreSchema', () => {
@@ -166,6 +187,16 @@ describe('updateChoreSchema', () => {
 
   it('should accept clearing weeklyAutoPlanDay with null', () => {
     const result = updateChoreSchema.safeParse({ weeklyAutoPlanDay: null });
+    expect(result.success).toBe(true);
+  });
+
+  it('should accept biweeklyAutoPlanDay as a partial update', () => {
+    const result = updateChoreSchema.safeParse({ biweeklyAutoPlanDay: 6 });
+    expect(result.success).toBe(true);
+  });
+
+  it('should accept clearing biweeklyAutoPlanDay with null', () => {
+    const result = updateChoreSchema.safeParse({ biweeklyAutoPlanDay: null });
     expect(result.success).toBe(true);
   });
 });

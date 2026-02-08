@@ -1,8 +1,18 @@
 import { db } from '@/lib/db';
 import { withApproval } from '@/lib/auth/with-approval';
 import { createChoreSchema, formatValidationError, listChoresQuerySchema } from '@/lib/validations';
+import { startOfTodayUtc } from '@/lib/date';
 
 export const runtime = 'nodejs';
+
+function nextUtcDateForMondayIndex(from: Date, mondayIndex: number) {
+  const start = startOfTodayUtc(from)
+  const current = (start.getUTCDay() + 6) % 7 // Mon=0..Sun=6
+  const delta = (mondayIndex - current + 7) % 7
+  const next = new Date(start)
+  next.setUTCDate(next.getUTCDate() + delta)
+  return next
+}
 
 export const GET = withApproval(async (_session, request: Request) => {
   try {
@@ -51,9 +61,12 @@ export const POST = withApproval(async (_session, request: Request) => {
       return Response.json(formatValidationError(parsed.error), { status: 400 });
     }
 
-    const { title, frequency, description, assigneeIds, weeklyAutoPlanDay } = parsed.data;
+    const { title, frequency, description, assigneeIds, weeklyAutoPlanDay, biweeklyAutoPlanDay } = parsed.data;
 
     const normalizedWeeklyAutoPlanDay = frequency === 'WEEKLY' ? weeklyAutoPlanDay : null;
+    const normalizedBiweeklyAutoPlanDay = frequency === 'BIWEEKLY' ? biweeklyAutoPlanDay : null;
+    const normalizedBiweeklyAutoPlanAnchor =
+      normalizedBiweeklyAutoPlanDay == null ? null : nextUtcDateForMondayIndex(new Date(), normalizedBiweeklyAutoPlanDay);
 
     const normalizedAssigneeIds = Array.from(
       new Set((assigneeIds ?? []).map((id) => id.trim()).filter(Boolean)),
@@ -85,6 +98,8 @@ export const POST = withApproval(async (_session, request: Request) => {
         title,
         frequency,
         weeklyAutoPlanDay: normalizedWeeklyAutoPlanDay,
+        biweeklyAutoPlanDay: normalizedBiweeklyAutoPlanDay,
+        biweeklyAutoPlanAnchor: normalizedBiweeklyAutoPlanAnchor,
         description: description ?? null,
         ...(normalizedAssigneeIds.length && {
           assignments: {
