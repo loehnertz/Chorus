@@ -57,6 +57,13 @@ export default async function SchedulePage({
   const gridEnd = new Date(gridStart)
   gridEnd.setUTCDate(gridEnd.getUTCDate() + 42)
 
+  // Pull a small buffer beyond the visible grid so cycle-based logic (notably BIWEEKLY)
+  // can see schedules that fall just outside the month grid.
+  const queryStart = new Date(gridStart)
+  queryStart.setUTCDate(queryStart.getUTCDate() - 14)
+  const queryEnd = new Date(gridEnd)
+  queryEnd.setUTCDate(queryEnd.getUTCDate() + 14)
+
   // Auto-schedule daily chores for the visible grid range, but never backfill the past.
   // This prevents the DB from accumulating historical daily schedules when users browse old months.
   const todayStart = startOfTodayUtc(now)
@@ -98,7 +105,7 @@ export default async function SchedulePage({
       orderBy: { title: 'asc' },
     }),
     db.schedule.findMany({
-      where: { hidden: false, scheduledFor: { gte: gridStart, lt: gridEnd } },
+      where: { hidden: false, scheduledFor: { gte: queryStart, lt: queryEnd } },
       include: {
         chore: {
           select: {

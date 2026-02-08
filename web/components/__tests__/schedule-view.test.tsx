@@ -9,6 +9,8 @@ const toastSuccess = jest.fn()
 const toastError = jest.fn()
 const toastMessage = jest.fn()
 
+const slotPickerMock = jest.fn(() => null)
+
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush, refresh: mockRefresh }),
 }))
@@ -22,7 +24,7 @@ jest.mock('sonner', () => ({
 }))
 
 jest.mock('@/components/slot-picker', () => ({
-  SlotPicker: () => null,
+  SlotPicker: (props: unknown) => slotPickerMock(props),
 }))
 
 const defaultUsers = [
@@ -37,6 +39,7 @@ describe('ScheduleView', () => {
     toastSuccess.mockReset()
     toastError.mockReset()
     toastMessage.mockReset()
+    slotPickerMock.mockReset()
     ;(globalThis as unknown as { fetch: unknown }).fetch = jest.fn()
   })
 
@@ -88,6 +91,41 @@ describe('ScheduleView', () => {
 
     const nextCheckbox = screen.getByRole('checkbox')
     expect(within(nextCheckbox.parentElement as HTMLElement).getByText('Make bed')).toBeInTheDocument()
+  })
+
+  it('disables cascaded chores already scheduled in the cycle (passes ids to SlotPicker)', () => {
+    render(
+      <ScheduleView
+        userId="u1"
+        year={2026}
+        monthIndex={1}
+        todayDayKey="2026-02-01"
+        initialSelectedDayKey="2026-02-04"
+        chores={[
+          { id: 'd1', title: 'Daily', frequency: 'DAILY', assigneeIds: [] },
+          { id: 'w1', title: 'Weekly laundry', frequency: 'WEEKLY', assigneeIds: [] },
+          { id: 'w2', title: 'Weekly vacuum', frequency: 'WEEKLY', assigneeIds: [] },
+        ]}
+        monthSchedules={[
+          {
+            id: 's1',
+            scheduledFor: '2026-02-07T00:00:00.000Z',
+            slotType: 'DAILY',
+            suggested: false,
+            completed: false,
+            chore: { id: 'w1', title: 'Weekly laundry', frequency: 'WEEKLY', assigneeIds: [] },
+          },
+        ]}
+        upcomingSchedules={[]}
+        users={defaultUsers}
+      />
+    )
+
+    expect(slotPickerMock).toHaveBeenCalled()
+    const lastProps = slotPickerMock.mock.calls[slotPickerMock.mock.calls.length - 1]?.[0] as {
+      existingChoreIds?: string[]
+    }
+    expect(lastProps.existingChoreIds).toEqual(expect.arrayContaining(['w1']))
   })
 
   it('adds a chore to the selected day', async () => {

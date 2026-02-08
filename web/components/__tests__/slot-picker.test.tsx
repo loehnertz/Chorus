@@ -141,6 +141,67 @@ describe('SlotPicker', () => {
     globalThis.fetch = originalFetch
   })
 
+  it('falls back to the first available chore when the suggestion is already scheduled in the cycle', async () => {
+    const user = userEvent.setup()
+
+    const originalFetch = globalThis.fetch
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          suggestion: {
+            sourceFrequency: 'WEEKLY',
+            chore: {
+              id: 'c1',
+              title: 'Already in cycle',
+              description: null,
+              frequency: 'WEEKLY',
+            },
+          },
+          paceWarnings: [],
+        }),
+      } as unknown as Response)
+      .mockResolvedValueOnce({ ok: true } as unknown as Response)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(globalThis as any).fetch = fetchMock
+
+    render(
+      <SlotPicker
+        slotType="DAILY"
+        scheduledFor="2026-02-04T00:00:00.000Z"
+        userId="u1"
+        sourceChores={[
+          { id: 'c1', title: 'Already in cycle', frequency: 'WEEKLY' },
+          { id: 'c2', title: 'Available chore', frequency: 'WEEKLY' },
+        ]}
+        existingChoreIds={['c1']}
+      />
+    )
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    const scheduleButton = screen.getByRole('button', { name: 'Schedule' })
+    await waitFor(() => expect(scheduleButton).toBeEnabled())
+
+    await user.click(scheduleButton)
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      '/api/schedules',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          choreId: 'c2',
+          scheduledFor: '2026-02-04T00:00:00.000Z',
+          slotType: 'DAILY',
+          suggested: false,
+        }),
+      })
+    )
+
+    globalThis.fetch = originalFetch
+  })
+
   it('prevents clicking on a disabled chore and keeps original selection', async () => {
     const user = userEvent.setup()
 

@@ -61,6 +61,10 @@ export function SlotPicker({
 
   const existingSet = React.useMemo(() => new Set(existingChoreIds ?? []), [existingChoreIds])
 
+  const firstAvailableId = React.useMemo(() => {
+    return sourceChores.find((c) => !existingSet.has(c.id))?.id ?? null
+  }, [existingSet, sourceChores])
+
   const selected = React.useMemo(
     () => sourceChores.find((c) => c.id === selectedId) ?? null,
     [selectedId, sourceChores]
@@ -88,15 +92,19 @@ export function SlotPicker({
       setPaceWarnings((data.paceWarnings ?? []).map((w) => w.message))
 
       setSelectedId((prev) => {
-        if (!prev) return id
-        return prev
+        // Keep an existing selection as long as it's still eligible.
+        if (prev && !existingSet.has(prev)) return prev
+
+        // Prefer the server suggestion if it's eligible; otherwise pick the first available.
+        if (id && !existingSet.has(id)) return id
+        return firstAvailableId
       })
     } catch {
       toast.error('Failed to load suggestion')
     } finally {
       setLoading(false)
     }
-  }, [slotType, sourceFrequency, userId, scheduledFor])
+  }, [slotType, sourceFrequency, userId, scheduledFor, existingSet, firstAvailableId])
 
   React.useEffect(() => {
     void loadSuggestion()
@@ -248,7 +256,7 @@ export function SlotPicker({
             'Select a chore to schedule'
           )}
         </p>
-        <Button type="button" onClick={scheduleSelected} disabled={!selectedId || saving || loading}>
+        <Button type="button" onClick={scheduleSelected} disabled={!selectedId || saving || loading || existingSet.has(selectedId)}>
           {saving ? 'Scheduling...' : 'Schedule'}
         </Button>
       </div>
