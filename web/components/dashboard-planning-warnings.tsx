@@ -28,14 +28,19 @@ export function DashboardPlanningWarnings({ warnings, className }: DashboardPlan
 
   return (
     <Card className={cn(className)}>
-      <CardHeader className="flex-row items-start justify-between gap-4">
+      <CardHeader className="space-y-0 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="min-w-0">
           <CardTitle className="text-xl md:text-2xl">Planning warnings</CardTitle>
           <p className="mt-1 text-sm text-[var(--foreground)]/70">
             Some cycles are nearly over, with chores still unscheduled.
           </p>
         </div>
-        <Button asChild variant="outline" size="sm">
+        <Button
+          asChild
+          variant="outline"
+          size="default"
+          className="w-full sm:w-auto sm:h-9 sm:px-4 sm:py-2 sm:text-sm"
+        >
           <Link href="/schedule" prefetch={false}>
             Open schedule
           </Link>
