@@ -1,7 +1,7 @@
 import { unstable_noStore as noStore } from 'next/cache'
 import { requireApprovedUser } from '@/lib/auth/require-approval'
 import { db } from '@/lib/db'
-import { startOfTodayUtc, startOfHalfYearUtc, endOfHalfYearUtc } from '@/lib/date'
+import { startOfTodayUtc, startOfBimonthUtc, endOfBimonthUtc, startOfHalfYearUtc, endOfHalfYearUtc } from '@/lib/date'
 import { getTodayDayKeyUtc } from '@/lib/calendar'
 import { ScheduleView } from '@/components/schedule-view'
 import { ensureDailySchedules, ensureWeeklyPinnedSchedules } from '@/lib/auto-schedule'
@@ -76,7 +76,9 @@ export default async function SchedulePage({
   const yearStart = new Date(Date.UTC(year, 0, 1))
   const yearEnd = new Date(Date.UTC(year + 1, 0, 1))
 
-  // Use the viewed month to anchor long-range (half-year) scheduling state.
+  // Use the viewed month to anchor long-range scheduling state.
+  const bimonthStart = startOfBimonthUtc(monthStart)
+  const bimonthEnd = endOfBimonthUtc(monthStart)
   const halfYearStart = startOfHalfYearUtc(monthStart)
   const halfYearEnd = endOfHalfYearUtc(monthStart)
 
@@ -84,7 +86,7 @@ export default async function SchedulePage({
   const upcomingEnd = new Date(upcomingStart)
   upcomingEnd.setUTCDate(upcomingEnd.getUTCDate() + 14)
 
-  const [chores, monthSchedulesRaw, upcomingRaw, yearlyScheduledRaw, semiannualScheduledRaw, users] = await Promise.all([
+  const [chores, monthSchedulesRaw, upcomingRaw, yearlyScheduledRaw, semiannualScheduledRaw, bimonthlyScheduledRaw, users] = await Promise.all([
     db.chore.findMany({
       select: {
         id: true,
@@ -153,6 +155,15 @@ export default async function SchedulePage({
       distinct: ['choreId'],
       select: { choreId: true },
     }),
+    db.schedule.findMany({
+      where: {
+        hidden: false,
+        scheduledFor: { gte: bimonthStart, lt: bimonthEnd },
+        chore: { frequency: 'BIMONTHLY' },
+      },
+      distinct: ['choreId'],
+      select: { choreId: true },
+    }),
     db.user.findMany({
       where: { approved: true },
       select: { id: true, name: true, image: true },
@@ -196,6 +207,7 @@ export default async function SchedulePage({
       longRangeScheduledChoreIds={{
         YEARLY: yearlyScheduledRaw.map((r) => r.choreId),
         SEMIANNUAL: semiannualScheduledRaw.map((r) => r.choreId),
+        BIMONTHLY: bimonthlyScheduledRaw.map((r) => r.choreId),
       }}
       users={users}
     />

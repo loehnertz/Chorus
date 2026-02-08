@@ -108,7 +108,7 @@ export function SlotPicker({
     if (!selectedId) return
     if (saving) return
     if (existingSet.has(selectedId)) {
-      toast.message('Already scheduled for this date')
+      toast.message('Already scheduled in this cycle')
       return
     }
 
@@ -221,7 +221,11 @@ export function SlotPicker({
                         {chore.description?.trim() ? chore.description : 'No description'}
                       </p>
                     </div>
-                    {suggested ? (
+                    {disabled ? (
+                      <span className="inline-flex items-center rounded-full border border-[var(--border)] px-2 py-0.5 text-[10px] font-[var(--font-display)] text-[var(--foreground)]/50">
+                        Scheduled
+                      </span>
+                    ) : suggested ? (
                       <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] px-2 py-0.5 text-[10px] font-[var(--font-display)] text-[var(--foreground)]/70">
                         <Sparkles className="h-3 w-3" aria-hidden="true" />
                         Suggested

@@ -315,9 +315,34 @@ export function ScheduleView({
       .map((c) => ({ id: c.id, title: c.title, description: c.description, frequency: c.frequency }))
   }, [chores, cascadeSource])
 
-  const existingChoreIdsForSelectedDay = React.useMemo(() => {
-    return selectedDayItems.map((s) => s.chore.id)
-  }, [selectedDayItems])
+  const existingChoreIdsForCascadeCycle = React.useMemo(() => {
+    // Always include chores scheduled on the selected day to prevent same-day duplicates.
+    const dayIds = selectedDayItems.map((s) => s.chore.id)
+
+    if (!cascadeSource) return dayIds
+
+    // For longer cycles (BIMONTHLY, SEMIANNUAL, YEARLY), the grid data may not cover
+    // the full cycle. Use pre-fetched server data when available.
+    const longRangeSet = longRangeScheduledSets[cascadeSource]
+    if (longRangeSet) {
+      return [...new Set([...dayIds, ...Array.from(longRangeSet)])]
+    }
+
+    // For shorter cycles (WEEKLY, BIWEEKLY, MONTHLY), compute from grid data.
+    const selectedDate = new Date(`${selectedDayKey}T00:00:00.000Z`)
+    const range = getCycleRangeForViewMode(viewMode, selectedDate, year, monthIndex)
+    if (!range) return dayIds
+
+    const scheduledInCycle = new Set(dayIds)
+    for (const s of items) {
+      const dt = new Date(s.scheduledFor)
+      if (dt >= range.start && dt < range.end && s.chore.frequency === cascadeSource) {
+        scheduledInCycle.add(s.chore.id)
+      }
+    }
+
+    return Array.from(scheduledInCycle)
+  }, [cascadeSource, selectedDayKey, viewMode, year, monthIndex, items, longRangeScheduledSets, selectedDayItems])
 
   const gotoMonth = (targetYear: number, targetMonthIndex: number) => {
     const month = toMonthParam(targetYear, targetMonthIndex)
@@ -829,7 +854,7 @@ export function ScheduleView({
                   scheduledFor={dayKeyToUtcIso(selectedDayKey)}
                   userId={userId}
                   sourceChores={cascadeChores}
-                  existingChoreIds={existingChoreIdsForSelectedDay}
+                  existingChoreIds={existingChoreIdsForCascadeCycle}
                   onScheduled={() => {
                     // Keep the list responsive while server refreshes.
                     void Promise.resolve()
