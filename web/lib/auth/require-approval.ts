@@ -4,6 +4,32 @@ import { db } from '@/lib/db';
 import { syncUser } from './user-sync';
 import type { NeonAuthSession } from '@/types/auth';
 
+type ApprovalResult =
+  | { kind: 'unauthenticated' }
+  | { kind: 'unapproved'; session: NeonAuthSession }
+  | { kind: 'approved'; session: NeonAuthSession };
+
+async function getApprovalResult(): Promise<ApprovalResult> {
+  const { data: session } = await auth.getSession();
+
+  if (!session?.user) {
+    return { kind: 'unauthenticated' };
+  }
+
+  await syncUser(session.user);
+
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { approved: true },
+  });
+
+  if (!user?.approved) {
+    return { kind: 'unapproved', session: session as unknown as NeonAuthSession };
+  }
+
+  return { kind: 'approved', session: session as unknown as NeonAuthSession };
+}
+
 /**
  * Require user approval for data access
  *
@@ -52,30 +78,17 @@ import type { NeonAuthSession } from '@/types/auth';
  * ```
  */
 export async function requireApprovedUser() {
-  // Get current session
-  const { data: session } = await auth.getSession();
+  const result = await getApprovalResult();
 
-  // Redirect to sign-in if not authenticated
-  if (!session?.user) {
+  if (result.kind === 'unauthenticated') {
     redirect('/sign-in');
   }
 
-  // Sync user data from Neon Auth to app database
-  await syncUser(session.user);
-
-  // Check if user is approved
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { approved: true },
-  });
-
-  // Redirect to pending approval if not approved
-  if (!user?.approved) {
+  if (result.kind === 'unapproved') {
     redirect('/pending-approval');
   }
 
-  // User is authenticated and approved
-  return session;
+  return result.session;
 }
 
 /**
@@ -114,24 +127,17 @@ export async function requireApprovedUser() {
  * ```
  */
 export async function requireApprovedUserApi(): Promise<Response | NeonAuthSession> {
-  const { data: session } = await auth.getSession();
+  const result = await getApprovalResult();
 
-  if (!session?.user) {
+  if (result.kind === 'unauthenticated') {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  await syncUser(session.user);
-
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { approved: true },
-  });
-
-  if (!user?.approved) {
+  if (result.kind === 'unapproved') {
     return Response.json({ error: 'User not approved' }, { status: 403 });
   }
 
-  return session as unknown as NeonAuthSession;
+  return result.session;
 }
 
 /**
@@ -142,22 +148,7 @@ export function isErrorResponse(result: Response | NeonAuthSession): result is R
 }
 
 export async function checkApprovedUser() {
-  const { data: session } = await auth.getSession();
-
-  if (!session?.user) {
-    return null;
-  }
-
-  await syncUser(session.user);
-
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { approved: true },
-  });
-
-  if (!user?.approved) {
-    return null;
-  }
-
-  return session;
+  const result = await getApprovalResult();
+  if (result.kind !== 'approved') return null;
+  return result.session;
 }
