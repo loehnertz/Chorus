@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
 import { auth } from './server';
-import { db } from '@/lib/db';
 import { syncUser } from './user-sync';
 import type { NeonAuthSession } from '@/types/auth';
 
@@ -16,12 +15,7 @@ async function getApprovalResult(): Promise<ApprovalResult> {
     return { kind: 'unauthenticated' };
   }
 
-  await syncUser(session.user);
-
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { approved: true },
-  });
+  const user = await syncUser(session.user);
 
   if (!user?.approved) {
     return { kind: 'unapproved', session: session as unknown as NeonAuthSession };

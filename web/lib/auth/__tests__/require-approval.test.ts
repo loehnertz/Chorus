@@ -8,20 +8,12 @@ jest.mock('../server', () => ({
   auth: { getSession: jest.fn() },
 }));
 
-jest.mock('@/lib/db', () => ({
-  db: {
-    user: {
-      findUnique: jest.fn(),
-    },
-  },
-}));
-
 jest.mock('../user-sync', () => ({
   syncUser: jest.fn(),
 }));
 
 import { auth } from '../server';
-import { db } from '@/lib/db';
+import { syncUser } from '../user-sync';
 
 describe('requireApprovedUserApi', () => {
   beforeEach(() => {
@@ -52,7 +44,7 @@ describe('requireApprovedUserApi', () => {
   it('should return 403 when user is not approved', async () => {
     const session = createMockSession();
     (auth.getSession as jest.Mock).mockResolvedValue({ data: session });
-    (db.user.findUnique as jest.Mock).mockResolvedValue({ approved: false });
+    (syncUser as jest.Mock).mockResolvedValue({ id: session.user.id, approved: false });
 
     const result = await requireApprovedUserApi();
 
@@ -63,10 +55,10 @@ describe('requireApprovedUserApi', () => {
     expect(body.error).toBe('User not approved');
   });
 
-  it('should return 403 when user not found in db', async () => {
+  it('should return 403 when syncUser returns null', async () => {
     const session = createMockSession();
     (auth.getSession as jest.Mock).mockResolvedValue({ data: session });
-    (db.user.findUnique as jest.Mock).mockResolvedValue(null);
+    (syncUser as jest.Mock).mockResolvedValue(null);
 
     const result = await requireApprovedUserApi();
 
@@ -77,7 +69,7 @@ describe('requireApprovedUserApi', () => {
   it('should return session when user is authenticated and approved', async () => {
     const session = createMockSession();
     (auth.getSession as jest.Mock).mockResolvedValue({ data: session });
-    (db.user.findUnique as jest.Mock).mockResolvedValue({ approved: true });
+    (syncUser as jest.Mock).mockResolvedValue({ id: session.user.id, approved: true });
 
     const result = await requireApprovedUserApi();
 
