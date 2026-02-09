@@ -4,6 +4,7 @@ import { getApprovedUsersCached, getChoresForScheduleCached } from '@/lib/cached
 import { startOfTodayUtc, startOfBimonthUtc, endOfBimonthUtc, startOfHalfYearUtc, endOfHalfYearUtc } from '@/lib/date'
 import { getTodayDayKeyUtc } from '@/lib/calendar'
 import { ensureBiweeklyPinnedSchedules, ensureDailySchedules, ensureWeeklyPinnedSchedules } from '@/lib/auto-schedule'
+import { getHolidaysForUser } from '@/lib/holiday'
 
 export const runtime = 'nodejs'
 
@@ -99,7 +100,7 @@ export const GET = withApproval(async (session, request: Request) => {
     const upcomingEnd = new Date(upcomingStart)
     upcomingEnd.setUTCDate(upcomingEnd.getUTCDate() + 14)
 
-    const [chores, monthSchedulesRaw, upcomingRaw, yearlyScheduledRaw, semiannualScheduledRaw, bimonthlyScheduledRaw, users] =
+    const [chores, monthSchedulesRaw, upcomingRaw, yearlyScheduledRaw, semiannualScheduledRaw, bimonthlyScheduledRaw, users, holidays] =
       await Promise.all([
         getChoresForScheduleCached(),
         db.schedule.findMany({
@@ -170,6 +171,7 @@ export const GET = withApproval(async (session, request: Request) => {
           select: { choreId: true },
         }),
         getApprovedUsersCached(),
+        getHolidaysForUser(session.user.id, gridStart, gridEnd),
       ])
 
     const mappedChores = chores.map((c) => ({
@@ -211,6 +213,12 @@ export const GET = withApproval(async (session, request: Request) => {
         BIMONTHLY: bimonthlyScheduledRaw.map((r) => r.choreId),
       },
       users,
+      holidays: holidays.map((h) => ({
+        id: h.id,
+        startDate: h.startDate.toISOString(),
+        endDate: h.endDate.toISOString(),
+        label: h.label,
+      })),
     })
   } catch (error) {
     console.error('Failed to fetch schedule view data:', error)

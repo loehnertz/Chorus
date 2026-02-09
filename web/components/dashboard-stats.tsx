@@ -10,6 +10,7 @@ export type DashboardStatsData = {
 
 export interface DashboardStatsProps {
   stats: DashboardStatsData
+  isOnHoliday?: boolean
   className?: string
 }
 
@@ -65,7 +66,13 @@ function StatCard({
   return <div className={cardClass}>{content}</div>
 }
 
-export function DashboardStats({ stats, className }: DashboardStatsProps) {
+export function DashboardStats({ stats, isOnHoliday, className }: DashboardStatsProps) {
+  const streakSub = (() => {
+    if (isOnHoliday) return 'on holiday'
+    if (stats.streakDays > 0) return 'consecutive days'
+    return 'start today'
+  })()
+
   return (
     <div className={cn('grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5', className)}>
       <StatCard
@@ -78,8 +85,8 @@ export function DashboardStats({ stats, className }: DashboardStatsProps) {
       <StatCard
         label="Streak"
         value={stats.streakDays}
-        sub={stats.streakDays > 0 ? 'consecutive days' : 'start today'}
-        subTone={stats.streakDays > 0 ? 'positive' : 'neutral'}
+        sub={streakSub}
+        subTone={stats.streakDays > 0 || isOnHoliday ? 'positive' : 'neutral'}
       />
       <StatCard label="Chores" value={stats.choresCount} sub="in the pool" href="/chores" />
     </div>

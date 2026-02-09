@@ -55,4 +55,47 @@ describe('streak', () => {
 
     expect(computeStreakDaysUtc(dates, now)).toBe(1)
   })
+
+  it('bridges across holiday days', () => {
+    // Completed day 1 (Feb 4), holiday days 5-6, completed day 7 (Feb 7)
+    const now = new Date('2026-02-07T12:00:00.000Z')
+    const dates = [
+      new Date('2026-02-07T01:00:00.000Z'),
+      new Date('2026-02-04T01:00:00.000Z'),
+    ]
+    const holidays = new Set(['2026-02-05', '2026-02-06'])
+
+    expect(computeStreakDaysUtc(dates, now, holidays)).toBe(2)
+  })
+
+  it('does not count holiday days as streak days', () => {
+    // Only holidays, no completions
+    const now = new Date('2026-02-07T12:00:00.000Z')
+    const holidays = new Set(['2026-02-07', '2026-02-06'])
+
+    expect(computeStreakDaysUtc([], now, holidays)).toBe(0)
+  })
+
+  it('skips holiday at start then counts completions', () => {
+    // Today (Feb 7) is a holiday, completed Feb 6 and Feb 5
+    const now = new Date('2026-02-07T12:00:00.000Z')
+    const dates = [
+      new Date('2026-02-06T01:00:00.000Z'),
+      new Date('2026-02-05T01:00:00.000Z'),
+    ]
+    const holidays = new Set(['2026-02-07'])
+
+    expect(computeStreakDaysUtc(dates, now, holidays)).toBe(2)
+  })
+
+  it('works without holiday parameter (backwards compatible)', () => {
+    const now = new Date('2026-02-07T12:00:00.000Z')
+    const dates = [
+      new Date('2026-02-07T01:00:00.000Z'),
+      new Date('2026-02-06T01:00:00.000Z'),
+    ]
+
+    expect(computeStreakDaysUtc(dates, now)).toBe(2)
+    expect(computeStreakDaysUtc(dates, now, undefined)).toBe(2)
+  })
 })

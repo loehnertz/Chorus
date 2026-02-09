@@ -8,6 +8,7 @@ import {
   shouldSendReminder,
   type ReminderKind,
 } from '@/lib/push/reminders';
+import { getUsersOnHoliday } from '@/lib/holiday';
 
 export const runtime = 'nodejs';
 
@@ -78,6 +79,9 @@ export async function GET(request: Request) {
     }),
   ]);
 
+  const allUserIds = [...new Set(subs.map((s) => s.userId))];
+  const usersOnHoliday = await getUsersOnHoliday(allUserIds, now);
+
   let considered = 0;
   let sent = 0;
   let removed = 0;
@@ -86,6 +90,11 @@ export async function GET(request: Request) {
   const kind: ReminderKind = 'daily';
 
   for (const sub of subs) {
+    if (usersOnHoliday.has(sub.userId)) {
+      skipped++;
+      continue;
+    }
+
     const tz = sub.timezone?.trim() ? sub.timezone.trim() : 'UTC';
 
     const check = shouldSendReminder(now, tz);

@@ -2,6 +2,13 @@ import { render, screen } from '@testing-library/react'
 import { HistoryView } from '@/components/history-view'
 import { formatLocalDateTimeCompact } from '@/lib/format-local-datetime'
 
+beforeEach(() => {
+  global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => [] })
+})
+afterEach(() => {
+  jest.restoreAllMocks()
+})
+
 describe('HistoryView', () => {
   it('renders an empty state', () => {
     render(<HistoryView currentUserId="u1" scope="mine" items={[]} />)

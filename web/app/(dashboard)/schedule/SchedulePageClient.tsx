@@ -74,6 +74,7 @@ export function SchedulePageClient(props: { month: string; day?: string | null }
       upcomingSchedules={data.upcomingSchedules}
       longRangeScheduledChoreIds={data.longRangeScheduledChoreIds}
       users={data.users}
+      holidays={data.holidays}
     />
   )
 }

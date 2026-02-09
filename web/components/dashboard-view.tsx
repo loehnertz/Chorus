@@ -1,4 +1,4 @@
-import { CalendarCheck } from 'lucide-react'
+import { CalendarCheck, Palmtree } from 'lucide-react'
 import type { Frequency } from '@/types/frequency'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -26,12 +26,20 @@ export interface DashboardViewProps {
   todaysTasks: TodaysTask[]
   recentActivity: RecentActivityItem[]
   planningWarnings?: DashboardPlanningWarning[]
+  isOnHoliday?: boolean
 }
 
-export function DashboardView({ userId, stats, todaysTasks, recentActivity, planningWarnings }: DashboardViewProps) {
+export function DashboardView({ userId, stats, todaysTasks, recentActivity, planningWarnings, isOnHoliday }: DashboardViewProps) {
   return (
     <div className="space-y-7 md:space-y-8">
-      <DashboardStats stats={stats} />
+      {isOnHoliday && (
+        <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-sage)]/10 border border-[var(--color-sage)]/20 px-4 py-3 text-sm">
+          <Palmtree className="h-4 w-4 text-[var(--color-sage)]" />
+          <span>Holiday mode is active — streaks preserved, reminders paused.</span>
+        </div>
+      )}
+
+      <DashboardStats stats={stats} isOnHoliday={isOnHoliday} />
 
       <DashboardPlanningWarnings warnings={planningWarnings ?? []} />
 

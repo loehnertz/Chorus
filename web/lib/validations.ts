@@ -207,6 +207,15 @@ export const deleteWebPushSubscriptionSchema = z.object({
   endpoint: z.string().url('endpoint must be a URL').optional(),
 });
 
+export const createHolidaySchema = z.object({
+  startDate: utcDateField('startDate'),
+  endDate: utcDateField('endDate'),
+  label: z.string().transform((s) => s.trim() || null).optional().default(''),
+}).refine(
+  (data) => data.startDate <= data.endDate,
+  { message: 'Start date must be on or before end date', path: ['startDate'] },
+);
+
 /**
  * Format Zod validation errors into a structured API response
  */

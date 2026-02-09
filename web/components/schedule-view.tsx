@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
-import { AlertTriangle, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react'
+import { AlertTriangle, ChevronLeft, ChevronRight, Palmtree, Plus, Trash2 } from 'lucide-react'
 import type { Frequency } from '@/types/frequency'
 import { FREQUENCY_LABELS } from '@/types/frequency'
 import { cn } from '@/lib/utils'
@@ -53,6 +53,13 @@ export type ScheduleViewItem = {
   }
 }
 
+export type ScheduleViewHoliday = {
+  id: string
+  startDate: string
+  endDate: string
+  label: string | null
+}
+
 export interface ScheduleViewProps {
   userId: string
   year: number
@@ -64,6 +71,7 @@ export interface ScheduleViewProps {
   upcomingSchedules: ScheduleViewItem[]
   longRangeScheduledChoreIds?: Record<string, string[]>
   users: Array<{ id: string; name: string | null; image?: string | null }>
+  holidays?: ScheduleViewHoliday[]
   className?: string
 }
 
@@ -133,6 +141,21 @@ function getCycleRangeForViewMode(
   }
 }
 
+function buildHolidayDayKeySetFromProps(holidays: ScheduleViewHoliday[]): Set<string> {
+  const keys = new Set<string>()
+  for (const h of holidays) {
+    const cursor = new Date(h.startDate)
+    const endKey = h.endDate.slice(0, 10)
+    let count = 0
+    while (dayKeyUtc(cursor) <= endKey && count < 730) {
+      keys.add(dayKeyUtc(cursor))
+      cursor.setUTCDate(cursor.getUTCDate() + 1)
+      count++
+    }
+  }
+  return keys
+}
+
 export function ScheduleView({
   userId,
   year,
@@ -144,6 +167,7 @@ export function ScheduleView({
   upcomingSchedules,
   longRangeScheduledChoreIds,
   users,
+  holidays,
   className,
 }: ScheduleViewProps) {
   const router = useRouter()
@@ -190,6 +214,11 @@ export function ScheduleView({
     return new Set(grid.filter((c) => c.inMonth).map((c) => c.dayKey))
   }, [grid])
   const todayKey = todayDayKey
+
+  const holidayDayKeys = React.useMemo(
+    () => buildHolidayDayKeySetFromProps(holidays ?? []),
+    [holidays],
+  )
 
   const countsByDay = React.useMemo(() => {
     const counts: Record<string, number> = {}
@@ -568,6 +597,7 @@ export function ScheduleView({
                 {grid.map((cell) => {
                   const selected = cell.dayKey === selectedDayKey
                   const isToday = cell.dayKey === todayKey
+                  const isHoliday = holidayDayKeys.has(cell.dayKey)
                   const count = countsByDay[cell.dayKey] ?? 0
                   return (
                     <button
@@ -613,6 +643,7 @@ export function ScheduleView({
                         cell.inMonth
                           ? 'border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)]'
                           : 'border-transparent bg-transparent opacity-40',
+                        cell.inMonth && isHoliday && !selected && 'bg-[var(--color-sage)]/8',
                         selected && 'border-[var(--color-terracotta)] bg-[var(--color-terracotta)]/10',
                         isToday && !selected && 'border-[var(--color-sage)]',
                         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-terracotta)] focus-visible:ring-offset-2'
@@ -687,6 +718,12 @@ export function ScheduleView({
           <Card>
             <CardHeader>
               <CardTitle className="text-xl md:text-2xl">{formatDayTitleUtc(selectedDayKey)}</CardTitle>
+              {holidayDayKeys.has(selectedDayKey) && (
+                <p className="flex items-center gap-1.5 text-xs text-[var(--color-sage)]">
+                  <Palmtree className="h-3.5 w-3.5" aria-hidden="true" />
+                  Holiday
+                </p>
+              )}
             </CardHeader>
             <CardContent>
               {selectedDayItems.length === 0 ? (

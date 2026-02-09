@@ -7,6 +7,7 @@ import { startOfTomorrowUtc, startOfTodayUtc, startOfWeekUtc } from '@/lib/date'
 import { computeStreakDaysUtc } from '@/lib/streak'
 import { ensureBiweeklyPinnedSchedules, ensureDailySchedules, ensureWeeklyPinnedSchedules } from '@/lib/auto-schedule'
 import { getDashboardPlanningWarnings } from '@/lib/dashboard-planning-warnings'
+import { getHolidaysForUser, isUserOnHoliday, buildHolidayDayKeySet } from '@/lib/holiday'
 
 /**
  * Dashboard Page
@@ -28,6 +29,8 @@ export default async function DashboardPage() {
   const startTomorrow = startOfTomorrowUtc(now)
   const startWeek = startOfWeekUtc(now)
 
+  const sixtyDaysAgo = new Date(startToday.getTime() - 1000 * 60 * 60 * 24 * 60)
+
   const [
     choresCount,
     completedTotal,
@@ -36,12 +39,14 @@ export default async function DashboardPage() {
     schedules,
     recent,
     planningWarnings,
+    holidays,
+    isOnHoliday,
   ] = await Promise.all([
     db.chore.count(),
     db.choreCompletion.count({ where: { userId } }),
     db.choreCompletion.count({ where: { userId, completedAt: { gte: startWeek } } }),
     db.choreCompletion.findMany({
-      where: { userId, completedAt: { gte: new Date(startToday.getTime() - 1000 * 60 * 60 * 24 * 60) } },
+      where: { userId, completedAt: { gte: sixtyDaysAgo } },
       select: { completedAt: true },
       orderBy: { completedAt: 'desc' },
     }),
@@ -69,9 +74,12 @@ export default async function DashboardPage() {
       },
     }),
     getDashboardPlanningWarnings(now, { remainingThreshold: 0.25 }),
+    getHolidaysForUser(userId, sixtyDaysAgo, startToday),
+    isUserOnHoliday(userId, now),
   ])
 
-  const streakDays = computeStreakDaysUtc(completionDates.map((c) => c.completedAt), now)
+  const holidayDayKeys = buildHolidayDayKeySet(holidays)
+  const streakDays = computeStreakDaysUtc(completionDates.map((c) => c.completedAt), now, holidayDayKeys)
 
   const todaysTasks = schedules
     .filter((s) => {
@@ -110,6 +118,7 @@ export default async function DashboardPage() {
         todaysTasks={todaysTasks}
         recentActivity={recentActivity}
         planningWarnings={planningWarnings}
+        isOnHoliday={isOnHoliday}
       />
     </PageFadeIn>
   )

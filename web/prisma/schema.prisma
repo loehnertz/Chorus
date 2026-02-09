@@ -20,6 +20,7 @@ model User {
   assignedChores ChoreAssignment[]
   completions    ChoreCompletion[]
   pushSubscriptions WebPushSubscription[]
+  holidays       Holiday[]
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 }
@@ -133,6 +134,20 @@ model ChoreCompletion {
 
   @@index([userId, completedAt])
   @@index([choreId, completedAt])
+}
+
+model Holiday {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startDate DateTime // UTC midnight, inclusive
+  endDate   DateTime // UTC midnight, inclusive
+  label     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, startDate, endDate])
+  @@index([startDate, endDate])
 }
 
 enum Frequency {

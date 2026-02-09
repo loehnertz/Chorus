@@ -13,6 +13,7 @@ import { FrequencyBadge } from '@/components/ui/frequency-badge'
 import { Avatar } from '@/components/ui/avatar'
 import { LocalDateTime } from '@/components/ui/local-datetime'
 import { PushRemindersOptIn } from '@/components/pwa/push-reminders-opt-in'
+import { HolidayManager } from '@/components/holiday-manager'
 
 export type HistoryItem = {
   id: string
@@ -84,6 +85,8 @@ export function HistoryView({ currentUserId, scope, items, className }: HistoryV
       </div>
 
       <PushRemindersOptIn />
+
+      <HolidayManager />
 
       <Card>
         <CardHeader>
