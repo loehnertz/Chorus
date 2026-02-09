@@ -567,6 +567,7 @@ export function ScheduleView({
               <div className="mt-3 grid grid-cols-7 gap-0.5 sm:gap-2">
                 {grid.map((cell) => {
                   const selected = cell.dayKey === selectedDayKey
+                  const isToday = cell.dayKey === todayKey
                   const count = countsByDay[cell.dayKey] ?? 0
                   return (
                     <button
@@ -605,7 +606,7 @@ export function ScheduleView({
                       disabled={!cell.inMonth}
                       aria-label={`Select ${cell.dayKey} (${formatDayTitleUtc(cell.dayKey)})`}
                       aria-pressed={selected}
-                      aria-current={cell.dayKey === todayKey ? 'date' : undefined}
+                      aria-current={isToday ? 'date' : undefined}
                       tabIndex={cell.inMonth ? (selected ? 0 : -1) : -1}
                       className={cn(
                         'relative flex h-11 sm:h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-[var(--radius-md)] border px-1 sm:px-2 py-1 sm:py-1.5 text-center',
@@ -613,10 +614,14 @@ export function ScheduleView({
                           ? 'border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)]'
                           : 'border-transparent bg-transparent opacity-40',
                         selected && 'border-[var(--color-terracotta)] bg-[var(--color-terracotta)]/10',
+                        isToday && !selected && 'border-[var(--color-sage)]',
                         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-terracotta)] focus-visible:ring-offset-2'
                       )}
                     >
-                      <span className="text-xs sm:text-sm font-[var(--font-display)] text-[var(--foreground)] leading-none">
+                      <span className={cn(
+                        'text-xs sm:text-sm font-[var(--font-display)] leading-none',
+                        isToday ? 'font-bold text-[var(--color-sage)]' : 'text-[var(--foreground)]'
+                      )}>
                         {cell.date.getUTCDate()}
                       </span>
                       {count ? (
