@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { CalendarDays, ClipboardList, History, LayoutDashboard } from 'lucide-react'
+import { CalendarDays, ClipboardList, LayoutDashboard, Settings } from 'lucide-react'
 
 export type NavItem = {
   href: string
@@ -11,5 +11,5 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/schedule', label: 'Schedule', icon: CalendarDays },
   { href: '/chores', label: 'Chores', icon: ClipboardList },
-  { href: '/history', label: 'History', icon: History },
+  { href: '/settings', label: 'Settings', icon: Settings },
 ]
