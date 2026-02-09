@@ -16,6 +16,7 @@
 
 - [Overview](#overview)
 - [Key Features](#key-features)
+- [Deploy Your Own](#deploy-your-own)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
@@ -46,6 +47,24 @@ Everything ultimately lands on your **daily schedule**: you open the app, see wh
 - **Multi-user** - Assign chores and see completions per user
 - **Warnings** - Pace/planning warnings when you're falling behind
 - **Mobile-first UI** - Built for quick check-ins and tap targets
+
+## Deploy Your Own
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Floehnertz%2FChorus&root-directory=web&env=DATABASE_URL,NEON_AUTH_BASE_URL,NEON_AUTH_COOKIE_SECRET&envDescription=Database%20and%20auth%20credentials%20from%20your%20Neon%20project&envLink=https%3A%2F%2Fgithub.com%2Floehnertz%2FChorus%23deploy-your-own)
+
+Before clicking the button, set up your backend:
+
+1. Create a free [Neon](https://neon.tech) project
+2. Enable **Neon Auth** in the project dashboard and copy the **Auth Base URL**
+3. Copy the **database connection string** from the Neon dashboard
+4. Generate a cookie secret: `openssl rand -base64 32`
+5. Click the deploy button above and paste the three values when prompted
+
+**Optional post-deploy setup:**
+
+- **Web push notifications** — generate VAPID keys (`npx web-push generate-vapid-keys`) and add `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`
+- **Cron secret** — set `CHORUS_CRON_SECRET` to protect the `/api/cron/autoschedule` endpoint
+- **Rate limiting** — provision an [Upstash Redis](https://upstash.com) instance and add `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`
 
 ## Tech Stack
 
