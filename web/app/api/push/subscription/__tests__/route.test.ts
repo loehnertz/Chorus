@@ -32,7 +32,7 @@ describe('GET /api/push/subscription', () => {
       Response.json({ error: 'Unauthorized' }, { status: 401 }),
     );
 
-    const res = await GET(createMockRequest('/api/push/subscription') as never);
+    const res = await GET();
     expect(res.status).toBe(401);
   });
 
@@ -40,7 +40,7 @@ describe('GET /api/push/subscription', () => {
     (requireApprovedUserApi as jest.Mock).mockResolvedValue(createMockSession());
     (db.webPushSubscription.count as jest.Mock).mockResolvedValue(0);
 
-    const res = await GET(createMockRequest('/api/push/subscription') as never);
+    const res = await GET();
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toEqual({ enabled: false, count: 0 });
   });
