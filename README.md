@@ -60,6 +60,11 @@ Before clicking the button, set up your backend:
 4. Generate a cookie secret: `openssl rand -base64 32`
 5. Click the deploy button above and paste the three values when prompted
 
+On deployment, Chorus now runs Prisma migrations automatically during the Vercel build (`prisma migrate deploy`), so a fresh Neon database gets all required app tables in `public`.
+
+Note: Neon Auth tables in the `neon_auth` schema are managed by Neon Auth itself, not by Prisma migrations in this repo.
+Chorus does not auto-seed data during deployment; if you want sample data, run `cd web && npx prisma db seed` manually.
+
 **Optional post-deploy setup:**
 
 - **Web push notifications** — generate VAPID keys (`npx web-push generate-vapid-keys`) and add `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`
@@ -87,7 +92,7 @@ chorus/                  # Repository root
 │   ├── app/           # Next.js App Router pages
 │   ├── components/    # React components
 │   ├── lib/           # Utilities and shared logic
-│   ├── prisma/        # Database schema
+│   ├── prisma/        # Database schema + migration history
 │   └── ...
 ├── CLAUDE.md          # Development documentation
 ├── PLAN.md            # Implementation roadmap
@@ -171,8 +176,17 @@ npm run lint && npm run test && npm run build
 
 # Database
 npx prisma migrate dev   # Create and apply migrations
+npx prisma migrate deploy # Apply committed migrations (used in deploy builds)
 npx prisma studio        # Open Prisma Studio GUI
 npx prisma generate      # Regenerate Prisma Client
+```
+
+If you change `web/prisma/schema.prisma`, create and commit a new migration:
+
+```bash
+cd web
+npx prisma migrate dev --name <descriptive_change_name>
+git add prisma/migrations prisma/schema.prisma
 ```
 
 ## Design Philosophy
