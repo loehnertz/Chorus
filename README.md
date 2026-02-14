@@ -69,7 +69,9 @@ Chorus accepts `POSTGRES_URL` automatically, so you do not need to manually set 
 
 If you are not using a Vercel Postgres integration, add `DATABASE_URL` manually from your Neon connection string.
 
-On deployment, Chorus now runs Prisma migrations automatically during the Vercel build (`prisma migrate deploy`), so a fresh Neon database gets all required app tables in `public`.
+On production deployment, Chorus runs Prisma migrations automatically during the Vercel build (`prisma migrate deploy`), so a fresh Neon database gets all required app tables in `public`.
+Preview deployments skip migrations by design.
+For best reliability, set `MIGRATE_DATABASE_URL` in Vercel to a direct Neon connection string (non-pooler host) used only for migrations.
 
 Note: Neon Auth tables in the `neon_auth` schema are managed by Neon Auth itself, not by Prisma migrations in this repo.
 Chorus does not auto-seed data during deployment; if you want sample data, run `cd web && npx prisma db seed` manually.
@@ -79,7 +81,8 @@ Chorus does not auto-seed data during deployment; if you want sample data, run `
 1. Open the deployed site and verify auth pages load.
 2. Verify the production build succeeded and migrations were applied.
 3. Confirm `NEON_AUTH_BASE_URL` and `NEON_AUTH_COOKIE_SECRET` are set in Vercel.
-4. Confirm one database variable is present: `DATABASE_URL` or `POSTGRES_URL`.
+4. Confirm one runtime database variable is present: `DATABASE_URL` or `POSTGRES_URL`.
+5. Recommended: set `MIGRATE_DATABASE_URL` (direct Neon host) for production migrations.
 
 **Optional post-deploy setup:**
 
@@ -102,7 +105,7 @@ How it works:
 - The workflow runs every 6 hours (and can also be run manually from Actions).
 - It fast-forwards the downstream repository `master` branch to `loehnertz/Chorus` `master`.
 - That push triggers a Vercel redeploy.
-- Build runs `prisma migrate deploy`, so committed migrations are applied automatically.
+- Production build runs `prisma migrate deploy`, so committed migrations are applied automatically.
 
 #### Manual/custom mode
 
