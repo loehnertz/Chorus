@@ -13,6 +13,7 @@ import {
 } from '@/lib/auto-schedule'
 import { getDashboardPlanningWarnings } from '@/lib/dashboard-planning-warnings'
 import { getHolidaysForUser, isUserOnHoliday, buildHolidayDayKeySet } from '@/lib/holiday'
+import { toTodayProgress } from '@/lib/gamification'
 
 /**
  * Dashboard Page
@@ -101,6 +102,9 @@ export default async function DashboardPage() {
       completedByUserId: s.completion?.userId ?? null,
     }))
 
+  const todayCompleted = todaysTasks.reduce((count, task) => count + (task.completed ? 1 : 0), 0)
+  const todayProgress = toTodayProgress(todayCompleted, todaysTasks.length)
+
   const recentActivity = recent.map((c) => ({
     id: c.id,
     title: c.chore.title,
@@ -121,6 +125,7 @@ export default async function DashboardPage() {
           completedThisWeek,
           streakDays,
         }}
+        todayProgress={todayProgress}
         todaysTasks={todaysTasks}
         recentActivity={recentActivity}
         planningWarnings={planningWarnings}

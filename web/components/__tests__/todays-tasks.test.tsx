@@ -11,6 +11,7 @@ jest.mock('next/navigation', () => ({
 const toastSuccess = jest.fn()
 const toastError = jest.fn()
 const toastMessage = jest.fn()
+const launchConfetti = jest.fn()
 
 jest.mock('sonner', () => ({
   toast: {
@@ -20,12 +21,19 @@ jest.mock('sonner', () => ({
   },
 }))
 
+jest.mock('@/components/celebration-confetti', () => ({
+  useCelebrationConfetti: () => launchConfetti,
+}))
+
 describe('TodaysTasks', () => {
   beforeEach(() => {
     mockRefresh.mockReset()
     toastSuccess.mockReset()
     toastError.mockReset()
     toastMessage.mockReset()
+    launchConfetti.mockReset()
+    launchConfetti.mockResolvedValue({ fired: true, reducedMotion: false })
+    window.sessionStorage.clear()
     ;(globalThis as unknown as { fetch: unknown }).fetch = jest.fn()
   })
 
@@ -56,7 +64,8 @@ describe('TodaysTasks', () => {
       '/api/completions',
       expect.objectContaining({ method: 'POST' })
     )
-    expect(toastSuccess).toHaveBeenCalledWith('Completed!')
+    expect(toastSuccess).toHaveBeenCalledWith('Completed! 1/1 done today')
+    expect(launchConfetti).toHaveBeenCalledTimes(1)
     expect(mockRefresh).toHaveBeenCalledTimes(1)
   })
 

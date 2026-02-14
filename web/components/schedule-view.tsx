@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { AlertTriangle, ChevronLeft, ChevronRight, Palmtree, Plus, Trash2 } from 'lucide-react'
@@ -28,6 +29,16 @@ import { CompletionCheckbox } from '@/components/completion-checkbox'
 import { SlotPicker, type SlotPickerChore } from '@/components/slot-picker'
 import { PageFadeIn } from '@/components/page-fade-in'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { useCelebrationConfetti } from '@/components/celebration-confetti'
+import {
+  computeTodayProgressFromScheduleItems,
+  getUtcDayKey,
+  hasCelebratedToday,
+  isTaskActionableByUser,
+  markCelebratedToday,
+  shouldTriggerZeroInboxCelebration,
+  toTodayProgress,
+} from '@/lib/gamification'
 
 export type ScheduleViewChore = {
   id: string
@@ -171,10 +182,12 @@ export function ScheduleView({
   className,
 }: ScheduleViewProps) {
   const router = useRouter()
+  const launchConfetti = useCelebrationConfetti()
 
   const [selectedDayKey, setSelectedDayKey] = React.useState(() => initialSelectedDayKey ?? todayDayKey)
   const [viewMode, setViewMode] = React.useState<Frequency>('DAILY')
   const [savingId, setSavingId] = React.useState<string | null>(null)
+  const [burstId, setBurstId] = React.useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null)
   const [items, setItems] = React.useState<ScheduleViewItem[]>(monthSchedules)
   const [upcoming, setUpcoming] = React.useState<ScheduleViewItem[]>(upcomingSchedules)
@@ -483,6 +496,13 @@ export function ScheduleView({
     setConfirmDeleteId(scheduleId)
   }
 
+  const triggerRowBurst = React.useCallback((scheduleId: string) => {
+    setBurstId(scheduleId)
+    window.setTimeout(() => {
+      setBurstId((prev) => (prev === scheduleId ? null : prev))
+    }, 320)
+  }, [])
+
   const setCompletion = async (task: ScheduleViewItem, nextChecked: boolean) => {
     if (savingId) return
 
@@ -500,6 +520,15 @@ export function ScheduleView({
       setItems((prev) => prev.map((s) => (s.id === scheduleId ? { ...s, ...patch } : s)))
       setUpcoming((prev) => prev.map((s) => (s.id === scheduleId ? { ...s, ...patch } : s)))
     }
+
+    const prevProgress = computeTodayProgressFromScheduleItems(items, userId, todayDayKey)
+    const countsTowardTodayProgress =
+      dayKeyUtc(new Date(task.scheduledFor)) === todayDayKey &&
+      isTaskActionableByUser(task.chore.assigneeIds, userId)
+    const nextProgress = toTodayProgress(
+      prevProgress.completed + (countsTowardTodayProgress ? (nextChecked ? 1 : -1) : 0),
+      prevProgress.total
+    )
 
     const prevCompletedByUserId = task.completedByUserId ?? null
     applyOptimistic({ completed: nextChecked, completedByUserId: nextChecked ? userId : null })
@@ -521,8 +550,38 @@ export function ScheduleView({
         return
       }
 
-      if (nextChecked) toast.success('Completed!')
-      else toast.message('Undone')
+      if (nextChecked) {
+        triggerRowBurst(scheduleId)
+        if (countsTowardTodayProgress && nextProgress.total > 0) {
+          toast.success(`Completed! ${nextProgress.completed}/${nextProgress.total} done today`)
+        } else {
+          toast.success('Completed!')
+        }
+
+        const dayKey = getUtcDayKey()
+        const alreadyCelebrated = hasCelebratedToday(userId, dayKey)
+        const shouldCelebrate = shouldTriggerZeroInboxCelebration({
+          prevCompleted: prevProgress.completed,
+          nextCompleted: nextProgress.completed,
+          total: nextProgress.total,
+          alreadyCelebrated,
+        })
+
+        if (shouldCelebrate) {
+          void launchConfetti()
+            .then((result) => {
+              markCelebratedToday(userId, dayKey)
+              if (result.reducedMotion) {
+                toast.success('All done for today.')
+              }
+            })
+            .catch(() => {
+              markCelebratedToday(userId, dayKey)
+            })
+        }
+      } else {
+        toast.message('Undone')
+      }
 
       router.refresh()
     } catch {
@@ -743,7 +802,23 @@ export function ScheduleView({
                     const completedByOther = task.completed && task.completedByUserId && task.completedByUserId !== userId
                     const completer = completedByOther ? users.find((usr) => usr.id === task.completedByUserId) : null
                     return (
-                      <div key={task.id} className={cn('flex items-center gap-4 py-4', isOthers && 'opacity-60')}>
+                      <motion.div
+                        key={task.id}
+                        className={cn('flex items-center gap-4 rounded-[var(--radius-sm)] py-4', isOthers && 'opacity-60')}
+                        initial={false}
+                        animate={
+                          burstId === task.id
+                            ? {
+                                scale: [1, 1.0125, 1],
+                                backgroundColor: ['rgba(0,0,0,0)', 'rgba(129,178,154,0.15)', 'rgba(0,0,0,0)'],
+                              }
+                            : {
+                                scale: 1,
+                                backgroundColor: 'rgba(0,0,0,0)',
+                              }
+                        }
+                        transition={{ duration: 0.3, ease: 'easeOut' }}
+                      >
                         <CompletionCheckbox
                           checked={task.completed}
                           disabled={disabled}
@@ -792,7 +867,7 @@ export function ScheduleView({
                             <Trash2 className="h-4 w-4" aria-hidden="true" />
                           </button>
                         </div>
-                      </div>
+                      </motion.div>
                     )
                   })}
                 </div>

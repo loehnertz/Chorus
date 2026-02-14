@@ -1,12 +1,22 @@
 'use client'
 
 import * as React from 'react'
+import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import type { Frequency } from '@/types/frequency'
 import { cn } from '@/lib/utils'
 import { CompletionCheckbox } from '@/components/completion-checkbox'
 import { FrequencyBadge } from '@/components/ui/frequency-badge'
+import { useCelebrationConfetti } from '@/components/celebration-confetti'
+import {
+  computeProgressFromCompletionMap,
+  getUtcDayKey,
+  hasCelebratedToday,
+  markCelebratedToday,
+  shouldTriggerZeroInboxCelebration,
+  toTodayProgress,
+} from '@/lib/gamification'
 
 export type TodaysTask = {
   scheduleId: string
@@ -25,7 +35,9 @@ export interface TodaysTasksProps {
 
 export function TodaysTasks({ userId, tasks, className }: TodaysTasksProps) {
   const router = useRouter()
+  const launchConfetti = useCelebrationConfetti()
   const [savingId, setSavingId] = React.useState<string | null>(null)
+  const [burstId, setBurstId] = React.useState<string | null>(null)
   const [completionById, setCompletionById] = React.useState<Record<string, string | null>>(() => {
     const next: Record<string, string | null> = {}
     for (const t of tasks) {
@@ -43,6 +55,15 @@ export function TodaysTasks({ userId, tasks, className }: TodaysTasksProps) {
     }
     setCompletionById(next)
   }, [tasks])
+
+  const progressTasks = React.useMemo(() => tasks.map((task) => ({ scheduleId: task.scheduleId })), [tasks])
+
+  const triggerRowBurst = React.useCallback((scheduleId: string) => {
+    setBurstId(scheduleId)
+    window.setTimeout(() => {
+      setBurstId((prev) => (prev === scheduleId ? null : prev))
+    }, 320)
+  }, [])
 
   const setCompletion = async (task: TodaysTask, nextChecked: boolean) => {
     if (savingId) return
@@ -85,8 +106,37 @@ export function TodaysTasks({ userId, tasks, className }: TodaysTasksProps) {
         return
       }
 
-      if (nextChecked) toast.success('Completed!')
-      else toast.message('Undone')
+      if (nextChecked) {
+        const prevProgress = computeProgressFromCompletionMap(progressTasks, completionById)
+        const nextProgress = toTodayProgress(prevProgress.completed + 1, prevProgress.total)
+
+        triggerRowBurst(scheduleId)
+        toast.success(`Completed! ${nextProgress.completed}/${nextProgress.total} done today`)
+
+        const dayKey = getUtcDayKey()
+        const alreadyCelebrated = hasCelebratedToday(userId, dayKey)
+        const shouldCelebrate = shouldTriggerZeroInboxCelebration({
+          prevCompleted: prevProgress.completed,
+          nextCompleted: nextProgress.completed,
+          total: nextProgress.total,
+          alreadyCelebrated,
+        })
+
+        if (shouldCelebrate) {
+          void launchConfetti()
+            .then((result) => {
+              markCelebratedToday(userId, dayKey)
+              if (result.reducedMotion) {
+                toast.success('All done for today.')
+              }
+            })
+            .catch(() => {
+              markCelebratedToday(userId, dayKey)
+            })
+        }
+      } else {
+        toast.message('Undone')
+      }
 
       router.refresh()
     } catch {
@@ -109,8 +159,24 @@ export function TodaysTasks({ userId, tasks, className }: TodaysTasksProps) {
         const checked = Object.prototype.hasOwnProperty.call(completionById, task.scheduleId)
         const canUndo = checked && completedBy === userId
         const disabled = savingId === task.scheduleId || (checked && !canUndo)
-        return (
-          <div key={task.scheduleId} className="flex items-center gap-4 py-4 sm:py-5">
+      return (
+          <motion.div
+            key={task.scheduleId}
+            className="flex items-center gap-4 rounded-[var(--radius-sm)] py-4 sm:py-5"
+            initial={false}
+            animate={
+              burstId === task.scheduleId
+                ? {
+                    scale: [1, 1.0125, 1],
+                    backgroundColor: ['rgba(0,0,0,0)', 'rgba(129,178,154,0.15)', 'rgba(0,0,0,0)'],
+                  }
+                : {
+                    scale: 1,
+                    backgroundColor: 'rgba(0,0,0,0)',
+                  }
+            }
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+          >
             <CompletionCheckbox
               checked={checked}
               disabled={disabled}
@@ -129,7 +195,7 @@ export function TodaysTasks({ userId, tasks, className }: TodaysTasksProps) {
               </p>
             </div>
             <FrequencyBadge frequency={task.frequency} />
-          </div>
+          </motion.div>
         )
       })}
     </div>

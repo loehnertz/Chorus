@@ -8,6 +8,7 @@ const mockRefresh = jest.fn()
 const toastSuccess = jest.fn()
 const toastError = jest.fn()
 const toastMessage = jest.fn()
+const launchConfetti = jest.fn()
 
 const slotPickerMock = jest.fn<null, [unknown]>(() => null)
 
@@ -27,6 +28,10 @@ jest.mock('@/components/slot-picker', () => ({
   SlotPicker: (props: unknown) => slotPickerMock(props),
 }))
 
+jest.mock('@/components/celebration-confetti', () => ({
+  useCelebrationConfetti: () => launchConfetti,
+}))
+
 const defaultUsers = [
   { id: 'u1', name: 'Alice' },
   { id: 'u2', name: 'Bob' },
@@ -39,6 +44,9 @@ describe('ScheduleView', () => {
     toastSuccess.mockReset()
     toastError.mockReset()
     toastMessage.mockReset()
+    launchConfetti.mockReset()
+    launchConfetti.mockResolvedValue({ fired: true, reducedMotion: false })
+    window.sessionStorage.clear()
     slotPickerMock.mockReset()
     ;(globalThis as unknown as { fetch: unknown }).fetch = jest.fn()
   })
@@ -432,5 +440,40 @@ describe('ScheduleView', () => {
     expect(global.fetch).toHaveBeenCalledWith('/api/completions?scheduleId=s1', { method: 'DELETE' })
     expect(toastMessage).toHaveBeenCalledWith('Undone')
     expect(mockRefresh).toHaveBeenCalled()
+  })
+
+  it('celebrates once when the final today task is completed', async () => {
+    const user = userEvent.setup()
+
+    ;(global.fetch as jest.Mock).mockResolvedValue({ ok: true })
+
+    render(
+      <ScheduleView
+        userId="u1"
+        year={2026}
+        monthIndex={1}
+        todayDayKey="2026-02-06"
+        initialSelectedDayKey="2026-02-06"
+        chores={[{ id: 'c1', title: 'Shared chore', frequency: 'DAILY', assigneeIds: ['u1'] }]}
+        monthSchedules={[
+          {
+            id: 's1',
+            scheduledFor: '2026-02-06T00:00:00.000Z',
+            slotType: 'DAILY',
+            suggested: false,
+            completed: false,
+            chore: { id: 'c1', title: 'Shared chore', frequency: 'DAILY', assigneeIds: ['u1'] },
+          },
+        ]}
+        upcomingSchedules={[]}
+        users={defaultUsers}
+      />
+    )
+
+    await user.click(screen.getByRole('checkbox'))
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1))
+    expect(toastSuccess).toHaveBeenCalledWith('Completed! 1/1 done today')
+    expect(launchConfetti).toHaveBeenCalledTimes(1)
   })
 })

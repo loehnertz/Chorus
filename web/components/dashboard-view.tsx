@@ -1,5 +1,6 @@
 import { CalendarCheck, Palmtree } from 'lucide-react'
 import type { Frequency } from '@/types/frequency'
+import type { TodayProgress } from '@/lib/gamification'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { DashboardStats, type DashboardStatsData } from '@/components/dashboard-stats'
@@ -23,13 +24,22 @@ export type RecentActivityItem = {
 export interface DashboardViewProps {
   userId: string
   stats: DashboardStatsData
+  todayProgress?: TodayProgress
   todaysTasks: TodaysTask[]
   recentActivity: RecentActivityItem[]
   planningWarnings?: DashboardPlanningWarning[]
   isOnHoliday?: boolean
 }
 
-export function DashboardView({ userId, stats, todaysTasks, recentActivity, planningWarnings, isOnHoliday }: DashboardViewProps) {
+export function DashboardView({
+  userId,
+  stats,
+  todayProgress,
+  todaysTasks,
+  recentActivity,
+  planningWarnings,
+  isOnHoliday,
+}: DashboardViewProps) {
   return (
     <div className="space-y-7 md:space-y-8">
       {isOnHoliday && (
@@ -39,7 +49,7 @@ export function DashboardView({ userId, stats, todaysTasks, recentActivity, plan
         </div>
       )}
 
-      <DashboardStats stats={stats} isOnHoliday={isOnHoliday} />
+      <DashboardStats stats={stats} todayProgress={todayProgress} isOnHoliday={isOnHoliday} />
 
       <DashboardPlanningWarnings warnings={planningWarnings ?? []} />
 
