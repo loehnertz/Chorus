@@ -6,6 +6,7 @@ import { AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageFadeIn } from '@/components/page-fade-in'
+import { isNextRedirectError } from '@/lib/is-next-redirect-error'
 
 export default function GlobalError({
   error,
@@ -14,6 +15,26 @@ export default function GlobalError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const redirectError = React.useMemo(() => isNextRedirectError(error), [error])
+  const [didAutoReset, setDidAutoReset] = React.useState(false)
+
+  React.useEffect(() => {
+    if (!redirectError || didAutoReset) return
+
+    setDidAutoReset(true)
+    reset()
+  }, [didAutoReset, redirectError, reset])
+
+  if (redirectError) {
+    return (
+      <div className="min-h-screen bg-[var(--background)]" aria-live="polite">
+        <main className="mx-auto max-w-6xl px-4 sm:px-6 md:px-10 py-7 sm:py-8 md:py-12">
+          <p className="text-sm text-[var(--foreground)]/70">Continuing to your dashboard...</p>
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-[var(--background)]">
       <main className="mx-auto max-w-6xl px-4 sm:px-6 md:px-10 py-7 sm:py-8 md:py-12">

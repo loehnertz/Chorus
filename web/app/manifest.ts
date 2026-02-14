@@ -6,9 +6,9 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Chorus',
     short_name: 'Chorus',
     description: 'Slot-based chore tracking for your household.',
-    // Use a public, non-redirecting entry point for installability checks.
-    // If a user is already authenticated, /sign-in will redirect server-side to /dashboard.
-    start_url: '/sign-in',
+    // Launch directly into the app shell. Unauthenticated users are redirected
+    // to /sign-in by auth middleware before dashboard data loads.
+    start_url: '/dashboard',
     scope: '/',
     display: 'standalone',
     orientation: 'portrait',

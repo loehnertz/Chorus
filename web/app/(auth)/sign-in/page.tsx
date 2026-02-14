@@ -4,8 +4,8 @@ import SignInClient from './SignInClient';
 
 /**
  * Sign In Page
- * Keeps /sign-in as a stable PWA start_url while still redirecting
- * authenticated users straight to the dashboard.
+ * Public authentication entry point. The installed PWA now launches at
+ * /dashboard, and unauthenticated users are redirected here.
  */
 export default async function SignInPage() {
   const { data: session } = await auth.getSession();
