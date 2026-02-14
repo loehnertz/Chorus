@@ -9,10 +9,17 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 function createPrismaClient() {
+  const databaseUrl = process.env.DATABASE_URL ?? process.env.POSTGRES_URL;
+  if (!databaseUrl) {
+    throw new Error(
+      'Missing database connection string. Set DATABASE_URL (or POSTGRES_URL when using a Vercel Postgres integration).',
+    );
+  }
+
   // Create or reuse pool
   const pool = globalForPrisma.pool ??
     new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString: databaseUrl,
       // In serverless environments, keep per-instance pools small to reduce the chance
       // of exhausting database connections during bursts.
       max: process.env.NODE_ENV === 'production' ? 3 : 10,

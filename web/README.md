@@ -16,3 +16,4 @@ npm run dev
 Default dev URL: `http://localhost:3001`
 
 Deployment builds run `prisma migrate deploy` automatically before `next build`, so fresh databases are bootstrapped from committed migrations in `prisma/migrations/`.
+The app accepts either `DATABASE_URL` or `POSTGRES_URL` for the database connection string.

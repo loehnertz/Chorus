@@ -7,6 +7,13 @@ import { defineConfig } from "prisma/config";
 const isDevelopment = process.env.NODE_ENV === 'development';
 config({ path: isDevelopment ? ".env.development.local" : ".env" });
 
+const databaseUrl = process.env["DATABASE_URL"] ?? process.env["POSTGRES_URL"];
+if (!databaseUrl) {
+  throw new Error(
+    "Missing database connection string. Set DATABASE_URL (or POSTGRES_URL when using a Vercel Postgres integration).",
+  );
+}
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
@@ -14,6 +21,6 @@ export default defineConfig({
     seed: "tsx prisma/seed.ts",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    url: databaseUrl,
   },
 });

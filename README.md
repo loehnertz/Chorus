@@ -50,20 +50,35 @@ Everything ultimately lands on your **daily schedule**: you open the app, see wh
 
 ## Deploy Your Own
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Floehnertz%2FChorus&root-directory=web&env=DATABASE_URL,NEON_AUTH_BASE_URL,NEON_AUTH_COOKIE_SECRET&envDescription=Database%20and%20auth%20credentials%20from%20your%20Neon%20project&envLink=https%3A%2F%2Fgithub.com%2Floehnertz%2FChorus%23deploy-your-own)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Floehnertz%2FChorus&root-directory=web&env=NEON_AUTH_BASE_URL,NEON_AUTH_COOKIE_SECRET&envDescription=Neon%20Auth%20values%20(required).%20Database%20comes%20from%20POSTGRES_URL%20(integration)%20or%20manual%20DATABASE_URL.&envLink=https%3A%2F%2Fgithub.com%2Floehnertz%2FChorus%23deploy-your-own)
 
-Before clicking the button, set up your backend:
+### Quick Deploy Checklist (Required)
 
 1. Create a free [Neon](https://neon.tech) project
 2. Enable **Neon Auth** in the project dashboard and copy the **Auth Base URL**
-3. Copy the **database connection string** from the Neon dashboard
-4. Generate a cookie secret: `openssl rand -base64 32`
-5. Click the deploy button above and paste the three values when prompted
+3. Generate a cookie secret: `openssl rand -base64 32`
+4. Click the deploy button above and paste `NEON_AUTH_BASE_URL` and `NEON_AUTH_COOKIE_SECRET`.
+
+### Fastest Path (Less Copy/Paste)
+
+For the simplest setup, attach Neon Postgres through Vercel during project creation.  
+Chorus accepts `POSTGRES_URL` automatically, so you do not need to manually set `DATABASE_URL`.
+
+### Manual Database Path
+
+If you are not using a Vercel Postgres integration, add `DATABASE_URL` manually from your Neon connection string.
 
 On deployment, Chorus now runs Prisma migrations automatically during the Vercel build (`prisma migrate deploy`), so a fresh Neon database gets all required app tables in `public`.
 
 Note: Neon Auth tables in the `neon_auth` schema are managed by Neon Auth itself, not by Prisma migrations in this repo.
 Chorus does not auto-seed data during deployment; if you want sample data, run `cd web && npx prisma db seed` manually.
+
+### Post-deploy Checklist
+
+1. Open the deployed site and verify auth pages load.
+2. Verify the production build succeeded and migrations were applied.
+3. Confirm `NEON_AUTH_BASE_URL` and `NEON_AUTH_COOKIE_SECRET` are set in Vercel.
+4. Confirm one database variable is present: `DATABASE_URL` or `POSTGRES_URL`.
 
 **Optional post-deploy setup:**
 
@@ -188,7 +203,7 @@ Visit `http://localhost:3001` to see the app.
 
 Required (see `web/.env.example`):
 
-- `DATABASE_URL`: Postgres connection string
+- `DATABASE_URL` or `POSTGRES_URL`: Postgres connection string
 - `NEON_AUTH_BASE_URL`: Neon Auth base URL
 - `NEON_AUTH_COOKIE_SECRET`: cookie secret
 
