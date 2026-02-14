@@ -53,7 +53,8 @@ cd web  # Always navigate to web directory first
 ```bash
 # Development
 npm run dev              # Start development server (port 3001)
-npm run build            # Build for production
+npm run build            # Deploy build (runs prisma migrate deploy first)
+npm run build:local      # Local build only (no migrations)
 npm run start            # Start production server
 
 # Database
@@ -70,7 +71,7 @@ npm run test:watch       # Run tests in watch mode
 npm run type-check       # Run TypeScript type checking
 
 # Pre-commit workflow (ALWAYS run before committing)
-npm run lint && npm run test && npm run build
+npm run lint && npm run test && npm run build:local
 ```
 
 ## Git Workflow
@@ -525,7 +526,7 @@ NEON_AUTH_COOKIE_SECRET="generated-secret"        # Generate: openssl rand -base
 ### Pre-Commit Workflow
 **ALWAYS run before committing code:**
 ```bash
-npm run lint && npm run test && npm run build
+npm run lint && npm run test && npm run build:local
 ```
 All three must pass before creating a commit. No exceptions.
 
@@ -551,7 +552,7 @@ This project is in early development. Refer to PLAN.md for the phased implementa
 
 ## Key Considerations
 
-- **Testing**: Write unit tests for every feature BEFORE implementation (TDD). Always run lint → test → build before committing
+- **Testing**: Write unit tests for every feature BEFORE implementation (TDD). Always run lint → test → build:local before committing
 - **Performance**: Use server components by default; only mark 'use client' when needed for interactivity
 - **Accessibility**: Large touch targets (min 44x44px), semantic HTML, keyboard navigation
 - **Mobile-first**: Design for mobile viewport first, then enhance for desktop
