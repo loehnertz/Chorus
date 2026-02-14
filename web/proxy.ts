@@ -11,6 +11,7 @@ import type { NextRequest } from 'next/server';
  *
  * Public routes (no authentication required):
  * - /sign-in (login page)
+ * - /sign-up (registration page when enabled)
  * - /pending-approval (waiting for approval page)
  * - /api/auth/* (authentication API routes)
  * - /manifest.webmanifest (PWA manifest)
@@ -21,6 +22,7 @@ import type { NextRequest } from 'next/server';
 
 const exactPublicRoutes = new Set([
   '/sign-in',
+  '/sign-up',
   '/pending-approval',
   '/manifest.webmanifest',
   '/sw.js',

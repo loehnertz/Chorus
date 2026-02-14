@@ -50,7 +50,7 @@ Everything ultimately lands on your **daily schedule**: you open the app, see wh
 
 ## Deploy Your Own
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Floehnertz%2FChorus&root-directory=web&env=NEON_AUTH_BASE_URL,NEON_AUTH_COOKIE_SECRET&envDescription=Neon%20Auth%20values%20(required).%20Database%20comes%20from%20POSTGRES_URL%20(integration)%20or%20manual%20DATABASE_URL.&envLink=https%3A%2F%2Fgithub.com%2Floehnertz%2FChorus%23deploy-your-own)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Floehnertz%2FChorus&root-directory=web&env=NEON_AUTH_BASE_URL,NEON_AUTH_COOKIE_SECRET,CHORUS_SIGN_UP_ENABLED&envDescription=Neon%20Auth%20values%20(required).%20Optional%20CHORUS_SIGN_UP_ENABLED%3D1%20allows%20sign-up.%20Database%20comes%20from%20POSTGRES_URL%20(integration)%20or%20manual%20DATABASE_URL.&envLink=https%3A%2F%2Fgithub.com%2Floehnertz%2FChorus%23deploy-your-own)
 
 ### Quick Deploy Checklist (Required)
 
@@ -58,6 +58,7 @@ Everything ultimately lands on your **daily schedule**: you open the app, see wh
 2. Enable **Neon Auth** in the project dashboard and copy the **Auth Base URL**
 3. Generate a cookie secret: `openssl rand -base64 32`
 4. Click the deploy button above and paste `NEON_AUTH_BASE_URL` and `NEON_AUTH_COOKIE_SECRET`.
+5. Optional onboarding mode: set `CHORUS_SIGN_UP_ENABLED=1` so housemates can self-register, then redeploy with it unset/`0` to close sign-up.
 
 ### Fastest Path (Less Copy/Paste)
 
@@ -209,12 +210,19 @@ Required (see `web/.env.example`):
 
 Optional (debug/perf knobs; defaults are off):
 
+- `CHORUS_SIGN_UP_ENABLED=1`: enables `/sign-up` and account creation endpoints (`/api/auth/sign-up/*`); unset/other values disable sign-up
 - `CHORUS_PROFILE=1`: logs coarse timings for auth + autoscheduling
 - `PRISMA_LOG_QUERIES=1`: Prisma query logging (stdout)
 - `PRISMA_PROFILE_QUERIES=1`: logs query durations (stdout)
 - `PRISMA_SLOW_QUERY_MS=50`: logs only queries slower than N ms (implies profiling)
 - `NEXT_PUBLIC_NAV_PREFETCH=1`: enables Next.js Link prefetch in primary nav
 - `CHORUS_ASYNC_AUTOSCHEDULE=1`: schedule view runs auto-scheduling best-effort (non-blocking)
+
+Sign-up toggle workflow for shared households:
+1. Deploy with `CHORUS_SIGN_UP_ENABLED=1`.
+2. Have housemates create accounts at `/sign-up`.
+3. Redeploy with `CHORUS_SIGN_UP_ENABLED` unset (or `0`) to disable further sign-ups.
+4. Re-enable later when someone new joins.
 
 Cron (optional):
 

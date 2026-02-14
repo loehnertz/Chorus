@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth/server';
+import { isSignUpEnabled } from '@/lib/auth/config';
 import SignInClient from './SignInClient';
 
 /**
@@ -9,11 +10,13 @@ import SignInClient from './SignInClient';
  */
 export default async function SignInPage() {
   const { data: session } = await auth.getSession();
+  const signUpEnabled = isSignUpEnabled();
+
   if (session?.user) {
     redirect('/dashboard');
   }
 
-  return <SignInClient />;
+  return <SignInClient signUpEnabled={signUpEnabled} />;
 }
 
 export const dynamic = 'force-dynamic';

@@ -6,10 +6,11 @@ Chorus implements a **two-layer security model** where all users must be both au
 
 ### Security Model Overview
 
-1. **Invite-Only Access (Sign-Up Disabled)**
+1. **Controlled Access (Build-Time Sign-Up Toggle)**
    - This deployment is intended for a single household
-   - Sign-up is disabled at the API layer (`app/api/auth/[...path]/route.ts` blocks `/sign-up`)
-   - New users must be created via Neon Console (or other admin workflow)
+   - Public sign-up is controlled by `CHORUS_SIGN_UP_ENABLED`
+   - `CHORUS_SIGN_UP_ENABLED=1` allows `/sign-up` and `/api/auth/sign-up/*`
+   - Unset/other values disable sign-up at the API layer
    - App users are still created with `approved: false` by default and require manual approval
 
 2. **Two-Layer Security Model**
@@ -182,35 +183,20 @@ This will enable:
 - Audit log of who approved whom
 - Automatic approval for trusted email domains
 
-## Emergency: Disabling Sign-Up
+## Sign-Up Toggle Operations
 
-Sign-up is already disabled for this deployment.
+Sign-up is controlled by environment variable and redeploy:
 
-If you need to (re-)disable sign-up (e.g., after enabling it for a future phase):
-
-1. **Remove any sign-up UI route (if added):**
-   - Ensure no `/sign-up` page exists under `app/(auth)/`
-
-2. **Add API blocking (optional):**
-   ```typescript
-   // web/app/api/auth/[...path]/route.ts
-   export async function POST(request: NextRequest) {
-     const pathname = request.nextUrl.pathname;
-
-     if (pathname.includes('/sign-up') || pathname.includes('/signup')) {
-       return Response.json(
-         { error: 'Sign-up is temporarily disabled' },
-         { status: 403 }
-       );
-     }
-
-     return handler.POST(request);
-   }
-   ```
-
-3. **Re-enable after fixing issue:**
-   - Restore the sign-up page (if you use one)
-   - Remove API blocking code
+1. **Enable sign-up window:**
+   - Set `CHORUS_SIGN_UP_ENABLED=1`
    - Deploy
+   - Share `/sign-up` with new household members
 
-**WARNING:** Only disable sign-up if absolutely necessary for security reasons.
+2. **Close sign-up window:**
+   - Unset `CHORUS_SIGN_UP_ENABLED` (or set to `0`)
+   - Deploy
+   - New sign-up requests are blocked with HTTP `403`
+
+3. **Re-open later:**
+   - Set `CHORUS_SIGN_UP_ENABLED=1` again
+   - Deploy
