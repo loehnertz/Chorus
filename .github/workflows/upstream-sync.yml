@@ -1,0 +1,55 @@
+name: Sync From Upstream Master
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      UPSTREAM_REPO: loehnertz/Chorus
+      UPSTREAM_BRANCH: master
+      TARGET_BRANCH: master
+    steps:
+      - name: Checkout target branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ env.TARGET_BRANCH }}
+
+      - name: Configure git identity
+        run: |
+          git config user.name "chorus-upstream-sync[bot]"
+          git config user.email "chorus-upstream-sync[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream branch
+        run: |
+          if git remote get-url upstream >/dev/null 2>&1; then
+            git remote set-url upstream "https://github.com/${UPSTREAM_REPO}.git"
+          else
+            git remote add upstream "https://github.com/${UPSTREAM_REPO}.git"
+          fi
+          git fetch upstream "${UPSTREAM_BRANCH}" --prune
+
+      - name: Fast-forward merge
+        run: |
+          set -euo pipefail
+          git checkout "${TARGET_BRANCH}"
+
+          if git merge --ff-only "upstream/${UPSTREAM_BRANCH}"; then
+            echo "Fast-forward merge succeeded."
+          else
+            echo "Fast-forward failed because ${TARGET_BRANCH} diverged from upstream/${UPSTREAM_BRANCH}."
+            echo "Recovery options:"
+            echo "1) Keep auto-follow mode: reset ${TARGET_BRANCH} to upstream/${UPSTREAM_BRANCH}."
+            echo "2) Keep local custom commits: disable this workflow and manage updates manually."
+            exit 1
+          fi
+
+      - name: Push synced branch
+        run: git push origin "${TARGET_BRANCH}"

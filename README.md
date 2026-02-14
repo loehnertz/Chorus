@@ -71,6 +71,54 @@ Chorus does not auto-seed data during deployment; if you want sample data, run `
 - **Cron secret** — set `CHORUS_CRON_SECRET` to protect the `/api/cron/autoschedule` endpoint
 - **Rate limiting** — provision an [Upstash Redis](https://upstash.com) instance and add `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`
 
+### Downstream Deployment Modes
+
+#### Auto-follow `master` (recommended)
+
+Use this mode if other deployments should automatically get your latest changes:
+
+1. Deploy with the button above (this creates a GitHub copy in their account and links Vercel to it).
+2. Keep Vercel Production Branch set to `master`.
+3. Keep GitHub Actions enabled in that copied repository.
+4. Keep `.github/workflows/upstream-sync.yml` enabled (included in this repo).
+
+How it works:
+- The workflow runs every 6 hours (and can also be run manually from Actions).
+- It fast-forwards the downstream repository `master` branch to `loehnertz/Chorus` `master`.
+- That push triggers a Vercel redeploy.
+- Build runs `prisma migrate deploy`, so committed migrations are applied automatically.
+
+#### Manual/custom mode
+
+Use this mode if someone wants to customize code on their own `master` branch:
+
+1. Disable `.github/workflows/upstream-sync.yml` in their repo.
+2. Pull upstream changes manually when ready.
+3. Resolve merge conflicts manually as needed.
+
+### Auto-follow Divergence Recovery
+
+If the sync workflow fails, the downstream `master` branch has diverged from upstream. Choose one path:
+
+1. Keep auto-follow: reset local `master` to upstream and re-enable sync.
+2. Keep local custom commits: disable sync and update manually.
+
+Reset commands for path 1:
+
+```bash
+git checkout master
+git remote add upstream https://github.com/loehnertz/Chorus.git
+git fetch upstream master
+git reset --hard upstream/master
+git push --force-with-lease origin master
+```
+
+### Migration Safety Contract (Auto-follow Mode)
+
+- Prefer additive, backward-compatible Prisma migrations.
+- Avoid destructive migrations without prior notice to operators.
+- Remember: rolling back app code does not automatically roll back database schema.
+
 ## Tech Stack
 
 - **Framework**: Next.js (App Router)
