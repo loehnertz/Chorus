@@ -6,12 +6,19 @@ jest.mock('@/lib/db', () => ({
     schedule: {
       createMany: jest.fn(),
       count: jest.fn(),
+      findMany: jest.fn(),
+      updateMany: jest.fn(),
     },
   },
 }))
 
 import { db } from '@/lib/db'
-import { ensureBiweeklyPinnedSchedules, ensureDailySchedules, ensureWeeklyPinnedSchedules } from '../auto-schedule'
+import {
+  ensureBiweeklyPinnedSchedules,
+  ensureDailySchedules,
+  ensureWeeklyPinnedSchedules,
+  rollForwardUnfinishedSchedulesToToday,
+} from '../auto-schedule'
 
 describe('ensureDailySchedules', () => {
   beforeEach(() => {
@@ -300,5 +307,115 @@ describe('ensureBiweeklyPinnedSchedules', () => {
 
     expect(result).toEqual({ created: 0 })
     expect(db.schedule.createMany).not.toHaveBeenCalled()
+  })
+})
+
+describe('rollForwardUnfinishedSchedulesToToday', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    ;(db.schedule.updateMany as jest.Mock).mockResolvedValue({ count: 0 })
+  })
+
+  it('should return zero when no unfinished past schedules exist', async () => {
+    ;(db.schedule.findMany as jest.Mock).mockResolvedValueOnce([])
+
+    const result = await rollForwardUnfinishedSchedulesToToday(new Date('2026-02-10T12:00:00Z'))
+
+    expect(result).toEqual({ moved: 0, hiddenAsDuplicate: 0 })
+    expect(db.schedule.updateMany).not.toHaveBeenCalled()
+    expect(db.schedule.findMany).toHaveBeenCalledTimes(1)
+    expect(db.schedule.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          hidden: false,
+          completion: { is: null },
+          scheduledFor: { lt: new Date('2026-02-10T00:00:00Z') },
+        }),
+      }),
+    )
+  })
+
+  it('should move unfinished past schedules to today when no duplicate exists', async () => {
+    ;(db.schedule.findMany as jest.Mock)
+      .mockResolvedValueOnce([
+        {
+          id: 's1',
+          choreId: 'c1',
+          scheduledFor: new Date('2026-02-09T00:00:00Z'),
+          createdAt: new Date('2026-02-01T00:00:00Z'),
+        },
+      ])
+      .mockResolvedValueOnce([])
+    ;(db.schedule.updateMany as jest.Mock).mockResolvedValueOnce({ count: 1 })
+
+    const result = await rollForwardUnfinishedSchedulesToToday(new Date('2026-02-10T12:00:00Z'))
+
+    expect(result).toEqual({ moved: 1, hiddenAsDuplicate: 0 })
+    expect(db.schedule.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ['s1'] } },
+      data: { scheduledFor: new Date('2026-02-10T00:00:00Z') },
+    })
+  })
+
+  it('should hide unfinished past schedules when same chore already exists today', async () => {
+    ;(db.schedule.findMany as jest.Mock)
+      .mockResolvedValueOnce([
+        {
+          id: 's-old',
+          choreId: 'c1',
+          scheduledFor: new Date('2026-02-09T00:00:00Z'),
+          createdAt: new Date('2026-02-01T00:00:00Z'),
+        },
+      ])
+      .mockResolvedValueOnce([{ choreId: 'c1' }])
+    ;(db.schedule.updateMany as jest.Mock).mockResolvedValueOnce({ count: 1 })
+
+    const result = await rollForwardUnfinishedSchedulesToToday(new Date('2026-02-10T12:00:00Z'))
+
+    expect(result).toEqual({ moved: 0, hiddenAsDuplicate: 1 })
+    expect(db.schedule.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ['s-old'] } },
+      data: { hidden: true },
+    })
+  })
+
+  it('should move only one row per chore and hide older duplicates', async () => {
+    ;(db.schedule.findMany as jest.Mock)
+      .mockResolvedValueOnce([
+        {
+          id: 's1',
+          choreId: 'c1',
+          scheduledFor: new Date('2026-02-08T00:00:00Z'),
+          createdAt: new Date('2026-02-01T00:00:00Z'),
+        },
+        {
+          id: 's2',
+          choreId: 'c1',
+          scheduledFor: new Date('2026-02-09T00:00:00Z'),
+          createdAt: new Date('2026-02-02T00:00:00Z'),
+        },
+        {
+          id: 's3',
+          choreId: 'c2',
+          scheduledFor: new Date('2026-02-07T00:00:00Z'),
+          createdAt: new Date('2026-02-01T00:00:00Z'),
+        },
+      ])
+      .mockResolvedValueOnce([])
+    ;(db.schedule.updateMany as jest.Mock)
+      .mockResolvedValueOnce({ count: 1 })
+      .mockResolvedValueOnce({ count: 2 })
+
+    const result = await rollForwardUnfinishedSchedulesToToday(new Date('2026-02-10T12:00:00Z'))
+
+    expect(result).toEqual({ moved: 2, hiddenAsDuplicate: 1 })
+    expect(db.schedule.updateMany).toHaveBeenNthCalledWith(1, {
+      where: { id: { in: ['s2'] } },
+      data: { hidden: true },
+    })
+    expect(db.schedule.updateMany).toHaveBeenNthCalledWith(2, {
+      where: { id: { in: ['s1', 's3'] } },
+      data: { scheduledFor: new Date('2026-02-10T00:00:00Z') },
+    })
   })
 })

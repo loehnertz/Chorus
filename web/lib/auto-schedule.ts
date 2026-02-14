@@ -263,3 +263,88 @@ export async function ensureBiweeklyPinnedSchedules(
   }
   return { created }
 }
+
+/**
+ * Move unfinished past schedules onto today's date (UTC).
+ *
+ * Rules:
+ * - Only rows that are visible (`hidden=false`) and incomplete are considered.
+ * - If the same chore already has a schedule on today, the old row is hidden.
+ * - If multiple old rows exist for the same chore, only the oldest is moved;
+ *   additional rows are hidden to avoid duplicate chores on today.
+ */
+export async function rollForwardUnfinishedSchedulesToToday(
+  now?: Date,
+): Promise<{ moved: number; hiddenAsDuplicate: number }> {
+  const profile = process.env.CHORUS_PROFILE === '1'
+  const t0 = profile ? performance.now() : 0
+  const today = startOfTodayUtc(now)
+
+  const unfinishedPast = await db.schedule.findMany({
+    where: {
+      hidden: false,
+      scheduledFor: { lt: today },
+      completion: { is: null },
+    },
+    select: {
+      id: true,
+      choreId: true,
+      scheduledFor: true,
+      createdAt: true,
+    },
+    orderBy: [{ scheduledFor: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+  })
+
+  if (unfinishedPast.length === 0) {
+    return { moved: 0, hiddenAsDuplicate: 0 }
+  }
+
+  const choreIds = Array.from(new Set(unfinishedPast.map((row) => row.choreId)))
+  const existingToday = await db.schedule.findMany({
+    where: {
+      choreId: { in: choreIds },
+      scheduledFor: today,
+    },
+    select: { choreId: true },
+  })
+  const alreadyOnToday = new Set(existingToday.map((row) => row.choreId))
+
+  const moveIds: string[] = []
+  const hideIds: string[] = []
+  const claimedForMove = new Set<string>()
+
+  for (const row of unfinishedPast) {
+    if (alreadyOnToday.has(row.choreId) || claimedForMove.has(row.choreId)) {
+      hideIds.push(row.id)
+      continue
+    }
+    claimedForMove.add(row.choreId)
+    moveIds.push(row.id)
+  }
+
+  let hiddenAsDuplicate = 0
+  if (hideIds.length > 0) {
+    const hidden = await db.schedule.updateMany({
+      where: { id: { in: hideIds } },
+      data: { hidden: true },
+    })
+    hiddenAsDuplicate = hidden.count
+  }
+
+  let moved = 0
+  if (moveIds.length > 0) {
+    const movedRows = await db.schedule.updateMany({
+      where: { id: { in: moveIds } },
+      data: { scheduledFor: today },
+    })
+    moved = movedRows.count
+  }
+
+  if (profile) {
+    console.info(
+      `perf: rollForwardUnfinishedSchedulesToToday candidates=${unfinishedPast.length} moved=${moved} hidden=${hiddenAsDuplicate} ${(performance.now() - t0).toFixed(1)}ms`,
+    )
+  }
+
+  return { moved, hiddenAsDuplicate }
+}

@@ -5,7 +5,12 @@ import { DashboardView } from '@/components/dashboard-view'
 import { PageFadeIn } from '@/components/page-fade-in'
 import { startOfTomorrowUtc, startOfTodayUtc, startOfWeekUtc } from '@/lib/date'
 import { computeStreakDaysUtc } from '@/lib/streak'
-import { ensureBiweeklyPinnedSchedules, ensureDailySchedules, ensureWeeklyPinnedSchedules } from '@/lib/auto-schedule'
+import {
+  ensureBiweeklyPinnedSchedules,
+  ensureDailySchedules,
+  ensureWeeklyPinnedSchedules,
+  rollForwardUnfinishedSchedulesToToday,
+} from '@/lib/auto-schedule'
 import { getDashboardPlanningWarnings } from '@/lib/dashboard-planning-warnings'
 import { getHolidaysForUser, isUserOnHoliday, buildHolidayDayKeySet } from '@/lib/holiday'
 
@@ -19,6 +24,7 @@ export default async function DashboardPage() {
   const userId = session.user.id
 
   const now = new Date()
+  await rollForwardUnfinishedSchedulesToToday(now)
   await Promise.all([
     ensureDailySchedules(now),
     ensureWeeklyPinnedSchedules(now),

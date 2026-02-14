@@ -3,7 +3,12 @@ import { db } from '@/lib/db'
 import { getApprovedUsersCached, getChoresForScheduleCached } from '@/lib/cached-queries'
 import { startOfTodayUtc, startOfBimonthUtc, endOfBimonthUtc, startOfHalfYearUtc, endOfHalfYearUtc } from '@/lib/date'
 import { getTodayDayKeyUtc } from '@/lib/calendar'
-import { ensureBiweeklyPinnedSchedules, ensureDailySchedules, ensureWeeklyPinnedSchedules } from '@/lib/auto-schedule'
+import {
+  ensureBiweeklyPinnedSchedules,
+  ensureDailySchedules,
+  ensureWeeklyPinnedSchedules,
+  rollForwardUnfinishedSchedulesToToday,
+} from '@/lib/auto-schedule'
 import { getHolidaysForUser } from '@/lib/holiday'
 
 export const runtime = 'nodejs'
@@ -61,6 +66,8 @@ export const GET = withApproval(async (session, request: Request) => {
     // Auto-schedule daily chores for the visible grid range, but never backfill the past.
     const todayStart = startOfTodayUtc(now)
     const scheduleStart = gridStart < todayStart ? todayStart : gridStart
+    await rollForwardUnfinishedSchedulesToToday(now)
+
     const asyncAutoschedule = process.env.CHORUS_ASYNC_AUTOSCHEDULE === '1'
     const scheduleWork = async () => {
       if (gridEnd > scheduleStart) {
